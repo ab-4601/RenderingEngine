@@ -1,0 +1,53 @@
+#version 450 core
+
+layout (local_size_x = 256) in;
+
+struct Particle {
+	vec4 position;
+	vec4 velocity;
+	vec4 color;
+	float life;
+	float forceEffect;
+	int textureIndex;
+	vec4 atlasCoords;
+};
+
+const float GRAVITY = 10.f;
+
+layout (std430, binding = 0) buffer ParticleBuffer {
+	Particle particles[];
+};
+
+layout (std430, binding = 1) buffer ExistingParticleBuffer {
+	Particle existingParticles[];
+};
+
+layout (std430, binding = 2) buffer CounterBuffer {
+	uint particleCount;
+};
+
+uniform float deltaTime;
+uniform int atlasSize;
+
+void main() {
+	uint idx = gl_GlobalInvocationID.x;
+
+	Particle p = particles[idx];
+
+	p.life -= deltaTime;
+
+	if(p.life <= 0) {
+		p.velocity.y += GRAVITY * p.forceEffect * deltaTime;
+
+		int row = p.textureIndex;
+		int col = p.textureIndex % atlasSize;
+
+		float texSize = 1.f / float(atlasSize);
+		float xMin = col * texSize;
+		float yMin = row * texSize;
+		p.atlasCoords = vec4(xMin, yMin, xMin + texSize, yMin + texSize);
+
+		uint particleIdx = atomicAdd(particleCount, 1);
+		existingParticles[particleIdx] = p;
+	}
+}
