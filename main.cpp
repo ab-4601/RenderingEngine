@@ -57,10 +57,10 @@ int main() {
     Grid grid;
     MouseSelector selection{ (uint)window.getBufferWidth(), (uint)window.getBufferHeight() };
     CoordinateSystem coordSystem;
-    Skybox skybox{ window.getBufferWidth(), window.getBufferHeight(), "Textures/skybox/newport_loft.hdr" };
+    Skybox skybox{ window.getBufferWidth(), window.getBufferHeight() };
     DirectionalLight mainLight{ 0.1f, 0.5f, lightDirection, { 1.f, 1.f, 1.f } };
     LightSources lightSources;
-    CascadedShadows csm;
+    CascadedShadows csm(window.getBufferWidth(), window.getBufferHeight());
 
     PBRShader pbrShader;
     Shader outlineShader{ "highlight.vert", "highlight.frag" };
@@ -239,7 +239,7 @@ int main() {
 
             if (enableShadows) {
                 csm.calculateShadows(
-                    view, window.getWindowWidth(), window.getWindowHeight(), Mesh::meshList, lightDirection, currFramebuffer
+                    window.getWindowWidth(), window.getWindowHeight(), Mesh::meshList, lightDirection, currFramebuffer
                 );
             }
 

@@ -87,7 +87,7 @@ layout (std140, binding = 0) uniform cameraSpaceMatrix {
 	mat4 view;
 };
 
-layout (std140, binding = 1) uniform LightSpaceMatrices {
+layout (std140, binding = 1) buffer LightSpaceMatrices {
 	mat4 lightSpaceMatrices[16];
 };
 

@@ -30,9 +30,9 @@ public:
 
 	inline void useShader() const { glUseProgram(this->programID); }
 	inline void endShader() const { glUseProgram(0); }
-	void dispatchComputeShader(int x, int y, int z) const {
+	void dispatchComputeShader(int x, int y, int z, GLbitfield barriers) const {
 		glDispatchCompute(x, y, z);
-		glMemoryBarrier(GL_ALL_BARRIER_BITS);
+		glMemoryBarrier(barriers);
 	}
 
 	inline void setInt(const char* varName, const int& value) {
