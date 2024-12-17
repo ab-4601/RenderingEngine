@@ -10,6 +10,7 @@ private:
 	BloomFBO mFBO;
 
 	GLuint intermediateFBO{ 0 }, screenBuffer{ 0 };
+	float knee{ 1.f };
 
 	glm::ivec2 srcViewportSize{ 0 };
 	glm::vec2 srcViewportSizeFLT{ 0.f };
@@ -26,6 +27,8 @@ private:
 	
 public:
 	BloomRenderer(int windowWidth, int windowHeight);
+
+	inline void setKnee(float knee) { this->knee = knee < 0.f ? 0.f : knee; }
 
 	bool _init(int windowWidth, int windowHeight);
 	void renderBloomTexture(GLuint srcTexture, float filterRadius, GLuint currFramebuffer = 0);

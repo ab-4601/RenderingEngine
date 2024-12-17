@@ -14,10 +14,12 @@ void BloomRenderer::renderDownsamples(GLuint srcTexture) {
 	this->downsampleShader.setInt("srcTexture", 0);
 	this->downsampleShader.setVec2("srcResolution", this->srcViewportSizeFLT);
 	this->downsampleShader.setInt("mipLevel", 0);
+	this->downsampleShader.setFloat("bloomThreshold", this->knee);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, srcTexture);
 
+	glDisable(GL_BLEND);
 	for (size_t i = 0; i < mipChain.size(); i++) {
 		const BloomMip& mip = mipChain[i];
 		

@@ -161,7 +161,7 @@ void PBRShader::setSpotLights(SpotLight* spotLights, unsigned int lightCount) {
 
 void PBRShader::setGeneralUniforms(DirectionalLight& directionalLight, std::vector<PointLight>& pointLights,
 	int pointLightCount, std::vector<SpotLight>& spotLights, int spotLightCount, int numCascades,
-	std::vector<float> cascadePlanes, float shadowRadius, glm::vec3 offsetTextureSize, GLuint irradianceMap,
+	const float* const cascadePlanes, float shadowRadius, glm::vec3 offsetTextureSize, GLuint irradianceMap,
 	GLuint brdfSampler, GLuint prefilterSampler, GLuint noiseSampler, GLuint cascadedShadowMap, GLuint pointShadowMap)
 {
 	glUseProgram(this->programID);
@@ -176,7 +176,7 @@ void PBRShader::setGeneralUniforms(DirectionalLight& directionalLight, std::vect
 	glUniform3fv(this->uniformOffsetTextureSize, 1, glm::value_ptr(offsetTextureSize));
 	glUniform1i(this->uniformCascadeCount, numCascades);
 
-	for (size_t i = 0; i < cascadePlanes.size(); i++)
+	for (size_t i = 0; i < ::MAX_CASCADES; i++)
 		glUniform1f(this->uniformCascadePlaneDistances[i], cascadePlanes[i]);
 
 	glActiveTexture(GL_TEXTURE5);

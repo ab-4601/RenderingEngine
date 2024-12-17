@@ -3,8 +3,10 @@
 CascadedShadows::CascadedShadows(int windowWidth, int windowHeight, float lambda, int size, int samplesU, int samplesV)
 	: aspect{ (float)windowWidth / windowHeight } 
 {
-	for (int i = 0; i < ::MAX_CASCADES; i++)
+	for (int i = 0; i < ::MAX_CASCADES; i++) {
+		this->cascadeSplits[i] = 0;
 		this->lightSpaceMatrices[i] = glm::mat4(1.f);
+	}
 
 	this->calcSplitDepths(lambda);
 	this->setComputeUniforms();
@@ -111,8 +113,6 @@ void CascadedShadows::_init() {
 }
 
 void CascadedShadows::calcSplitDepths(float lambda) {
-	this->cascadeSplits.clear();
-
 	float range = ::far_plane - ::near_plane;
 	float logFactor = std::log(::far_plane / ::near_plane);
 
@@ -123,7 +123,7 @@ void CascadedShadows::calcSplitDepths(float lambda) {
 
 		float logSplit = ::near_plane * std::pow(logFactor, p);
 
-		this->cascadeSplits.push_back(lambda * linearSplit + (1 - lambda) * logSplit);
+		this->cascadeSplits[i] = (lambda * linearSplit + (1 - lambda) * logSplit);
 	}
 }
 
@@ -131,7 +131,7 @@ void CascadedShadows::setComputeUniforms() {
 	this->computeShader.useShader();
 
 	std::string buffer{};
-	for (int i = 0; i < this->cascadeSplits.size(); i++) {
+	for (int i = 0; i < this->numCascades; i++) {
 		buffer = "cascadeSplits[" + std::to_string(i) + "]";
 		this->computeShader.setFloat(buffer.c_str(), this->cascadeSplits[i]);
 	}

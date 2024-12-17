@@ -30,8 +30,8 @@ public:
 	void _newFrame();
 	void _updateTransformOperation(const Window& window);
 	void renderGUI(
-		ImGuiIO& io, float& exposure, float& shadowRadius, float& filterRadius, bool& drawSkybox, bool& displayGrid,
-		bool& displayCoordinateSystem, bool& enableBloom, bool& enableWireframe, 
+		ImGuiIO& io, float& exposure, float& shadowRadius, float& filterRadius, float &bloomThreshold,
+		bool& drawSkybox, bool& displayGrid, bool& displayCoordinateSystem, bool& enableBloom, bool& enableWireframe, 
 		bool& enableShadows, bool& enableHDR, bool& enableSSAO, glm::vec3& dirLightLocation, Mesh* currMesh = nullptr
 	);
 	void manipulate(int bufferWidth, int bufferHeight, const Camera& camera, Mesh* mesh);

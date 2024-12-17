@@ -104,6 +104,7 @@ int main() {
 
     float exposure = 1.f;
     float shadowRadius = 1.5f;
+    float bloomThreshold = 1.f;
 
     GLuint gridSize = 500;
 
@@ -208,7 +209,7 @@ int main() {
         pSystem.updateParticles(deltaTime, cameraPosition);
         //fireSystem.updateParticles(deltaTime, cameraPosition);
 
-        if (elapsedTime >= 0.012f)
+        //if (elapsedTime >= 0.012f)
         {
             currFramebuffer = 0;
             elapsedTime = 0.f;
@@ -317,8 +318,10 @@ int main() {
             pSystem.renderParticles(&window, camera, model);
             //fireSystem.renderParticles(&window, camera, model);
 
-            if(enableHDR && enableBloom)
+            if(enableHDR && enableBloom) {
+                bloom.setKnee(bloomThreshold);
                 bloom.renderBloomTextureMSAA(filterRadius, currFramebuffer);
+            }
 
 // ----------------------------------------------------------------------------------------------------------------
 
@@ -328,10 +331,12 @@ int main() {
             }
 
             if (index != -1) 
-                overlay.renderGUI(io, exposure, shadowRadius, filterRadius, drawSkybox, displayGrid, displayCoordinateSystem,
+                overlay.renderGUI(io, exposure, shadowRadius, filterRadius, bloomThreshold,
+                    drawSkybox, displayGrid, displayCoordinateSystem,
                     enableBloom, drawWireframe, enableShadows, enableHDR, enableSSAO, lightDirection, meshes[index]);
             else
-                overlay.renderGUI(io, exposure, shadowRadius, filterRadius, drawSkybox, displayGrid, displayCoordinateSystem,
+                overlay.renderGUI(io, exposure, shadowRadius, filterRadius, bloomThreshold,
+                    drawSkybox, displayGrid, displayCoordinateSystem,
                     enableBloom, drawWireframe, enableShadows, enableHDR, enableSSAO, lightDirection);
 
             glfwSwapBuffers(window.getMainWindow());

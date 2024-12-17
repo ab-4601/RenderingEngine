@@ -33,6 +33,9 @@ ParticleMaster::ParticleMaster(ParticleMaster&& source) noexcept {
 }
 
 void ParticleMaster::update(float delta, glm::vec3 cameraPosition) {
+	if (this->particles.size() == 0)
+		return;
+
 	CParticle* particle = nullptr;
 
 	for (size_t i = 0; i < this->particles.size(); i++) {

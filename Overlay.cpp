@@ -21,7 +21,7 @@ ImGuiIO& Overlay::_init(GLFWwindow* window) {
     style.Colors[ImGuiCol_Text] = ImVec4(1.f, 0.9f, 0.9f, 1.f);
     style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.9f, 0.41f, 0.f, 1.f);
     style.Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.5f);
-    style.Colors[ImGuiCol_FrameBg] = ImVec4(0.05f, 0.05f, 0.05f, 0.7f);
+    style.Colors[ImGuiCol_FrameBg] = ImVec4(0.05f, 0.05f, 0.05f, 1.f);
     style.Colors[ImGuiCol_Header] = ImVec4(0.1f, 0.1f, 0.1f, 0.f);
     style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.9f, 0.41f, 0.f, 1.f);
     style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.9f, 0.41f, 0.f, 1.f);
@@ -134,26 +134,56 @@ void Overlay::DrawSliderFloat(const std::string& label, float* values, float min
     ImGui::PopID();
 }
 
-void Overlay::renderGUI(ImGuiIO& io, float& exposure, float& shadowRadius, float& filterRadius, bool& drawSkybox,
-    bool& displayGrid, bool& displayCoordinateSystem, bool& enableBloom, bool& enableWireframe, bool& enableShadows,
-    bool& enableHDR, bool& enableSSAO, glm::vec3& dirLightLocation, Mesh* currMesh) 
+void Overlay::renderGUI(ImGuiIO& io, float& exposure, float& shadowRadius, float& filterRadius, float& bloomThreshold,
+    bool& drawSkybox, bool& displayGrid, bool& displayCoordinateSystem, bool& enableBloom, bool& enableWireframe,
+    bool& enableShadows, bool& enableHDR, bool& enableSSAO, glm::vec3& dirLightLocation, Mesh* currMesh) 
 {
     ImGui::PushFont(this->mainfont);
     ImGui::Begin("Scene Information and modifiers");
 
-    ImGui::Checkbox("Render Skybox", &drawSkybox);
-    ImGui::Checkbox("Display Coordinate System", &displayCoordinateSystem);
-    ImGui::Checkbox("Display Grid", &displayGrid);
-    ImGui::Checkbox("Bloom", &enableBloom);
-    ImGui::Checkbox("HDR", &enableHDR);
-    ImGui::Checkbox("Wireframe", &enableWireframe);
-    ImGui::Checkbox("Shadows", &enableShadows);
-    ImGui::Checkbox("SSAO", &enableSSAO);
+    if (ImGui::TreeNode("Scene")) {
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
+            ImGui::Checkbox("Render Skybox", &drawSkybox);
+            ImGui::Checkbox("Display Coordinate System", &displayCoordinateSystem);
+            ImGui::Checkbox("Display Grid", &displayGrid);
+            ImGui::Checkbox("Wireframe", &enableWireframe);
+            ImGui::Checkbox("Enable HDR", &enableHDR);
+            ImGui::Checkbox("Enable bloom", &enableBloom);
+            ImGui::Checkbox("Enable shadows", &enableShadows);
+            ImGui::Checkbox("SSAO", &enableSSAO);
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
+        ImGui::TreePop();
+    }
+
     ImGui::NewLine();
 
-    this->DrawDragFloat("Exposure", &exposure, 0.01f, 150.f);
-    this->DrawDragFloat("Filter Radius", &filterRadius, 0.0001f, 150.f);
-    this->DrawDragFloat("Shadow Radius", &shadowRadius, 0.001f, 150.f);
+    if (ImGui::TreeNode("HDR")) {
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
+            this->DrawDragFloat("Exposure", &exposure, 0.01f, 150.f);
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
+        ImGui::TreePop();
+    }
+
+    ImGui::NewLine();
+
+    if (ImGui::TreeNode("Bloom")) {
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
+            this->DrawDragFloat("Filter Radius", &filterRadius, 0.0001f, 150.f);
+            bloomThreshold = bloomThreshold < 0.f ? 0.f : bloomThreshold;
+            this->DrawDragFloat("Knee", &bloomThreshold, 0.01f, 150.f);
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
+        ImGui::TreePop();
+    }
+
+    ImGui::NewLine();
+
+    if (ImGui::TreeNode("Shadows")) {
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
+            this->DrawDragFloat("Shadow Radius", &shadowRadius, 0.001f, 150.f);
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
+        ImGui::TreePop();
+    }
+
     ImGui::NewLine();
 
     if (ImGui::TreeNode("Material Properties")) {

@@ -68,7 +68,7 @@ public:
 	void setSpotLights(SpotLight* spotLights, unsigned int lightCount);
 
 	void setGeneralUniforms(DirectionalLight& directionalLight, std::vector<PointLight>& pointLights, int pointLightCount,
-		std::vector<SpotLight>& spotLights, int spotLightCount, int numCascades, std::vector<float> cascadePlanes,
+		std::vector<SpotLight>& spotLights, int spotLightCount, int numCascades, const float* const cascadePlanes,
 		float shadowRadius, glm::vec3 offsetTextureSize, GLuint irradianceMap, GLuint brdfSampler,
 		GLuint prefilterSampler, GLuint noiseSampler, GLuint cascadedShadowMap, GLuint pointShadowMap);
 

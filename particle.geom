@@ -18,26 +18,14 @@ in VS_OUT {
 } data_in[];
 
 void main() {
-	gl_Position = gl_in[0].gl_Position;
-	gs_out.color = vec4(data_in[0].color, 1);
-	gs_out.blend = data_in[0].blend;
-	gs_out.texCoord1 = data_in[0].texCoord1;
-	gs_out.texCoord2 = data_in[0].texCoord2;
-	EmitVertex();
-
-	gl_Position = gl_in[1].gl_Position;
-	gs_out.color = vec4(data_in[1].color, 1);
-	gs_out.blend = data_in[1].blend;
-	gs_out.texCoord1 = data_in[1].texCoord1;
-	gs_out.texCoord2 = data_in[1].texCoord2;
-	EmitVertex();
-
-	gl_Position = gl_in[2].gl_Position;
-	gs_out.color = vec4(data_in[2].color, 1);
-	gs_out.blend = data_in[2].blend;
-	gs_out.texCoord1 = data_in[2].texCoord1;
-	gs_out.texCoord2 = data_in[2].texCoord2;
-	EmitVertex();
-
+	for(int i = 0; i < 3; i++) {
+		gl_Position = gl_in[i].gl_Position;
+		gs_out.color = vec4(data_in[i].color, 1);
+		gs_out.blend = data_in[i].blend;
+		gs_out.texCoord1 = data_in[i].texCoord1;
+		gs_out.texCoord2 = data_in[i].texCoord2;
+		EmitVertex();
+	}
+	
 	EndPrimitive();
 }

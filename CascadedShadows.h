@@ -12,7 +12,7 @@ private:
 	GLuint FBO{ 0 }, SSBO{ 0 };
 	GLuint shadowMaps{ 0 }, randomOffset{ 0 };
 
-	std::vector<float> cascadeSplits;
+	float cascadeSplits[::MAX_CASCADES];
 	glm::mat4 lightSpaceMatrices[::MAX_CASCADES];
 	glm::vec4 frustumCorners[8];
 	glm::vec3 noiseTextureSize{ 0.f };
@@ -43,7 +43,7 @@ public:
 	inline GLuint getNumCascades() const { return this->numCascades; }
 	inline GLuint getShadowMaps() const { return this->shadowMaps; }
 	inline GLuint noiseBuffer() const { return this->randomOffset; }
-	inline std::vector<float> cascadePlanes() const { return this->cascadeSplits; }
+	inline const float* const cascadePlanes() const { return &this->cascadeSplits[0]; }
 	inline glm::vec3 getNoiseTextureSize() const { return this->noiseTextureSize; }
 
 	void calculateShadows(int windowWidth, int windowHeight, std::vector<Mesh*>& meshes,

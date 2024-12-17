@@ -3,6 +3,7 @@
 layout (location = 0) out vec3 downsample;
 
 uniform sampler2D srcTexture;
+uniform float bloomThreshold;
 uniform vec2 srcResolution;
 uniform int mipLevel = 1;
 
@@ -47,6 +48,21 @@ void main() {
     vec3 k = texture(srcTexture, vec2(texel.x + x, texel.y + y)).rgb;
     vec3 l = texture(srcTexture, vec2(texel.x - x, texel.y - y)).rgb;
     vec3 m = texture(srcTexture, vec2(texel.x + x, texel.y - y)).rgb;
+
+	// Apply bloom threshold (filter out dark regions)
+    e = max(e - bloomThreshold, vec3(0.0));
+    a = max(a - bloomThreshold, vec3(0.0));
+    b = max(b - bloomThreshold, vec3(0.0));
+    c = max(c - bloomThreshold, vec3(0.0));
+    d = max(d - bloomThreshold, vec3(0.0));
+    f = max(f - bloomThreshold, vec3(0.0));
+    g = max(g - bloomThreshold, vec3(0.0));
+    h = max(h - bloomThreshold, vec3(0.0));
+    i = max(i - bloomThreshold, vec3(0.0));
+    j = max(j - bloomThreshold, vec3(0.0));
+    k = max(k - bloomThreshold, vec3(0.0));
+    l = max(l - bloomThreshold, vec3(0.0));
+    m = max(m - bloomThreshold, vec3(0.0));
 
     vec3 groups[5];
 
