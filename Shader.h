@@ -5,10 +5,10 @@
 
 class Shader {
 protected:
-	char* vertexShader;
-	char* fragmentShader;
-	char* geometryShader;
-	char* computeShader;
+	char* vertexShaderSource;
+	char* fragmentShaderSource;
+	char* geometryShaderSource;
+	char* computeShaderSource;
 
 	std::unordered_map<const char*, GLuint> shaderUniforms{};
 
@@ -21,8 +21,8 @@ protected:
 	}
 
 public:
-	Shader(std::string vertFileName = "", std::string fragFileName = "", std::string geomFileName = "");
 	Shader(std::string compFileName = "");
+	Shader(std::string vertFileName, std::string fragFileName, std::string geomFileName = "");
 
 	void readFile(std::string fileName, char*& shader);
 	void compileShader(GLuint& shaderID, const char* shader, GLenum shaderType);
@@ -30,6 +30,10 @@ public:
 
 	inline void useShader() const { glUseProgram(this->programID); }
 	inline void endShader() const { glUseProgram(0); }
+	void dispatchComputeShader(int x, int y, int z) const {
+		glDispatchCompute(x, y, z);
+		glMemoryBarrier(GL_ALL_BARRIER_BITS);
+	}
 
 	inline void setInt(const char* varName, const int& value) {
 		this->checkUniform(varName);
@@ -99,23 +103,6 @@ public:
 	inline void setMat4(const char* varName, const glm::mat4& value) {
 		this->checkUniform(varName);
 		glUniformMatrix4fv(this->shaderUniforms[varName], 1, GL_FALSE, glm::value_ptr(value));
-	}
-
-	template <class T>
-	void setArray(std::string varName, int count, std::vector<T>& values) {
-		std::string buffer{};
-		for (int i = 0; i < count; i++) {
-			buffer = varName + "[" + std::to_string(i) + "]";
-
-			this->checkUniform(buffer.c_str());
-
-			if (typeid(values[0]).name() == "int")
-				glUniform1i(this->shaderUniforms[buffer.c_str()], values[i]);
-			else if (typeid(values[0]).name() == "unsigned int")
-				glUniform1ui(this->shaderUniforms[buffer.c_str()], values[i]);
-			else if (typeid(values[0]).name() == "float")
-				glUniform1f(this->shaderUniforms[buffer.c_str()], values[i]);
-		}
 	}
 
 	~Shader();

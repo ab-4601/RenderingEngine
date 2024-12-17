@@ -44,6 +44,8 @@ void HDR::_init() {
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	this->_initSMAAbuffers();
 }
 
 void HDR::_initMSAA() {
@@ -78,6 +80,7 @@ void HDR::_initMSAA() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	this->_initIntermediateFBO();
+	this->_initSMAAbuffers();
 }
 
 void HDR::_initSMAAbuffers() {
@@ -87,11 +90,11 @@ void HDR::_initSMAAbuffers() {
 	glGenTextures(1, &this->edgeColorBuffer);
 	glBindTexture(GL_TEXTURE_2D, this->edgeColorBuffer);
 	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA16F, this->screenResolution.x, this->screenResolution.y, 0, GL_RGBA, GL_FLOAT, NULL
+		GL_TEXTURE_2D, 0, GL_RG8, this->screenResolution.x, this->screenResolution.y, 0, GL_RG, GL_UNSIGNED_BYTE, NULL
 	);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -123,8 +126,6 @@ void HDR::_initSMAAbuffers() {
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	this->_initSMAAbuffers();
 }
 
 void HDR::_initIntermediateFBO() {
@@ -218,7 +219,7 @@ void HDR::renderToDefaultBuffer(float exposure, GLuint bloomBuffer, bool enableB
 	this->shader.endShader();
 }
 
-void HDR::renderToDefaultBufferMSAA(float exposure, GLuint bloomBuffer, bool enableBloom) 
+void HDR::renderToDefaultBufferMSAA(float exposure, GLuint bloomBuffer, bool enableBloom)
 {
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, this->FBO);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->intermediateFBO);

@@ -2,6 +2,7 @@
 
 #include "Core.h"
 #include "Shader.h"
+#include "Texture.h"
 #include "Quad.h"
 
 class HDR {
@@ -15,6 +16,8 @@ private:
 
 	GLuint edgeFBO = 0, blendFBO = 0;
 	GLuint edgeColorBuffer = 0, blendColorBuffer = 0;
+
+	Texture areaTexture{ "Textures/SMAA/AreaTexDX10.dds" }, searchTexture{ "Textures/SMAA/SearchTex.dds" };
 
 	glm::vec2 screenResolution;
 

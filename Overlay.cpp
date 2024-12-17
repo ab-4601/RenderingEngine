@@ -18,10 +18,11 @@ ImGuiIO& Overlay::_init(GLFWwindow* window) {
     style.WindowBorderSize = 1.f;
     style.WindowRounding = 8.f;
     style.Colors[ImGuiCol_Border] = ImVec4(0.9f, 0.41f, 0.f, 1.f);
+    style.Colors[ImGuiCol_Text] = ImVec4(1.f, 0.9f, 0.9f, 1.f);
     style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.9f, 0.41f, 0.f, 1.f);
-    style.Colors[ImGuiCol_WindowBg] = ImVec4(0.f, 0.f, 0.f, 0.7f);
-    style.Colors[ImGuiCol_FrameBg] = ImVec4(0.05f, 0.05f, 0.05f, 1.f);
-    style.Colors[ImGuiCol_Header] = ImVec4(0.f, 0.f, 0.f, 0.f);
+    style.Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.5f);
+    style.Colors[ImGuiCol_FrameBg] = ImVec4(0.05f, 0.05f, 0.05f, 0.7f);
+    style.Colors[ImGuiCol_Header] = ImVec4(0.1f, 0.1f, 0.1f, 0.f);
     style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.9f, 0.41f, 0.f, 1.f);
     style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.9f, 0.41f, 0.f, 1.f);
     style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.4f, 0.4f, 0.4f, 1.f);
@@ -63,7 +64,7 @@ void Overlay::DrawVec3Control(const std::string& label, float* values, float res
     float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.f;
     ImVec2 buttonSize = { lineHeight + 3.f, lineHeight };
 
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.f, 0.05f, 0.05f, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.15f, 1.f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.2f, 0.2f, 1.f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.8f, 0.1f, 0.15f, 1.f));
     if (ImGui::Button("X", buttonSize))
@@ -75,9 +76,9 @@ void Overlay::DrawVec3Control(const std::string& label, float* values, float res
     ImGui::PopItemWidth();
     ImGui::SameLine();
 
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.02f, 1.f, 0.05f, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.9f, 0.2f, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.15f, 0.8f, 0.1f, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.7f, 0.2f, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.8f, 0.3f, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.7f, 0.2f, 1.f));
     if(ImGui::Button("Y", buttonSize))
         values[1] = resetValue;
     ImGui::PopStyleColor(3);
@@ -87,9 +88,9 @@ void Overlay::DrawVec3Control(const std::string& label, float* values, float res
     ImGui::PopItemWidth();
     ImGui::SameLine();
 
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.05f, 0.05f, 1.f, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.9f, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.15f, 0.8f, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.1f, 0.25f, 0.9f, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.35f, 1.f, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.25f, 0.8f, 1.f));
     if(ImGui::Button("Z", buttonSize))
         values[2] = resetValue;
 
@@ -133,8 +134,8 @@ void Overlay::DrawSliderFloat(const std::string& label, float* values, float min
     ImGui::PopID();
 }
 
-void Overlay::renderGUI(ImGuiIO& io, float& exposure, float& filterRadius, bool& drawSkybox, bool& displayGrid,
-    bool& displayCoordinateSystem, bool& enableBloom, bool& enableWireframe, bool& enableShadows,
+void Overlay::renderGUI(ImGuiIO& io, float& exposure, float& shadowRadius, float& filterRadius, bool& drawSkybox,
+    bool& displayGrid, bool& displayCoordinateSystem, bool& enableBloom, bool& enableWireframe, bool& enableShadows,
     bool& enableHDR, bool& enableSSAO, glm::vec3& dirLightLocation, Mesh* currMesh) 
 {
     ImGui::PushFont(this->mainfont);
@@ -152,6 +153,7 @@ void Overlay::renderGUI(ImGuiIO& io, float& exposure, float& filterRadius, bool&
 
     this->DrawDragFloat("Exposure", &exposure, 0.01f, 150.f);
     this->DrawDragFloat("Filter Radius", &filterRadius, 0.0001f, 150.f);
+    this->DrawDragFloat("Shadow Radius", &shadowRadius, 0.001f, 150.f);
     ImGui::NewLine();
 
     if (ImGui::TreeNode("Material Properties")) {

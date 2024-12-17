@@ -53,16 +53,7 @@ vec3 SMAA() {
 	vec3 color = texture2D(hdrBuffer, texel).rgb;
 	vec4 weights = texture2D(blendWeightTexture, texel);
 
-	vec2 texelStep = 1.f / screenResolution;
-	vec3 blendedColor = color;
-
-	//Horizontal blend
-	blendedColor += weights.r * texture2D(hdrBuffer, texel + vec2(texelStep.x, 0.f)).rgb;
-	blendedColor += weights.g * texture2D(hdrBuffer, texel - vec2(texelStep.x, 0.f)).rgb;
-
-	//Vertical blend
-	blendedColor += weights.b * texture2D(hdrBuffer, texel + vec2(0.f, texelStep.y)).rgb;
-	blendedColor += weights.a * texture2D(hdrBuffer, texel - vec2(0.f, texelStep.y)).rgb;
+	vec3 blendedColor = mix(vec4(color, 1.f), weights, weights.a).rgb;
 
 	return blendedColor;
 }

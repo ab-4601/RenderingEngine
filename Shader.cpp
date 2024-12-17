@@ -1,19 +1,19 @@
 #include "Shader.h"
 
 Shader::Shader(std::string vertFileName, std::string fragFileName, std::string geomFileName)
-	: vertexShader{ nullptr }, fragmentShader{ nullptr }, geometryShader{ nullptr },
+	: vertexShaderSource{ nullptr }, fragmentShaderSource{ nullptr }, geometryShaderSource{ nullptr },
 	vertFileName{ vertFileName }, fragFileName{ fragFileName }, geomFileName{ geomFileName }, compFileName{ "" },
 	vertexShaderID{ 0 }, fragmentShaderID{ 0 }, geometryShaderID{ 0 }, computeShaderID{ 0 }, programID { 0 }
 {
-	this->readFile(this->vertFileName, this->vertexShader);
-	this->readFile(this->fragFileName, this->fragmentShader);
+	this->readFile(this->vertFileName, this->vertexShaderSource);
+	this->readFile(this->fragFileName, this->fragmentShaderSource);
 
-	this->compileShader(this->vertexShaderID, this->vertexShader, GL_VERTEX_SHADER);
-	this->compileShader(this->fragmentShaderID, this->fragmentShader, GL_FRAGMENT_SHADER);
+	this->compileShader(this->vertexShaderID, this->vertexShaderSource, GL_VERTEX_SHADER);
+	this->compileShader(this->fragmentShaderID, this->fragmentShaderSource, GL_FRAGMENT_SHADER);
 
 	if (this->geomFileName != "") {
-		this->readFile(this->geomFileName, this->geometryShader);
-		this->compileShader(this->geometryShaderID, this->geometryShader, GL_GEOMETRY_SHADER);
+		this->readFile(this->geomFileName, this->geometryShaderSource);
+		this->compileShader(this->geometryShaderID, this->geometryShaderSource, GL_GEOMETRY_SHADER);
 		this->attachShader({ vertexShaderID, fragmentShaderID, geometryShaderID });
 		glDeleteShader(this->geometryShaderID);
 	}
@@ -24,18 +24,18 @@ Shader::Shader(std::string vertFileName, std::string fragFileName, std::string g
 	glDeleteShader(this->vertexShaderID);
 	glDeleteShader(this->fragmentShaderID);
 
-	delete[] this->vertexShader;
-	delete[] this->fragmentShader;
-	delete[] this->geometryShader;
+	delete[] this->vertexShaderSource;
+	delete[] this->fragmentShaderSource;
+	delete[] this->geometryShaderSource;
 }
 
 Shader::Shader(std::string compFileName)
-	: vertexShader{ nullptr }, fragmentShader{ nullptr }, geometryShader{ nullptr },
+	: vertexShaderSource{ nullptr }, fragmentShaderSource{ nullptr }, geometryShaderSource{ nullptr },
 	vertFileName{ "" }, fragFileName{ "" }, geomFileName{ "" }, compFileName{ compFileName },
 	vertexShaderID{ 0 }, fragmentShaderID{ 0 }, geometryShaderID{ 0 }, computeShaderID{ 0 }, programID{ 0 }
 {
-	this->readFile(this->compFileName, this->computeShader);
-	this->compileShader(this->computeShaderID, this->computeShader, GL_COMPUTE_SHADER);
+	this->readFile(this->compFileName, this->computeShaderSource);
+	this->compileShader(this->computeShaderID, this->computeShaderSource, GL_COMPUTE_SHADER);
 	this->attachShader({ this->computeShaderID });
 
 	glDeleteShader(this->computeShaderID);

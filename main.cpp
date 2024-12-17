@@ -4,14 +4,11 @@
 #define STB_IMAGE_IMPLEMENTATION
 #endif
 
-#include "Window.h"
-#include "Camera.h"
 #include "Skybox.h"
 #include "Overlay.h"
 #include "HDR.h"
 #include "BloomRenderer.h"
 #include "MouseSelector.h"
-#include "SelectionTexture.h"
 #include "CoordinateSystem.h"
 #include "Icosphere.h"
 #include "Cube.h"
@@ -60,10 +57,10 @@ int main() {
     Grid grid;
     MouseSelector selection{ (uint)window.getBufferWidth(), (uint)window.getBufferHeight() };
     CoordinateSystem coordSystem;
-    Skybox skybox{ window.getBufferWidth(), window.getBufferHeight() };
+    Skybox skybox{ window.getBufferWidth(), window.getBufferHeight(), "Textures/skybox/newport_loft.hdr" };
     DirectionalLight mainLight{ 0.1f, 0.5f, lightDirection, { 1.f, 1.f, 1.f } };
     LightSources lightSources;
-    CascadedShadows csm{ 0.5f };
+    CascadedShadows csm;
 
     PBRShader pbrShader;
     Shader outlineShader{ "highlight.vert", "highlight.frag" };
@@ -104,7 +101,9 @@ int main() {
     bool enableHDR = true;
     bool displayCoordinateSystem = false;
     bool displayGrid = false;
+
     float exposure = 1.f;
+    float shadowRadius = 1.5f;
 
     GLuint gridSize = 500;
 
@@ -181,7 +180,7 @@ int main() {
 
     pbrShader.setGeneralUniforms(
         mainLight, pointLights, pointLightCount, spotLights, spotLightCount,
-        csm.getNumCascades(), csm.cascadePlanes(), 0.5f, csm.getNoiseTextureSize(), skybox.getIrradianceMap(),
+        csm.getNumCascades(), csm.cascadePlanes(), shadowRadius, csm.getNoiseTextureSize(), skybox.getIrradianceMap(),
         skybox.getBRDFTexture(), skybox.getPrefilterTexture(), csm.noiseBuffer(), csm.getShadowMaps(), 0
     );
 
@@ -254,6 +253,7 @@ int main() {
 
             glUniform1i(pbrShader.getUniformShadowBool(), enableShadows);
             glUniform1i(pbrShader.getUniformSSAObool(), enableSSAO);
+            glUniform1f(pbrShader.getUniformPCFRadius(), shadowRadius);
 
             if (drawWireframe)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -322,18 +322,17 @@ int main() {
 
 // ----------------------------------------------------------------------------------------------------------------
 
-            if (index != -1) 
-                overlay.renderGUI(io, exposure, filterRadius, drawSkybox, displayGrid, displayCoordinateSystem,
-                    enableBloom, drawWireframe, enableShadows, enableHDR, enableSSAO, lightDirection, meshes[index]);
-            else
-                overlay.renderGUI(io, exposure, filterRadius, drawSkybox, displayGrid, displayCoordinateSystem,
-                    enableBloom, drawWireframe, enableShadows, enableHDR, enableSSAO, lightDirection);
-
-            if (enableHDR)
-            {
+            if (enableHDR) {
                 //hdrBuffer.renderToDefaultBuffer(exposure, bloom.bloomTexture(), enableBloom);
                 hdrBuffer.renderToDefaultBufferMSAA(exposure, bloom.bloomTexture(), enableBloom);
             }
+
+            if (index != -1) 
+                overlay.renderGUI(io, exposure, shadowRadius, filterRadius, drawSkybox, displayGrid, displayCoordinateSystem,
+                    enableBloom, drawWireframe, enableShadows, enableHDR, enableSSAO, lightDirection, meshes[index]);
+            else
+                overlay.renderGUI(io, exposure, shadowRadius, filterRadius, drawSkybox, displayGrid, displayCoordinateSystem,
+                    enableBloom, drawWireframe, enableShadows, enableHDR, enableSSAO, lightDirection);
 
             glfwSwapBuffers(window.getMainWindow());
         }

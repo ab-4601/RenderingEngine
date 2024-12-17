@@ -1,13 +1,12 @@
 #include "CascadedShadows.h"
 
 CascadedShadows::CascadedShadows(float lambda, int size, int samplesU, int samplesV) {
-	this->offsetTextureSamplesU = samplesU;
-	this->offsetTextureSamplesV = samplesV;
-	this->offsetTextureSize = size;
+	for (int i = 0; i < ::MAX_CASCADES; i++)
+		this->lightSpaceMatrices[i] = glm::mat4(1.f);
 
 	this->calcSplitDepths(lambda);
+	this->genRandomOffsetData(size, samplesU, samplesV);
 	this->_init();
-	this->genRandomOffsetData();
 }
 
 bool CascadedShadows::checkFramebufferStatus() {
@@ -19,19 +18,19 @@ bool CascadedShadows::checkFramebufferStatus() {
 	return true;
 }
 
-void CascadedShadows::genRandomOffsetData() {
-	int samples = this->offsetTextureSamplesU * this->offsetTextureSamplesV;
-	int bufferSize = this->offsetTextureSize * this->offsetTextureSize * samples * 2;
+void CascadedShadows::genRandomOffsetData(int size, int samplesU, int samplesV) {
+	int samples = samplesU * samplesV;
+	int bufferSize = size * size * samples * 2;
 	float* offsetData = new float[bufferSize];
 
-	for (int i = 0; i < this->offsetTextureSize; i++) {
-		for (int j = 0; j < this->offsetTextureSize; j++) {
+	for (int i = 0; i < size; i++) {
+		for (int j = 0; j < size; j++) {
 			for (int k = 0; k < samples; k += 2) {
 				int x1{}, y1{}, x2{}, y2{};
-				x1 = k % (this->offsetTextureSamplesU);
-				y1 = (samples - 1 - k) / this->offsetTextureSamplesU;
-				x2 = (k + 1) % this->offsetTextureSamplesU;
-				y2 = (samples - 1 - k - 1) / this->offsetTextureSamplesU;
+				x1 = k % (samplesU);
+				y1 = (samples - 1 - k) / samplesU;
+				x2 = (k + 1) % samplesU;
+				y2 = (samples - 1 - k - 1) / samplesU;
 
 				glm::vec4 v{};
 
@@ -40,13 +39,12 @@ void CascadedShadows::genRandomOffsetData() {
 				v.z = (x2 + 0.5f) + jitter(-0.5f, 0.5f);
 				v.w = (y2 + 0.5f) + jitter(-0.5f, 0.5f);
 
-				v.x /= this->offsetTextureSamplesU;
-				v.y /= this->offsetTextureSamplesV;
-				v.z /= this->offsetTextureSamplesU;
-				v.w /= this->offsetTextureSamplesV;
+				v.x /= samplesU;
+				v.y /= samplesV;
+				v.z /= samplesU;
+				v.w /= samplesV;
 
-				int cell = ((k / 2) * this->offsetTextureSize * this->offsetTextureSize +
-					j * this->offsetTextureSize + i) * 4;
+				int cell = ((k / 2) * size * size + j * size + i) * 4;
 
 				offsetData[cell + 0] = glm::sqrt(v.y) * glm::cos(glm::two_pi<float>() * v.x);
 				offsetData[cell + 1] = glm::sqrt(v.y) * glm::sin(glm::two_pi<float>() * v.x);
@@ -56,14 +54,13 @@ void CascadedShadows::genRandomOffsetData() {
 		}
 	}
 
+	this->noiseTextureSize = glm::vec3(size, size, samples / 2);
+
 	glGenTextures(1, &this->randomOffset);
 	glBindTexture(GL_TEXTURE_3D, this->randomOffset);
 
-	glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA32F, this->offsetTextureSize, this->offsetTextureSize, samples / 2);
-	glTexSubImage3D(
-		GL_TEXTURE_3D, 0, 0, 0, 0, this->offsetTextureSize, this->offsetTextureSize,
-		samples / 2, GL_RGBA, GL_FLOAT, offsetData
-	);
+	glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA32F, size, size, samples / 2);
+	glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, size, size, samples / 2, GL_RGBA, GL_FLOAT, offsetData);
 
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -130,7 +127,7 @@ void CascadedShadows::calcSplitDepths(float lambda) {
 void CascadedShadows::calcFrustumCorners(glm::mat4 projection, glm::mat4 view) {
 	glm::mat4 inverse = glm::inverse(projection * view);
 
-	this->frustumCorners.clear();
+	int index = 0;
 
 	for (int x = 0; x < 2; x++) {
 		for (int y = 0; y < 2; y++) {
@@ -140,13 +137,13 @@ void CascadedShadows::calcFrustumCorners(glm::mat4 projection, glm::mat4 view) {
 				point = inverse * point;
 				point /= point.w;
 
-				this->frustumCorners.push_back(point);
+				this->frustumCorners[index++] = point;
 			}
 		}
 	}
 }
 
-void CascadedShadows::calcLightSpaceMatrix(glm::mat4 view, glm::vec3 lightDir,
+glm::mat4 CascadedShadows::calcLightSpaceMatrix(glm::mat4 view, glm::vec3 lightDir,
 	int windowWidth, int windowHeight, const float& nearPlane, const float& farPlane)
 {
 	float aspect = (float)windowWidth / windowHeight;
@@ -159,7 +156,7 @@ void CascadedShadows::calcLightSpaceMatrix(glm::mat4 view, glm::vec3 lightDir,
 	for (const auto& corner : this->frustumCorners)
 		center += glm::vec3(corner);
 
-	center /= this->frustumCorners.size();
+	center /= 8;
 
 	glm::mat4 lightView = glm::lookAt(
 		center + lightDir,
@@ -167,60 +164,77 @@ void CascadedShadows::calcLightSpaceMatrix(glm::mat4 view, glm::vec3 lightDir,
 		glm::vec3(0.f, 1.f, 0.f)
 	);
 
-	glm::vec3 min{ std::numeric_limits<float>::max() };
-	glm::vec3 max{ std::numeric_limits<float>::lowest() };
+	glm::vec3 zMin{ std::numeric_limits<float>::max() };
+	glm::vec3 zMax{ std::numeric_limits<float>::lowest() };
 
 	for (const glm::vec4& corner : this->frustumCorners) {
 		glm::vec3 trf = glm::vec3(lightView * corner);
-		min = glm::min(min, trf);
-		max = glm::max(max, trf);
+		zMin = glm::min(zMin, trf);
+		zMax = glm::max(zMax, trf);
 	}
 
 	float zMult = 10.f;
 
-	min.z = (min.z < 0.f) ? min.z * zMult : min.z / zMult;
-	max.z = (max.z < 0.f) ? max.z / zMult : max.z * zMult;
+	zMin.z = (zMin.z < 0.f) ? zMin.z * zMult : zMin.z / zMult;
+	zMax.z = (zMax.z < 0.f) ? zMax.z / zMult : zMax.z * zMult;
 
-	glm::mat4 lightProjection = glm::ortho(min.x, max.x, min.y, max.y, -max.z, -min.z);
+	glm::mat4 lightProjection = glm::ortho(zMin.x, zMax.x, zMin.y, zMax.y, -zMax.z, -zMin.z);
 
-	this->lightSpaceMatrices.push_back(lightProjection * lightView);
+	return lightProjection * lightView;
 }
 
 void CascadedShadows::calcLightSpaceMatrices(glm::mat4 view, glm::vec3 lightDir, int windowWidth, int windowHeight)
 {
-	this->lightSpaceMatrices.clear();
-
 	for (int i = 0; i < this->numCascades + 1; i++) {
 		if (i == 0) {
-			this->calcLightSpaceMatrix(
+			this->lightSpaceMatrices[i] = this->calcLightSpaceMatrix(
 				view, lightDir, windowWidth, windowHeight, ::near_plane, this->cascadeSplits[i]
 			);
 		}
 		else if (i < this->numCascades) {
-			this->calcLightSpaceMatrix(
+			this->lightSpaceMatrices[i] = this->calcLightSpaceMatrix(
 				view, lightDir, windowWidth, windowHeight, this->cascadeSplits[i - 1], this->cascadeSplits[i]
 			);
 		}
 		else {
-			this->calcLightSpaceMatrix(
+			this->lightSpaceMatrices[i] = this->calcLightSpaceMatrix(
 				view, lightDir, windowWidth, windowHeight, this->cascadeSplits[i - 1], ::far_plane
 			);
 		}
 	}
+
+	glBindBuffer(GL_UNIFORM_BUFFER, this->UBO);
+
+	for (int i = 0; i < this->numCascades + 1; i++) {
+		glBufferSubData(GL_UNIFORM_BUFFER, i * sizeof(glm::mat4x4), sizeof(glm::mat4x4), &this->lightSpaceMatrices[i]);
+	}
+
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 void CascadedShadows::calculateShadows(glm::mat4 view, int windowWidth, int windowHeight, std::vector<Mesh*>& meshes,
 	glm::vec3 lightPosition, GLuint currFramebuffer)
 {
 	this->calcLightSpaceMatrices(view, lightPosition, windowWidth, windowHeight);
-
-	glBindBuffer(GL_UNIFORM_BUFFER, this->UBO);
-
-	for (size_t i = 0; i < this->lightSpaceMatrices.size(); i++) {
-		glBufferSubData(GL_UNIFORM_BUFFER, i * sizeof(glm::mat4x4), sizeof(glm::mat4x4), &this->lightSpaceMatrices.at(i));
+	/*this->computeShader.useShader();
+	this->computeShader.setVec3("lightDirection", lightPosition);
+	std::string buffer{};
+	for (int i = 0; i < this->cascadeSplits.size(); i++) {
+		buffer = "cascadeSplits[" + std::to_string(i) + "]";
+		this->computeShader.setFloat(buffer.c_str(), this->cascadeSplits[i]);
 	}
 
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	this->computeShader.setFloat("nearPlane", ::near_plane);
+	this->computeShader.setFloat("farPlane", ::far_plane);
+	this->computeShader.setFloat("aspect", (float)windowWidth / windowHeight);
+	this->computeShader.setFloat("shadowMapResolution", (float)this->mapResolution);
+	this->computeShader.setInt("numCascades", this->numCascades);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->UBO);
+	this->computeShader.dispatchComputeShader(1, 1, 1);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+	this->computeShader.endShader();*/
 
 	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
@@ -232,6 +246,7 @@ void CascadedShadows::calculateShadows(glm::mat4 view, int windowWidth, int wind
 	glPolygonOffset(3.f, 3.f);
 
 	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_CLAMP);
 	glCullFace(GL_FRONT);
 
 	for (size_t i = 0; i < meshes.size(); i++) {
@@ -243,6 +258,7 @@ void CascadedShadows::calculateShadows(glm::mat4 view, int windowWidth, int wind
 	glDisable(GL_CULL_FACE);
 
 	glDisable(GL_POLYGON_OFFSET_FILL);
+	glDisable(GL_DEPTH_CLAMP);
 
 	this->shader.endShader();
 

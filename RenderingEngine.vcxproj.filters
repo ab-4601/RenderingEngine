@@ -718,5 +718,8 @@
     <None Include="PBR.geom">
       <Filter>Shaders\Lighting\PBR\Forward</Filter>
     </None>
+    <None Include="CSM.comp">
+      <Filter>Shaders\Shadow\Cascaded Shadows</Filter>
+    </None>
   </ItemGroup>
 </Project>

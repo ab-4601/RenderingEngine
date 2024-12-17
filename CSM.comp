@@ -1,0 +1,137 @@
+#version 450 core
+
+precision highp float;
+precision highp int;
+
+layout (local_size_x = 1) in;
+
+const float MAX_FLOAT = 3.402823466e+38f;
+const int MAX_CASCADES = 16;
+
+layout (std140, binding = 0) uniform cameraSpaceMatrix {
+	mat4 projection;
+	mat4 view;
+};
+
+layout (std430, binding = 1) buffer LightSpaceMatrices {
+	mat4 lightSpaceMatrices[16];
+};
+
+uniform vec3 lightDirection;
+uniform float cascadeSplits[MAX_CASCADES];
+uniform float nearPlane;
+uniform float farPlane;
+uniform float aspect;
+uniform int numCascades;
+
+vec4 frustumCorners[8];
+
+mat4 lookAt(vec3 eye, vec3 center, vec3 up) {
+	vec3 f = normalize(center - eye);
+	vec3 s = normalize(cross(f, up));
+	vec3 u = cross(s, f);
+
+	mat4 result = mat4(1.f);
+    result[0][0] = s.x;
+	result[1][0] = s.y;
+	result[2][0] = s.z;
+    result[0][1] = u.x;
+	result[1][1] = u.y;
+	result[2][1] = u.z;
+    result[0][2] = -f.x;
+	result[1][2] = -f.y;
+	result[2][2] = -f.z;
+    result[3][0] = -dot(s, eye);
+    result[3][1] = -dot(u, eye);
+    result[3][2] = dot(f, eye);
+
+    return result;
+}
+
+mat4 perspective(float fovy, float aspect, float zNear, float zFar) {
+    float tanHalfFovy = tan(radians(fovy) / 2.f);
+
+    mat4 result = mat4(0.f);
+    result[0][0] = 1.f / (aspect * tanHalfFovy);
+    result[1][1] = 1.f / tanHalfFovy;
+    result[2][2] = -(zFar + zNear) / (zFar - zNear);
+    result[2][3] = -1.f;
+    result[3][2] = -(2.f * zFar * zNear) / (zFar - zNear);
+    return result;
+}
+
+mat4 ortho(float left, float right, float bottom, float top, float zNear, float zFar) {
+	mat4 result = mat4(1.f);
+    result[0][0] = 2.f / (right - left);
+    result[1][1] = 2.f / (top - bottom);
+    result[2][2] = -2.f / (zFar - zNear);
+    result[3][0] = -(right + left) / (right - left);
+    result[3][1] = -(top + bottom) / (top - bottom);
+    result[3][2] = -(zFar + zNear) / (zFar - zNear);
+    return result;
+}
+
+void calcFrustumCorners(mat4 projectionMatrix) {
+	int index = 0;
+	mat4 invViewProjection = inverse(projectionMatrix * view);
+
+	for(int x = 0; x < 2; x++) {
+		for(int y = 0; y < 2; y++) {
+			for(int z = 0; z < 2; z++) {
+				vec4 point = vec4(2.f * x - 1.f, 2.f * y - 1.f, 2.f * z - 1.f, 1.f);
+
+				point = invViewProjection * point;
+				point /= point.w;
+
+				frustumCorners[index] = point;
+				++index;
+			}
+		}
+	}
+}
+
+mat4 calcLightSpaceMatrix(float zNear, float zFar) {
+	mat4 projectionMatrix = perspective(45.f, aspect, zNear, zFar);
+
+	vec3 center = vec3(0.f, 0.f, 0.f);
+
+	calcFrustumCorners(projectionMatrix);
+	for(int i = 0; i < 8; i++)
+		center += vec3(frustumCorners[i]);
+
+	center /= 8.f;
+
+	mat4 lightView = lookAt(center + lightDirection, center, vec3(0.f, 1.f, 0.f));
+
+	vec3 zMin = vec3(MAX_FLOAT);
+	vec3 zMax = vec3(-MAX_FLOAT);
+
+	for(int i = 0; i < 8; i++) {
+		vec3 trf = vec3(lightView * frustumCorners[i]);
+		zMin = min(zMin, trf);
+		zMax = max(zMax, trf);
+	}
+
+	float zMult = 10.f;
+
+	zMin.z = (zMin.z < 0.f) ? zMin.z * zMult : zMin.z / zMult;
+	zMax.z = (zMax.z < 0.f) ? zMax.z / zMult : zMax.z * zMult;
+
+	mat4 lightProjection = ortho(zMin.x, zMax.x, zMin.y, zMax.y, -zMax.z, -zMin.z);
+
+	return lightProjection * lightView;
+}
+
+void main() {
+	for(int i = 0; i < 16; i++)
+		lightSpaceMatrices[i] = mat4(1.f);
+
+	for(int i = 0; i < numCascades + 1; i++) {
+		if(i == 0)
+			lightSpaceMatrices[i] = calcLightSpaceMatrix(nearPlane, cascadeSplits[i]);
+		else if(i < numCascades)
+			lightSpaceMatrices[i] = calcLightSpaceMatrix(cascadeSplits[i - 1], cascadeSplits[i]);
+		else
+			lightSpaceMatrices[i] = calcLightSpaceMatrix(cascadeSplits[i - 1], farPlane);
+	}
+}

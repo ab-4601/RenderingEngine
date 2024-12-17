@@ -30,7 +30,7 @@ public:
 	void _newFrame();
 	void _updateTransformOperation(const Window& window);
 	void renderGUI(
-		ImGuiIO& io, float& exposure, float& filterRadius, bool& drawSkybox, bool& displayGrid,
+		ImGuiIO& io, float& exposure, float& shadowRadius, float& filterRadius, bool& drawSkybox, bool& displayGrid,
 		bool& displayCoordinateSystem, bool& enableBloom, bool& enableWireframe, 
 		bool& enableShadows, bool& enableHDR, bool& enableSSAO, glm::vec3& dirLightLocation, Mesh* currMesh = nullptr
 	);
