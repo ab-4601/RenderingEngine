@@ -48,6 +48,13 @@ void Terrain::generateTexCoords() {
 			this->texCoords.push_back((float)i / 10);
 		}
 	}
+
+	int index = 0;
+
+	for (Vertex& vertex : this->vertices) {
+		vertex.texel = glm::vec2(this->texCoords[index], this->texCoords[index + 1]);
+		index += 2;
+	}
 }
 
 void Terrain::generateVertexNormals() {
@@ -59,32 +66,31 @@ void Terrain::generateVertexNormals() {
 
 	if (noise.getAmplitude() == 0.f) {
 		normal = glm::vec3(0.f, 1.f, 0.f);
-		for (int i = 0; i < numOfPoints; i++) {
-			this->addNormals(normal);
-		}
+		for (int i = 0; i < numOfPoints; i++)
+			this->vertices[i].normal = normal;
 	}
 	else {
 		for (int i = 0; i < numOfPoints; i++) {
-			currPoint = this->vertexCoords.at(i);
+			currPoint = this->vertices.at(i).position;
 
 			if (currRow == this->rows) {
 				if ((i + 1) % this->cols == 0) {
-					a = this->vertexCoords.at(i - 1);
-					b = this->vertexCoords.at(i - this->cols);
+					a = this->vertices.at(i - 1).position;
+					b = this->vertices.at(i - this->cols).position;
 				}
 				else {
-					a = this->vertexCoords.at(i - this->cols);
-					b = this->vertexCoords.at(i + 1);
+					a = this->vertices.at(i - this->cols).position;
+					b = this->vertices.at(i + 1).position;
 				}
 			}
 			else {
 				if ((i + 1) % this->cols == 0) {
-					a = this->vertexCoords.at(i + this->cols);
-					b = this->vertexCoords.at(i - 1);
+					a = this->vertices.at(i + this->cols).position;
+					b = this->vertices.at(i - 1).position;
 				}
 				else {
-					a = this->vertexCoords.at(i + 1);
-					b = this->vertexCoords.at(i + 1 + this->cols);
+					a = this->vertices.at(i + 1).position;
+					b = this->vertices.at(i + 1 + this->cols).position;
 				}
 			}
 
@@ -92,9 +98,9 @@ void Terrain::generateVertexNormals() {
 				++currRow;
 
 			normal = glm::cross(a - currPoint, b - currPoint);
-			normal *= this->scale;
+			normal = glm::normalize(normal);
 
-			this->addNormals(normal);
+			this->vertices[i].normal = normal;
 		}
 	}
 }
@@ -147,8 +153,7 @@ void Terrain::generateTerrain(float scale) {
 			for (int c = -(int)this->cols / 2; c < (int)this->cols / 2; c++) {
 				glm::vec3 vertex(r * this->scale, 0, c * this->scale);
 
-				this->addVertex(vertex);
-				this->vertexCoords.push_back(vertex);
+				this->vertices.push_back(Vertex{ vertex });
 			}
 		}
 	}
@@ -157,8 +162,7 @@ void Terrain::generateTerrain(float scale) {
 			for (int c = -(int)this->cols / 2; c < (int)this->cols / 2; c++) {
 				glm::vec3 vertex(r * this->scale, finalHeightMap.at(index++), c * this->scale);
 
-				this->addVertex(vertex);
-				this->vertexCoords.push_back(vertex);
+				this->vertices.push_back(Vertex{ vertex });
 			}
 		}
 	}

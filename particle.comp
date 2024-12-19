@@ -1,53 +1,118 @@
 #version 450 core
 
-layout (local_size_x = 256) in;
+layout (local_size_x = 1) in;
+
+precision highp float;
+precision highp int;
 
 struct Particle {
-	vec4 position;
-	vec4 velocity;
-	vec4 color;
-	float life;
+	vec3 position;
+	vec3 velocity;
+	vec3 color;
+
 	float forceEffect;
-	int textureIndex;
-	vec4 atlasCoords;
+	float rotation;
+	float scale;
+	float lifeTime;
+	float distanceFromCamera;
+
+	float elapsedTime;
+	float delta;
+
+	vec2 texOffset1;
+	vec2 texOffset2;
+	float blend;
 };
 
-const float GRAVITY = 10.f;
+void translate(out mat4 matrix, vec3 offset) {
+	matrix[3] = vec4(offset, 1.f);
+}
 
-layout (std430, binding = 0) buffer ParticleBuffer {
+void scale(out mat4 matrix, vec3 scaleFactors) {
+	matrix[0][0] = scaleFactors.x;
+	matrix[1][1] = scaleFactors.y;
+	matrix[2][2] = scaleFactors.z;
+}
+
+void rotate(out mat4 matrix, float angle, vec3 axis) {
+	axis = normalize(axis);
+	float cosTheta = cos(angle);
+	float sinTheta = sin(angle);
+	float oneMinusCos = 1.f - cosTheta;
+
+	matrix[0][0] = cosTheta + axis.x * axis.x * oneMinusCos;
+    matrix[0][1] = axis.x * axis.y * oneMinusCos - axis.z * sinTheta;
+    matrix[0][2] = axis.x * axis.z * oneMinusCos + axis.y * sinTheta;
+
+    matrix[1][0] = axis.y * axis.x * oneMinusCos + axis.z * sinTheta;
+    matrix[1][1] = cosTheta + axis.y * axis.y * oneMinusCos;
+    matrix[1][2] = axis.y * axis.z * oneMinusCos - axis.x * sinTheta;
+
+    matrix[2][0] = axis.z * axis.x * oneMinusCos - axis.y * sinTheta;
+    matrix[2][1] = axis.z * axis.y * oneMinusCos + axis.x * sinTheta;
+    matrix[2][2] = cosTheta + axis.z * axis.z * oneMinusCos;
+}
+
+layout (std140, binding = 2) buffer particleMatrices {
+	mat4 modelViewMatrices[];
+};
+
+layout (std140, binding = 3) buffer blendValues {
+	float blendFactors[];
+};
+
+layout (std140, binding = 0) uniform cameraSpaceMatrix {
+	mat4 projection;
+	mat4 view;
+};
+
+layout (std140, binding = 1) buffer ParticleBuffer {
 	Particle particles[];
 };
 
-layout (std430, binding = 1) buffer ExistingParticleBuffer {
-	Particle existingParticles[];
-};
+uniform ivec2 atlasInfo; // number of rows and columns in the atlas
+uniform int numParticles;
 
-layout (std430, binding = 2) buffer CounterBuffer {
-	uint particleCount;
-};
+mat4 updateModelViewMatrix(vec3 particlePosition, float particleRotation, float particleScale) {
+	mat4 model = mat4(1.f);
 
-uniform float deltaTime;
-uniform int atlasSize;
+	translate(model, particlePosition);
+
+	for(int i = 0; i < 3; i++)
+		for(int j = 0; j < 3; j++)
+			model[i][j] = view[j][i];
+
+	rotate(model, particleRotation, vec3(0.f, 0.f, 1.f));
+	scale(model, vec3(particleScale));
+
+	return view * model;
+}
+
+void setParticleTextureOffset(out vec2 offset, int index) {
+	int col = index % atlasInfo.y;
+	int row = index / atlasInfo.x;
+
+	offset.x = float(col) / atlasInfo.y;
+	offset.y = float(row) / atlasInfo.x;
+}
+
+void updateParticleTextureInfo(inout Particle particle, int index) {
+	float lifeFactor = particle.elapsedTime / particle.lifeTime;
+	int stageCount = int(pow(atlasInfo.x, 2));
+	float atlasProgression = lifeFactor * stageCount;
+
+	int index1 = int(floor(atlasProgression));
+	int index2 = index1 < stageCount - 1 ? index1 + 1 : index1;
+
+	blendFactors[index] = atlasProgression - floor(atlasProgression);
+
+	setParticleTextureOffset(particle.texOffset1, index1);
+	setParticleTextureOffset(particle.texOffset2, index2);
+}
 
 void main() {
-	uint idx = gl_GlobalInvocationID.x;
-
-	Particle p = particles[idx];
-
-	p.life -= deltaTime;
-
-	if(p.life <= 0) {
-		p.velocity.y += GRAVITY * p.forceEffect * deltaTime;
-
-		int row = p.textureIndex;
-		int col = p.textureIndex % atlasSize;
-
-		float texSize = 1.f / float(atlasSize);
-		float xMin = col * texSize;
-		float yMin = row * texSize;
-		p.atlasCoords = vec4(xMin, yMin, xMin + texSize, yMin + texSize);
-
-		uint particleIdx = atomicAdd(particleCount, 1);
-		existingParticles[particleIdx] = p;
+	for(int i = 0; i < numParticles; i++) {
+		modelViewMatrices[i] = updateModelViewMatrix(particles[i].position, particles[i].rotation, particles[i].scale);
+		updateParticleTextureInfo(particles[i], i);
 	}
 }

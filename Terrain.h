@@ -18,18 +18,7 @@ private:
 
 	std::vector<glm::vec3> vertexCoords;
 	std::vector<std::vector<float>> heightMaps;
-
-	void addNormals(const glm::vec3& vertex) {
-		this->normals.push_back(vertex.x);
-		this->normals.push_back(vertex.y);
-		this->normals.push_back(vertex.z);
-	}
-
-	void addVertex(const glm::vec3& vertex) {
-		this->vertices.push_back(vertex.x);
-		this->vertices.push_back(vertex.y);
-		this->vertices.push_back(vertex.z);
-	}
+	std::vector<float> texCoords;
 
 	void generateIndices();
 	void generateTexCoords();

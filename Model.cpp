@@ -1,5 +1,14 @@
 #include "Model.h"
 
+static std::ostream& operator<<(std::ostream& os, Vertex& vertex) {
+	os << "Position: " << vertex.position.x << ", " << vertex.position.y << ", " << vertex.position.z << "\n";
+	os << "Texel: " << vertex.normal.x << ", " << vertex.texel.y << "\n";
+	os << "Normal: " << vertex.normal.x << ", " << vertex.normal.y << ", " << vertex.normal.z << "\n";
+	os << "Tangent: " << vertex.tangent.x << ", " << vertex.tangent.y << ", " << vertex.tangent.z << "\n";
+
+	return os;
+}
+
 Model::Model(std::string fileName, std::string texFolderPath, aiTextureType diffuseMap,
 	aiTextureType normalMap, aiTextureType metallicMap, bool isStrippedNormal)
 	: texFolderPath{ texFolderPath }
@@ -10,35 +19,6 @@ Model::Model(std::string fileName, std::string texFolderPath, aiTextureType diff
 	this->heightMaps.clear();
 
 	this->loadModel(fileName, diffuseMap, normalMap, metallicMap, isStrippedNormal);
-}
-
-void Model::createModel() {
-	glGenVertexArrays(1, &this->VAO);
-	glBindVertexArray(this->VAO);
-
-	glGenBuffers(1, &this->VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-	glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(float), this->vertices.data(), GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 11, (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 11, (void*)(sizeof(float) * 3));
-	glEnableVertexAttribArray(1);
-
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 11, (void*)(sizeof(float) * 5));
-	glEnableVertexAttribArray(2);
-
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 11, (void*)(sizeof(float) * 8));
-	glEnableVertexAttribArray(3);
-
-	glGenBuffers(1, &this->IBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->IBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(uint), this->indices.data(), GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
 }
 
 void Model::_loadNode(aiNode* node, const aiScene* const scene, bool isStrippedNormal) {
@@ -52,18 +32,16 @@ void Model::_loadNode(aiNode* node, const aiScene* const scene, bool isStrippedN
 void Model::_loadMesh(aiMesh* mesh, const aiScene* const scene, bool isStrippedNormal) {
 	this->vertices.clear();
 	this->indices.clear();
+	Vertex vertex{};
 
 	for (size_t i = 0; i < mesh->mNumVertices; i++) {
-		this->vertices.insert(this->vertices.end(), { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z });
-		
-		if (mesh->mTextureCoords[0])
-			this->vertices.insert(this->vertices.end(), { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y });
-		else
-			this->vertices.insert(this->vertices.end(), { 0.f, 0.f });
+		vertex.position = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+		vertex.texel = (mesh->mTextureCoords[0]) ? glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y)
+			: glm::vec2(0.f);
+		vertex.normal = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+		vertex.tangent = glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
 
-		this->vertices.insert(this->vertices.end(), { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z });
-
-		this->vertices.insert(this->vertices.end(), { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z });
+		this->vertices.push_back(vertex);
 	}
 
 	for (size_t i = 0; i < mesh->mNumFaces; i++) {
@@ -77,7 +55,7 @@ void Model::_loadMesh(aiMesh* mesh, const aiScene* const scene, bool isStrippedN
 	currMesh->setObjectID(-1);
 	currMesh->setVertices(this->vertices);
 	currMesh->setIndices(this->indices);
-	currMesh->createModel(isStrippedNormal);
+	currMesh->loadMesh(true, true, true, true, isStrippedNormal);
 
 	this->meshList.push_back(currMesh);
 	this->meshToTex.push_back(mesh->mMaterialIndex);

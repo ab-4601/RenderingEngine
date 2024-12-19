@@ -16,15 +16,12 @@ private:
 	std::vector<Texture*> metalnessMaps;
 	std::vector<unsigned int> meshToTex;
 
-	std::vector<GLfloat> vertices;
+	std::vector<Vertex> vertices;
 	std::vector<uint> indices;
-
-	GLuint VAO{ 0 }, VBO{ 0 }, IBO{ 0 };
 
 	void _loadNode(aiNode* node, const aiScene* const scene, bool isStrippedNormal);
 	void _loadMesh(aiMesh* mesh, const aiScene* const scene, bool isStrippedNormal);
 	void _loadMaterialMap(const aiScene* const scene, std::vector<Texture*>& maps, aiTextureType textureType);
-	void createModel();
 
 public:
 	Model(std::string fileName = "", std::string texFolderPath = "",

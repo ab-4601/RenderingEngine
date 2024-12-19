@@ -10,7 +10,7 @@ ImGuiIO& Overlay::_init(GLFWwindow* window) {
     ImGui_ImplOpenGL3_Init("#version 450");
 
     io.Fonts->AddFontDefault();
-    mainfont = io.Fonts->AddFontFromFileTTF("Fonts/JetBrainsMonoNL-ExtraLight.ttf",
+    mainfont = io.Fonts->AddFontFromFileTTF("Fonts/JetBrainsMono-SemiBold.ttf",
         18.5f, NULL);
     IM_ASSERT(this->mainfont != NULL);
 
@@ -179,7 +179,7 @@ void Overlay::renderGUI(ImGuiIO& io, float& exposure, float& shadowRadius, float
 
     if (ImGui::TreeNode("Shadows")) {
         ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
-            this->DrawDragFloat("Shadow Radius", &shadowRadius, 0.001f, 150.f);
+            this->DrawDragFloat("PCF filter radius", &shadowRadius, 0.001f, 150.f);
         ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
         ImGui::TreePop();
     }

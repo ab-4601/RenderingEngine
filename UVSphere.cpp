@@ -5,21 +5,10 @@ UVSphere::UVSphere(unsigned int stackCount, unsigned int sectorCount, float radi
 
 }
 
-void UVSphere::addVertex(float x, float y, float z) {
-	this->vertices.push_back(x);
-	this->vertices.push_back(y);
-	this->vertices.push_back(z);
-}
+void UVSphere::addVertex(glm::vec3 position, glm::vec3 normal, glm::vec2 texel) {
+	Vertex vertex{ position, texel, normal };
 
-void UVSphere::addNormal(float x, float y, float z) {
-	this->normals.push_back(x);
-	this->normals.push_back(y);
-	this->normals.push_back(z);
-}
-
-void UVSphere::addTexel(float u, float v) {
-	this->texCoords.push_back(u);
-	this->texCoords.push_back(v);
+	this->vertices.push_back(vertex);
 }
 
 void UVSphere::addIndices(unsigned int a, unsigned int b, unsigned int c) {
@@ -37,6 +26,9 @@ void UVSphere::generateSphere() {
 	float stackStep = PI / this->stackCount;
 	float sectorAngle{}, stackAngle{};
 
+	glm::vec3 position{}, normal{};
+	glm::vec2 texel{};
+
 	for (int i = 0; i <= this->stackCount; i++) {
 		stackAngle = (PI / 2) - (i * stackStep);
 		xy = this->radius * cosf(stackAngle);
@@ -49,17 +41,18 @@ void UVSphere::generateSphere() {
 			x = xy * cosf(sectorAngle);
 			y = xy * sinf(sectorAngle);
 
-			this->addVertex(x, y, z);
+			position = glm::vec3(x, y, z);
 
 			nx = x * lengthInv;
 			ny = y * lengthInv;
 			
-			this->addNormal(nx, ny, nz);
+			normal = glm::vec3(nx, ny, nz);
 
 			u = (float)j / sectorCount;
 			v = (float)i / stackCount;
 
-			this->addTexel(u, v);
+			texel = glm::vec2(u, v);
+			this->addVertex(position, normal, texel);
 		}
 	}
 

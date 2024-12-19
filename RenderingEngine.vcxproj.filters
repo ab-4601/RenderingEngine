@@ -28,12 +28,6 @@
     <Filter Include="Source Files\Lighting">
       <UniqueIdentifier>{d2efa2f5-a4d7-4131-bc8b-8da1860c8e5e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Geometry">
-      <UniqueIdentifier>{470c2b84-2db5-4bc8-852c-03cd22acb577}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Geometry">
-      <UniqueIdentifier>{f89244ad-33db-4834-8f76-913220fda893}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\CoreDependencies">
       <UniqueIdentifier>{03b99fe3-ff27-497f-aed3-fe1feec2253e}</UniqueIdentifier>
     </Filter>
@@ -193,6 +187,12 @@
     <Filter Include="Source Files\CoreDependencies\Engine Core\Renderer">
       <UniqueIdentifier>{8c33551d-17c0-48a7-b772-b245d59cd0b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\CoreDependencies\Engine Core\Geometry">
+      <UniqueIdentifier>{470c2b84-2db5-4bc8-852c-03cd22acb577}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\CoreDependencies\Engine Core\Geometry">
+      <UniqueIdentifier>{f89244ad-33db-4834-8f76-913220fda893}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -220,10 +220,10 @@
       <Filter>Source Files\Lighting</Filter>
     </ClCompile>
     <ClCompile Include="Line.cpp">
-      <Filter>Source Files\Geometry</Filter>
+      <Filter>Source Files\CoreDependencies\Engine Core\Geometry</Filter>
     </ClCompile>
     <ClCompile Include="Icosphere.cpp">
-      <Filter>Source Files\Geometry</Filter>
+      <Filter>Source Files\CoreDependencies\Engine Core\Geometry</Filter>
     </ClCompile>
     <ClCompile Include="Terrain.cpp">
       <Filter>Source Files\TerrainGenerator</Filter>
@@ -235,13 +235,13 @@
       <Filter>Source Files\ParticleSystem</Filter>
     </ClCompile>
     <ClCompile Include="UVSphere.cpp">
-      <Filter>Source Files\Geometry</Filter>
+      <Filter>Source Files\CoreDependencies\Engine Core\Geometry</Filter>
     </ClCompile>
     <ClCompile Include="PerlinNoise.cpp">
       <Filter>Source Files\TerrainGenerator</Filter>
     </ClCompile>
     <ClCompile Include="Cube.cpp">
-      <Filter>Source Files\Geometry</Filter>
+      <Filter>Source Files\CoreDependencies\Engine Core\Geometry</Filter>
     </ClCompile>
     <ClCompile Include="Water.cpp">
       <Filter>Source Files\Water</Filter>
@@ -390,10 +390,10 @@
       <Filter>Header Files\Lighting</Filter>
     </ClInclude>
     <ClInclude Include="Icosphere.h">
-      <Filter>Header Files\Geometry</Filter>
+      <Filter>Header Files\CoreDependencies\Engine Core\Geometry</Filter>
     </ClInclude>
     <ClInclude Include="Line.h">
-      <Filter>Header Files\Geometry</Filter>
+      <Filter>Header Files\CoreDependencies\Engine Core\Geometry</Filter>
     </ClInclude>
     <ClInclude Include="Terrain.h">
       <Filter>Header Files\TerrainGenerator</Filter>
@@ -405,13 +405,13 @@
       <Filter>Header Files\ParticleSystem</Filter>
     </ClInclude>
     <ClInclude Include="UVSphere.h">
-      <Filter>Header Files\Geometry</Filter>
+      <Filter>Header Files\CoreDependencies\Engine Core\Geometry</Filter>
     </ClInclude>
     <ClInclude Include="PerlinNoise.h">
       <Filter>Header Files\TerrainGenerator</Filter>
     </ClInclude>
     <ClInclude Include="Cube.h">
-      <Filter>Header Files\Geometry</Filter>
+      <Filter>Header Files\CoreDependencies\Engine Core\Geometry</Filter>
     </ClInclude>
     <ClInclude Include="Water.h">
       <Filter>Header Files\Water</Filter>

@@ -2,41 +2,18 @@
 
 Icosphere::Icosphere()
     : Mesh() {
-    this->_generateIcosohedron();
+    this->_generateIcosahedron();
 }
 
-void Icosphere::addVertex(float x, float y, float z) {
-    this->vertices.push_back(x);
-    this->vertices.push_back(y);
-    this->vertices.push_back(z);
-}
-
-void Icosphere::addTempVertices(float x, float y, float z) {
-    this->tempVertices.push_back(x);
-    this->tempVertices.push_back(y);
-    this->tempVertices.push_back(z);
-}
-
-void Icosphere::addTempIndices(unsigned int a, unsigned int b, unsigned int c) {
-    this->tempIndices.push_back(a);
-    this->tempIndices.push_back(b);
-    this->tempIndices.push_back(c);
-}
-
-void Icosphere::addTexCoord(glm::vec2 uvCoord) {
-    this->texCoords.push_back(uvCoord.x);
-    this->texCoords.push_back(uvCoord.y);
-}
-
-void Icosphere::_generateIcosohedron() {
+void Icosphere::_generateIcosahedron() {
     const float X = 0.525731112119133606f;
     const float Z = 0.850650808352039932f;
     const float N = 0.f;
 
     this->vertices = {
-        -X,N,Z, X,N,Z, -X,N,-Z,  X,N,-Z,
-        N,Z,X,  N,Z,-X, N,-Z,X,  N,-Z,-X,
-        Z,X,N, -Z,X,N,  Z,-X,N, -Z,-X,N
+        Vertex({-X,N,Z}), Vertex({X,N,Z}), Vertex({-X,N,-Z}),  Vertex({X,N,-Z}),
+        Vertex({N,Z,X}),  Vertex({N,Z,-X}), Vertex({N,-Z,X}),  Vertex({N,-Z,-X}),
+        Vertex({Z,X,N}), Vertex({-Z,X,N}),  Vertex({Z,-X,N}), Vertex({-Z,-X,N})
     };
 
     this->indices = {
@@ -47,33 +24,25 @@ void Icosphere::_generateIcosohedron() {
     };
 }
 
-glm::vec2 Icosphere::getTexCoord(glm::vec3 point) {
-    point = glm::normalize(point);
-
-    float theta = atan2f(point.z, point.x);
-    float phi = acosf(point.y);
-
-    float u = static_cast<float>((theta + PI) / (2 * PI));
-    float v = static_cast<float>(phi / PI);
-
-    return glm::vec2(u, v);
-}
-
 void Icosphere::_generateTexCoords() {
-    glm::vec3 point{};
+    glm::vec3 point{ 0.f };
+    float theta{ 0.f }, phi{ 0.f }, u{ 0.f }, v{ 0.f };
+    for (size_t i = 0; i < this->vertices.size(); i++) {
+        point = glm::normalize(this->vertices.at(i).position);
 
-    for (size_t i = 0; i < this->vertices.size(); i += 3) {
-        point.x = vertices.at(i);
-        point.y = vertices.at(i + 1);
-        point.z = vertices.at(i + 2);
+        theta = atan2f(point.z, point.x);
+        phi = acosf(point.y);
 
-        glm::vec2 uvCoord = this->getTexCoord(point);
+        u = ((theta + PI) / (2 * PI));
+        v = (phi / PI);
 
-        this->addTexCoord(uvCoord);
+        this->vertices.at(i).texel = glm::vec2(u, v);
     }
 }
 
-void Icosphere::_subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, unsigned int index1, unsigned int index2, unsigned int index3) {
+void Icosphere::_subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, unsigned int index1, unsigned int index2,
+    unsigned int index3) 
+{
     glm::vec3 mid1 = (a + b) / 2.f;
     mid1 = glm::normalize(mid1);
 
@@ -83,14 +52,17 @@ void Icosphere::_subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, unsigned int i
     glm::vec3 mid3 = (a + c) / 2.f;
     mid3 = glm::normalize(mid3);
 
-    this->addVertex(mid1.x, mid1.y, mid1.z);
-    unsigned int newIndex1 = (unsigned int)(this->vertices.size() / 3) - 1;
+    glm::vec3 position{ mid1.x, mid1.y, mid1.z };
+    this->addVertex(position, glm::vec2(0.f), position);
+    unsigned int newIndex1 = (unsigned int)(this->vertices.size() - 1);
 
-    this->addVertex(mid2.x, mid2.y, mid2.z);
-    unsigned int newIndex2 = (unsigned int)(this->vertices.size() / 3) - 1;
+    position = glm::vec3(mid2.x, mid2.y, mid2.z);
+    this->addVertex(position, glm::vec2(0.f), position);
+    unsigned int newIndex2 = (unsigned int)(this->vertices.size() - 1);
 
-    this->addVertex(mid3.x, mid3.y, mid3.z);
-    unsigned int newIndex3 = (unsigned int)(this->vertices.size() / 3) - 1;
+    position = glm::vec3(mid3.x, mid3.y, mid3.z);
+    this->addVertex(position, glm::vec2(0.f), position);
+    unsigned int newIndex3 = (unsigned int)(this->vertices.size() - 1);
 
     this->addTempIndices(newIndex1, newIndex2, newIndex3);
     this->addTempIndices(index1, newIndex1, newIndex3);
@@ -101,32 +73,23 @@ void Icosphere::_subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, unsigned int i
 void Icosphere::smoothSphere(int subdivisions) {
     unsigned int index1{ 0 }, index2{ 0 }, index3{ 0 };
 
+    std::vector<unsigned int> tmpIndices{};
+    std::vector<Vertex> tmpVertices{};
+
     while (subdivisions != 0) {
-        std::vector<unsigned int> tmpIndices = this->indices;
-        std::vector<float> tmpVertices = this->vertices;
+        tmpIndices = this->indices;
+        tmpVertices = this->vertices;
 
         for (size_t i = 0; i < tmpIndices.size(); i += 3) {
             index1 = tmpIndices.at(i);
             index2 = tmpIndices.at(i + 1);
             index3 = tmpIndices.at(i + 2);
 
-            float x1 = tmpVertices.at(index1 * 3);
-            float y1 = tmpVertices.at((index1 * 3) + 1);
-            float z1 = tmpVertices.at((index1 * 3) + 2);
+            glm::vec3 a{ tmpVertices.at(index1).position };
 
-            glm::vec3 a(x1, y1, z1);
+            glm::vec3 b{ tmpVertices.at(index2).position };
 
-            float x2 = tmpVertices.at(index2 * 3);
-            float y2 = tmpVertices.at((index2 * 3) + 1);
-            float z2 = tmpVertices.at((index2 * 3) + 2);
-
-            glm::vec3 b(x2, y2, z2);
-
-            float x3 = tmpVertices.at(index3 * 3);
-            float y3 = tmpVertices.at((index3 * 3) + 1);
-            float z3 = tmpVertices.at((index3 * 3) + 2);
-
-            glm::vec3 c(x3, y3, z3);
+            glm::vec3 c{ tmpVertices.at(index3).position };
 
             this->_subdivide(a, b, c, index1, index2, index3);
         }
@@ -136,8 +99,6 @@ void Icosphere::smoothSphere(int subdivisions) {
 
         --subdivisions;
     }
-
-    this->normals = this->vertices;
 
     this->_generateTexCoords();
 }

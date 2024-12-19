@@ -3,10 +3,8 @@
 CascadedShadows::CascadedShadows(int windowWidth, int windowHeight, float lambda, int size, int samplesU, int samplesV)
 	: aspect{ (float)windowWidth / windowHeight } 
 {
-	for (int i = 0; i < ::MAX_CASCADES; i++) {
+	for (int i = 0; i < ::MAX_CASCADES; i++)
 		this->cascadeSplits[i] = 0;
-		this->lightSpaceMatrices[i] = glm::mat4(1.f);
-	}
 
 	this->calcSplitDepths(lambda);
 	this->setComputeUniforms();
@@ -80,11 +78,11 @@ void CascadedShadows::_init() {
 	glGenTextures(1, &this->shadowMaps);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, this->shadowMaps);
 
-	glTexStorage3D(
-		GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT32F, this->mapResolution, this->mapResolution, this->numCascades + 1
+	glTexImage3D(
+		GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, this->mapResolution, this->mapResolution,
+		this->numCascades + 1, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL
 	);
 
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_SPARSE_ARB, GL_TRUE);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -150,9 +148,7 @@ void CascadedShadows::calculateShadows(int windowWidth, int windowHeight, std::v
 	this->computeShader.useShader();
 	this->computeShader.setVec3("lightDirection", lightPosition);
 	
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->SSBO);
 	this->computeShader.dispatchComputeShader(1, 1, 1, GL_SHADER_STORAGE_BARRIER_BIT);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 	this->computeShader.endShader();
 
@@ -189,6 +185,9 @@ void CascadedShadows::calculateShadows(int windowWidth, int windowHeight, std::v
 CascadedShadows::~CascadedShadows() {
 	if (this->FBO != 0)
 		glDeleteFramebuffers(1, &this->FBO);
+
+	if (this->SSBO != 0)
+		glDeleteBuffers(1, &this->SSBO);
 
 	if (this->shadowMaps != 0)
 		glDeleteTextures(1, &this->shadowMaps);

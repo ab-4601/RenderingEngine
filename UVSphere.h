@@ -8,9 +8,7 @@ private:
 	unsigned int stackCount, sectorCount;
 	float radius;
 
-	void addVertex(float x, float y, float z);
-	void addNormal(float x, float y, float z);
-	void addTexel(float u, float v);
+	void addVertex(glm::vec3 position, glm::vec3 normal, glm::vec2 texel);
 	void addIndices(unsigned int a, unsigned int b, unsigned int c);
 
 	void generateIndices();

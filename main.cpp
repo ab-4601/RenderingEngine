@@ -112,7 +112,7 @@ int main() {
     sphere.smoothSphere(5);
     sphere.setColor({ 0.07f, 1.f, 1.f });
     sphere.setMeshMaterial(0.f, 0.f, 1.f);
-    sphere.createMeshWithNormals();
+    sphere.loadMesh();
 
     model = glm::mat4(1.f);
     model = glm::translate(model, glm::vec3(400.f, 100.f, 0.f));
@@ -128,7 +128,7 @@ int main() {
     cube.setColor({ 1.f, 0.07f, 0.07f });
     cube.setModelMatrix(model);
     cube.setMeshMaterial(0.f, 0.f, 1.f);;
-    cube.createUnindexedMesh();
+    cube.loadMesh(false, false);
 
     model = glm::mat4(1.f);
     model = glm::scale(model, glm::vec3(5.f, 5.f, 5.f));
@@ -137,7 +137,7 @@ int main() {
     terrain.generateHeightMaps(3);
     terrain.setMeshMaterial(0.f, 1.f, 1.f);
     terrain.generateTerrain();
-    terrain.createMeshWithNormals();
+    terrain.loadMesh(true);
     terrain.setModelMatrix(model);
     terrain.setColor(glm::vec3(0.2f, 0.2f, 0.2f));*/
 
@@ -209,7 +209,7 @@ int main() {
         pSystem.updateParticles(deltaTime, cameraPosition);
         //fireSystem.updateParticles(deltaTime, cameraPosition);
 
-        //if (elapsedTime >= 0.012f)
+        if (elapsedTime >= 0.012f)
         {
             currFramebuffer = 0;
             elapsedTime = 0.f;

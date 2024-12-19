@@ -13,8 +13,6 @@ private:
 	GLuint shadowMaps{ 0 }, randomOffset{ 0 };
 
 	float cascadeSplits[::MAX_CASCADES];
-	glm::mat4 lightSpaceMatrices[::MAX_CASCADES];
-	glm::vec4 frustumCorners[8];
 	glm::vec3 noiseTextureSize{ 0.f };
 
 	float aspect{ 0.f };

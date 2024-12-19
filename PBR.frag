@@ -142,10 +142,6 @@ vec3 fresnelSchlickRoughness(float theta) {
 	return F0 + (max(vec3(1.f - roughness), F0) - F0) * pow(clamp(1.f - theta, 0.f, 1.f), 5.f);
 }
 
-float rand(vec2 v){
-    return fract(sin(dot(v, vec2(12.9898, 78.233))) * 43758.5453);
-}
-
 float calculateDirectionalShadow() {
 	vec4 fragPosViewSpace = view * data_in.fragPos;
 	float depthVal = abs(fragPosViewSpace.z);
