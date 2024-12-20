@@ -7,7 +7,7 @@ class Window {
 private:
 	// Window variables
 	GLFWwindow* window;
-	unsigned int windowWidth, windowHeight;
+	uint windowWidth, windowHeight;
 	int bufferWidth, bufferHeight;
 
 	// Camera variables
@@ -35,7 +35,7 @@ private:
 	}
 
 public:
-	Window();
+	Window(uint windowWidth = 0, uint windowHeight = 0);
 
 	// Setup window
 	void setupWindow();

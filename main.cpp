@@ -10,9 +10,9 @@
 #include "BloomRenderer.h"
 #include "MouseSelector.h"
 #include "CoordinateSystem.h"
-#include "Icosphere.h"
 #include "Cube.h"
 #include "UVSphere.h"
+#include "Icosphere.h"
 #include "Model.h"
 #include "Terrain.h"
 #include "LightSources.h"
@@ -53,14 +53,14 @@ int main() {
     Camera camera{ {-300, 100, 0}, window.getBufferWidth(), window.getBufferHeight() };
     Overlay overlay;
     HDR hdrBuffer{ window.getBufferWidth(), window.getBufferHeight() };
-    BloomRenderer bloom{ (int)window.getWindowWidth(), (int)window.getWindowHeight() };
+    BloomRenderer bloom{ window.getBufferWidth(), window.getBufferHeight() };
     Grid grid;
-    MouseSelector selection{ (uint)window.getBufferWidth(), (uint)window.getBufferHeight() };
+    MouseSelector selection{ window.getWindowWidth(), window.getWindowHeight() };
     CoordinateSystem coordSystem;
     Skybox skybox{ window.getBufferWidth(), window.getBufferHeight() };
     DirectionalLight mainLight{ 0.1f, 0.5f, lightDirection, { 1.f, 1.f, 1.f } };
     LightSources lightSources;
-    CascadedShadows csm(window.getBufferWidth(), window.getBufferHeight());
+    CascadedShadows csm{ window.getBufferWidth(), window.getBufferHeight(), 0.4f };
 
     PBRShader pbrShader;
     Shader outlineShader{ "highlight.vert", "highlight.frag" };
@@ -141,8 +141,6 @@ int main() {
     terrain.setModelMatrix(model);
     terrain.setColor(glm::vec3(0.2f, 0.2f, 0.2f));*/
 
-    meshes = Mesh::meshList;
-
     /*Model suntemple(
         "Models/SunTemple/SunTemple.fbx",
         "Models/SunTemple/Textures/",
@@ -160,7 +158,9 @@ int main() {
         aiTextureType_METALNESS
     );
 
-    //models.push_back(&sponza);
+    meshes = Mesh::meshList;
+
+    models.push_back(&sponza);
     //models.push_back(&suntemple);
 
     coordSystem.createCoordinateSystem();
@@ -240,7 +240,7 @@ int main() {
 
             if (enableShadows) {
                 csm.calculateShadows(
-                    window.getWindowWidth(), window.getWindowHeight(), Mesh::meshList, lightDirection, currFramebuffer
+                    window.getWindowWidth(), window.getWindowHeight(), meshes, models, lightDirection, currFramebuffer
                 );
             }
 
@@ -264,7 +264,7 @@ int main() {
 
             glm::vec2 mouseClickCoords = window.getViewportCoord();
 
-            if (window.getKeyPress(GLFW_KEY_TAB))
+            if (window.getKeyPress(GLFW_KEY_TAB)) 
             {
                 index = -1;
                 prevIndex = -1;

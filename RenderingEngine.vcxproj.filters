@@ -58,12 +58,6 @@
     <Filter Include="Header Files\Water">
       <UniqueIdentifier>{8c5ddd77-db26-4849-9121-02b5a78de091}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Water">
-      <UniqueIdentifier>{d279890f-80ea-4e65-9333-568d5225234c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shaders\Water">
-      <UniqueIdentifier>{446acecc-1d0e-4d8d-8288-4235b6674980}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders\Skybox">
       <UniqueIdentifier>{45f99647-aa72-4f2b-91f8-0b6eea32701b}</UniqueIdentifier>
     </Filter>
@@ -187,10 +181,10 @@
     <Filter Include="Source Files\CoreDependencies\Engine Core\Renderer">
       <UniqueIdentifier>{8c33551d-17c0-48a7-b772-b245d59cd0b7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\CoreDependencies\Engine Core\Geometry">
+    <Filter Include="Header Files\CoreDependencies\Engine Core\Model\Geometry">
       <UniqueIdentifier>{470c2b84-2db5-4bc8-852c-03cd22acb577}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\CoreDependencies\Engine Core\Geometry">
+    <Filter Include="Source Files\CoreDependencies\Engine Core\Model\Geometry">
       <UniqueIdentifier>{f89244ad-33db-4834-8f76-913220fda893}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -220,10 +214,10 @@
       <Filter>Source Files\Lighting</Filter>
     </ClCompile>
     <ClCompile Include="Line.cpp">
-      <Filter>Source Files\CoreDependencies\Engine Core\Geometry</Filter>
+      <Filter>Source Files\CoreDependencies\Engine Core\Model\Geometry</Filter>
     </ClCompile>
     <ClCompile Include="Icosphere.cpp">
-      <Filter>Source Files\CoreDependencies\Engine Core\Geometry</Filter>
+      <Filter>Source Files\CoreDependencies\Engine Core\Model\Geometry</Filter>
     </ClCompile>
     <ClCompile Include="Terrain.cpp">
       <Filter>Source Files\TerrainGenerator</Filter>
@@ -235,19 +229,13 @@
       <Filter>Source Files\ParticleSystem</Filter>
     </ClCompile>
     <ClCompile Include="UVSphere.cpp">
-      <Filter>Source Files\CoreDependencies\Engine Core\Geometry</Filter>
+      <Filter>Source Files\CoreDependencies\Engine Core\Model\Geometry</Filter>
     </ClCompile>
     <ClCompile Include="PerlinNoise.cpp">
       <Filter>Source Files\TerrainGenerator</Filter>
     </ClCompile>
     <ClCompile Include="Cube.cpp">
-      <Filter>Source Files\CoreDependencies\Engine Core\Geometry</Filter>
-    </ClCompile>
-    <ClCompile Include="Water.cpp">
-      <Filter>Source Files\Water</Filter>
-    </ClCompile>
-    <ClCompile Include="WaterShader.cpp">
-      <Filter>Source Files\Water</Filter>
+      <Filter>Source Files\CoreDependencies\Engine Core\Model\Geometry</Filter>
     </ClCompile>
     <ClCompile Include="LightingShader.cpp">
       <Filter>Source Files\CoreDependencies\ShaderLoaders</Filter>
@@ -390,10 +378,10 @@
       <Filter>Header Files\Lighting</Filter>
     </ClInclude>
     <ClInclude Include="Icosphere.h">
-      <Filter>Header Files\CoreDependencies\Engine Core\Geometry</Filter>
+      <Filter>Header Files\CoreDependencies\Engine Core\Model\Geometry</Filter>
     </ClInclude>
     <ClInclude Include="Line.h">
-      <Filter>Header Files\CoreDependencies\Engine Core\Geometry</Filter>
+      <Filter>Header Files\CoreDependencies\Engine Core\Model\Geometry</Filter>
     </ClInclude>
     <ClInclude Include="Terrain.h">
       <Filter>Header Files\TerrainGenerator</Filter>
@@ -405,18 +393,15 @@
       <Filter>Header Files\ParticleSystem</Filter>
     </ClInclude>
     <ClInclude Include="UVSphere.h">
-      <Filter>Header Files\CoreDependencies\Engine Core\Geometry</Filter>
+      <Filter>Header Files\CoreDependencies\Engine Core\Model\Geometry</Filter>
     </ClInclude>
     <ClInclude Include="PerlinNoise.h">
       <Filter>Header Files\TerrainGenerator</Filter>
     </ClInclude>
     <ClInclude Include="Cube.h">
-      <Filter>Header Files\CoreDependencies\Engine Core\Geometry</Filter>
+      <Filter>Header Files\CoreDependencies\Engine Core\Model\Geometry</Filter>
     </ClInclude>
     <ClInclude Include="Water.h">
-      <Filter>Header Files\Water</Filter>
-    </ClInclude>
-    <ClInclude Include="WaterShader.h">
       <Filter>Header Files\Water</Filter>
     </ClInclude>
     <ClInclude Include="Core.h">
@@ -576,12 +561,6 @@
     </None>
     <None Include="coord.vert">
       <Filter>Shaders\Coordinate System</Filter>
-    </None>
-    <None Include="water.vert">
-      <Filter>Shaders\Water</Filter>
-    </None>
-    <None Include="water.frag">
-      <Filter>Shaders\Water</Filter>
     </None>
     <None Include="skybox.frag">
       <Filter>Shaders\Skybox</Filter>

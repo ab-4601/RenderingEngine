@@ -1,8 +1,6 @@
 #pragma once
 
-#include "Core.h"
 #include "Mesh.h"
-#include "Line.h"
 #include "PerlinNoise.h"
 
 class Terrain : public Mesh {

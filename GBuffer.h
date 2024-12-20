@@ -1,9 +1,6 @@
 #pragma once
 
-#include "Core.h"
 #include "Model.h"
-#include "Shader.h"
-#include "Camera.h"
 
 class GBuffer {
 private:

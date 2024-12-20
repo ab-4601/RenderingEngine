@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Core.h"
 #include "Shader.h"
 #include "Camera.h"
 #include "Texture.h"
@@ -18,22 +17,35 @@ struct Vertex {
 	) : position{ position }, texel{ texel }, normal{ normal }, tangent{ tangent } {}
 };
 
+struct MeshMetaData {
+	uint baseVertex;
+	uint baseIndex;
+	uint numIndices;
+	uint materialIndex;
+
+	MeshMetaData(uint baseVertex = 0, uint baseIndex = 0, uint numIndices = 0, uint materialIndex = 0)
+		: baseVertex{ baseVertex }, baseIndex{ baseIndex }, numIndices{ numIndices }, materialIndex{ materialIndex } { }
+};
+
 class Mesh {
 protected:
 	static uint meshCount;
-	uint objectID;
+	uint objectID{ 0 };
 
-	glm::vec3 color;
-	glm::mat4 model;
-	glm::mat4 outlineModel;
+	glm::vec3 color{ 1.f };
+	glm::mat4 model{ 1.f };
+	glm::mat4 outlineModel{ 1.f };
+
 	std::vector<Vertex> vertices;
 	std::vector<uint> indices;
+	std::vector<MeshMetaData> renderData;
 
+	uint indexOffset{ 0 }, vertexOffset{ 0 };
 	GLfloat metallic{ 0.f }, roughness{ 0.f }, ao{ 0.f };
 
-	GLuint VAO;
-	GLuint VBO;
-	GLuint IBO;
+	GLuint VAO{ 0 };
+	GLuint VBO{ 0 };
+	GLuint IBO{ 0 };
 
 	Texture* diffuseMap = nullptr;
 	Texture* normalMap = nullptr;
@@ -41,13 +53,13 @@ protected:
 	Texture* metallicMap = nullptr;
 	Texture* roughnessMap = nullptr;
 
-	bool useDiffuseMap;
-	bool useNormalMap;
-	bool strippedNormalMap;
-	bool useMaterialMap;
-	bool drawIndexed;
-	bool calcShadows;
-	bool enableSSAO;
+	bool useDiffuseMap{ false };
+	bool useNormalMap{ false };
+	bool strippedNormalMap{ false };
+	bool useMaterialMap{ false };
+	bool drawIndexed{ true };
+	bool calcShadows{ false };
+	bool enableSSAO{ false };
 
 public:
 	static std::vector<Mesh*> meshList;

@@ -1,7 +1,7 @@
 #include "Window.h"
 
-Window::Window()
-    : window{ nullptr }, windowWidth{ 0 }, windowHeight{ 0 }, bufferWidth { 0 }, bufferHeight{ 0 },
+Window::Window(uint windowWidth, uint windowHeight)
+    : window{ nullptr }, windowWidth{ windowWidth }, windowHeight{ windowHeight }, bufferWidth { 0 }, bufferHeight{ 0 },
     lastX{ 0.f }, lastY{ 0.f }, XChange{ 0.f }, YChange{ 0.f }, mouseFirstMoved{ true }, scrollChange{ 0.f }, 
     LMBPressed{ false }, RMBPressed{ false }, viewportX{0}, viewportY{0} {
 
@@ -96,17 +96,21 @@ void Window::setupWindow() {
     // Allow forward compatibility
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    if (this->windowWidth == 0 || this->windowHeight == 0) {
+        const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
-    glfwWindowHint(GLFW_RED_BITS, mode->redBits);
-    glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
-    glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
-    glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+        glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+        glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+        glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+        glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-    this->windowWidth = mode->width;
-    this->windowHeight = mode->height;
+        this->windowWidth = mode->width;
+        this->windowHeight = mode->height;
 
-    this->window = glfwCreateWindow(mode->width, mode->height, "Curr Window", glfwGetPrimaryMonitor(), NULL);
+        this->window = glfwCreateWindow(mode->width, mode->height, "Main window", glfwGetPrimaryMonitor(), NULL);
+    }
+    else
+        this->window = glfwCreateWindow(this->windowWidth, this->windowHeight, "Main window", NULL, NULL);
 
     if (!this->window) {
         std::cerr << "GLFW Window creation failed" << std::endl;

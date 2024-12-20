@@ -1,17 +1,12 @@
 #include "Mesh.h"
 
-Mesh::Mesh()
-	: VAO{ 0 }, VBO{ 0 }, IBO{ 0 }, color{ 1.f, 1.f, 1.f }, model{ glm::mat4(1.f) }, objectID{ 0 }, enableSSAO{ false },
-	useDiffuseMap{ false }, drawIndexed{ false }, useNormalMap{ false }, calcShadows{ false }, useMaterialMap{ false },
-	strippedNormalMap{ false }
-{
-	meshList.push_back(this);
+Mesh::Mesh() {
+	this->meshList.push_back(this);
 	this->objectID = this->meshCount++;
 
 	this->vertices.clear();
 	this->indices.clear();
-
-	this->outlineModel = glm::scale(this->model, glm::vec3(1.1f, 1.1f, 1.1f));
+	this->renderData.clear();
 }
 
 void Mesh::loadMesh(bool useDiffuseMap, bool drawIndexed, bool useNormalMap, bool useMaterialMap, bool isStrippedNormal) {
@@ -60,7 +55,11 @@ void Mesh::drawMesh(GLenum renderMode) {
 	glBindVertexArray(this->VAO);
 
 	if (this->drawIndexed) {
-		glDrawElements(renderMode, static_cast<GLsizei>(this->indices.size()), GL_UNSIGNED_INT, this->indices.data());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->IBO);
+
+		glDrawElements(renderMode, static_cast<GLsizei>(this->indices.size()), GL_UNSIGNED_INT, 0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 	else {
 		glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
@@ -69,6 +68,8 @@ void Mesh::drawMesh(GLenum renderMode) {
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
+
+	glBindVertexArray(0);
 }
 
 void Mesh::renderMesh(PBRShader& shader, glm::vec3 cameraPosition, GLenum renderMode)

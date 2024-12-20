@@ -1,8 +1,6 @@
 #pragma once
 
-#include "Core.h"
-#include "Mesh.h"
-#include "Shader.h"
+#include "Model.h"
 
 class CascadedShadows {
 private:
@@ -44,7 +42,7 @@ public:
 	inline const float* const cascadePlanes() const { return &this->cascadeSplits[0]; }
 	inline glm::vec3 getNoiseTextureSize() const { return this->noiseTextureSize; }
 
-	void calculateShadows(int windowWidth, int windowHeight, std::vector<Mesh*>& meshes,
+	void calculateShadows(int windowWidth, int windowHeight, std::vector<Mesh*>& meshes, std::vector<Model*>& models,
 		glm::vec3 lightPosition, GLuint currFramebuffer = 0);
 
 	~CascadedShadows();

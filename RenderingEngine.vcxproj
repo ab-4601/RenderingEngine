@@ -192,8 +192,6 @@
     <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="UVSphere.cpp" />
-    <ClCompile Include="Water.cpp" />
-    <ClCompile Include="WaterShader.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="Grid.cpp" />
   </ItemGroup>
@@ -255,7 +253,6 @@
     <ClInclude Include="Texture.h" />
     <ClInclude Include="UVSphere.h" />
     <ClInclude Include="Water.h" />
-    <ClInclude Include="WaterShader.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="Grid.h" />
   </ItemGroup>
@@ -315,8 +312,6 @@
     <None Include="selection.vert" />
     <None Include="skybox.frag" />
     <None Include="skybox.vert" />
-    <None Include="water.frag" />
-    <None Include="water.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

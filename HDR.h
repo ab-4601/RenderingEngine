@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Core.h"
 #include "Shader.h"
 #include "Texture.h"
 #include "Quad.h"

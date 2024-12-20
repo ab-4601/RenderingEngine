@@ -39,6 +39,8 @@ Shader::Shader(std::string compFileName)
 	this->attachShader({ this->computeShaderID });
 
 	glDeleteShader(this->computeShaderID);
+
+	delete[] this->computeShaderSource;
 }
 
 void Shader::readFile(std::string fileName, char*& shader) {
@@ -47,7 +49,7 @@ void Shader::readFile(std::string fileName, char*& shader) {
 	file.open(fileName, std::ios::in | std::ios::binary);
 
 	if (!file) {
-		std::cerr << "Unable to open file" << std::endl;
+		std::cerr << "Unable to open shader file at location: " << fileName << std::endl;
 		file.close();
 		exit(0);
 	}
@@ -79,8 +81,14 @@ void Shader::compileShader(GLuint& shaderID, const char* shader, GLenum shaderTy
 
 	// Display shader compile status if errors
 	if (!success) {
+		std::string buffer{};
+		if (shaderType == GL_VERTEX_SHADER) buffer = this->vertFileName;
+		else if (shaderType == GL_FRAGMENT_SHADER) buffer = this->fragFileName;
+		else if (shaderType == GL_GEOMETRY_SHADER) buffer = this->geomFileName;
+		else buffer = this->compFileName;
+
 		glGetShaderInfoLog(shaderID, 512, NULL, infoLog);
-		std::cerr << "Error. Shader compilation failed\n" << infoLog << std::endl;
+		std::cerr << "Error. Shader compilation failed: " + buffer + "\n" << infoLog << std::endl;
 	}
 }
 
@@ -96,11 +104,16 @@ void Shader::attachShader(std::vector<GLuint> shaderIDs) {
 	int success{};
 	char infoLog[512];
 
+	std::string buffer{};
+	if (this->vertFileName == "") buffer = this->compFileName;
+	else if (this->geomFileName == "") buffer = this->vertFileName + ", " + this->fragFileName;
+	else buffer = this->vertFileName + ", " + this->fragFileName + ", " + this->geomFileName;
+
 	glGetProgramiv(this->programID, GL_LINK_STATUS, &success);
 
 	if (!success) {
 		glGetProgramInfoLog(this->programID, 512, NULL, infoLog);
-		std::cerr << "Error. Program linking failed\n" << infoLog << std::endl;
+		std::cerr << "Error. Program linking failed: " + buffer + "\n" << infoLog << std::endl;
 	}
 
 	glValidateProgram(this->programID);
@@ -109,7 +122,7 @@ void Shader::attachShader(std::vector<GLuint> shaderIDs) {
 
 	if (!success) {
 		glGetProgramInfoLog(this->programID, 512, NULL, infoLog);
-		std::cerr << "Error. Program validation failed\n" << infoLog << std::endl;
+		std::cerr << "Error. Program validation failed: " + buffer + "\n" << infoLog << std::endl;
 	}
 }
 
