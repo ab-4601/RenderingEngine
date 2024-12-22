@@ -23,7 +23,7 @@ public:
 	inline GLuint getMetallicBuffer() const { return this->gMetallic; }
 
 	void updateGbuffer(PBRShader& shader, const std::vector<Mesh*>& meshes, const std::vector<Model*>& models, 
-		glm::vec3 cameraPosition, GLuint currFramebuffer = 0);
+		GLuint currFramebuffer = 0);
 
 	~GBuffer() {
 		if (this->FBO != 0)

@@ -2,7 +2,7 @@
 
 in vec4 color;
 
-layout (location = 0) out vec4 fragColor;
+out vec4 fragColor;
 
 uniform float intensity;
 

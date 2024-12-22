@@ -6,9 +6,10 @@ layout (location = 2) in vec3 normal;
 
 uniform mat4 model;
 
-layout (std140, binding = 0) uniform cameraSpaceMatrix {
+layout (std140, binding = 0) uniform cameraSpaceVariables {
 	mat4 projection;
 	mat4 view;
+	vec3 cameraPosition;
 };
 
 void main() {

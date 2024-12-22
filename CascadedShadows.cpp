@@ -143,7 +143,7 @@ void CascadedShadows::setComputeUniforms() {
 }
 
 void CascadedShadows::calculateShadows(int windowWidth, int windowHeight, std::vector<Mesh*>& meshes,
-	std::vector<Model*>& models, glm::vec3 lightPosition, GLuint currFramebuffer)
+	glm::vec3 lightPosition, GLuint currFramebuffer)
 {
 	this->computeShader.useShader();
 	this->computeShader.setVec3("lightDirection", lightPosition);
@@ -168,11 +168,6 @@ void CascadedShadows::calculateShadows(int windowWidth, int windowHeight, std::v
 	for (size_t i = 0; i < meshes.size(); i++) {
 		this->shader.setMat4("model", meshes[i]->getModelMatrix());
 		meshes[i]->drawMesh(GL_TRIANGLES);
-	}
-
-	for (size_t i = 0; i < models.size(); i++) {
-		this->shader.setMat4("model", models[i]->getModelMatrix());
-		models[i]->drawModel(GL_TRIANGLES);
 	}
 
 	glCullFace(GL_BACK);

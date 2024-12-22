@@ -2,16 +2,16 @@
 
 layout (location = 0) in vec3 aPos;
 
-layout (std140, binding = 0) uniform cameraSpaceMatrix {
+layout (std140, binding = 0) uniform cameraSpaceVariables {
 	mat4 projection;
 	mat4 view;
+	vec3 cameraPosition;
 };
 
 out vec3 worldPos;
 out vec3 cameraPos;
 out float gridSizeVar;
 
-uniform vec3 cameraPosition;
 uniform float gridSize = 5000.f;
 
 void main() {

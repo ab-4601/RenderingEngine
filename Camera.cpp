@@ -12,10 +12,10 @@ Camera::Camera(glm::vec3 position, int windowWidth, int windowHeight, glm::vec3 
 	float aspect = (float)windowWidth / windowHeight;
 	this->projection = glm::perspective(glm::radians(45.f), aspect, ::near_plane, ::far_plane);
 
-	glGenBuffers(1, &this->matrixBuffer);
-	glBindBuffer(GL_UNIFORM_BUFFER, this->matrixBuffer);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4x4) * 2, nullptr, GL_DYNAMIC_DRAW);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, this->matrixBuffer);
+	glGenBuffers(1, &this->cameraBuffer);
+	glBindBuffer(GL_UNIFORM_BUFFER, this->cameraBuffer);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4x4) * 2 + sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, this->cameraBuffer);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	update();
@@ -83,9 +83,14 @@ void Camera::update() {
 	this->right = glm::normalize(glm::cross(this->front, this->worldUpDir));
 	this->up = glm::normalize(glm::cross(this->right, this->front));
 
-	glm::mat4 cameraSpaceMatrices[2] = { this->projection, this->generateViewMatrix() };
+	glm::mat4x4 cameraSpaceMatrices[2] = { this->projection, this->generateViewMatrix() };
 
-	glBindBuffer(GL_UNIFORM_BUFFER, this->matrixBuffer);
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4x4) * 2, cameraSpaceMatrices);
+	glBindBuffer(GL_UNIFORM_BUFFER, this->cameraBuffer);
+	for (int i = 0; i < 3; i++) {
+		if (i != 2)
+			glBufferSubData(GL_UNIFORM_BUFFER, i * sizeof(glm::mat4x4), sizeof(glm::mat4x4), &cameraSpaceMatrices[i]);
+		else
+			glBufferSubData(GL_UNIFORM_BUFFER, i * sizeof(glm::mat4x4), sizeof(glm::vec3), &this->position);
+	}
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }

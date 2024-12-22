@@ -13,6 +13,7 @@ void Mesh::loadMesh(bool useDiffuseMap, bool drawIndexed, bool useNormalMap, boo
 	this->useDiffuseMap = useDiffuseMap;
 	this->useNormalMap = useNormalMap;
 	this->useMaterialMap = useMaterialMap;
+	this->strippedNormalMap = isStrippedNormal;
 	this->drawIndexed = drawIndexed;
 
 	glGenVertexArrays(1, &this->VAO);
@@ -20,10 +21,10 @@ void Mesh::loadMesh(bool useDiffuseMap, bool drawIndexed, bool useNormalMap, boo
 
 	glGenBuffers(1, &this->VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-	glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex), this->vertices.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex), &this->vertices[0], GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
 
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texel));
@@ -37,7 +38,7 @@ void Mesh::loadMesh(bool useDiffuseMap, bool drawIndexed, bool useNormalMap, boo
 	if (this->drawIndexed == true) {
 		glGenBuffers(1, &this->IBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->IBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(uint), this->indices.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(uint), &this->indices[0], GL_STATIC_DRAW);
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -56,25 +57,19 @@ void Mesh::drawMesh(GLenum renderMode) {
 
 	if (this->drawIndexed) {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->IBO);
-
-		glDrawElements(renderMode, static_cast<GLsizei>(this->indices.size()), GL_UNSIGNED_INT, 0);
-
+			glDrawElements(renderMode, static_cast<GLsizei>(this->indices.size()), GL_UNSIGNED_INT, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 	else {
 		glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-
-		glDrawArrays(renderMode, 0, static_cast<GLsizei>(this->vertices.size()));
-
+			glDrawArrays(renderMode, 0, static_cast<GLsizei>(this->vertices.size()));
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
 	glBindVertexArray(0);
 }
 
-void Mesh::renderMesh(PBRShader& shader, glm::vec3 cameraPosition, GLenum renderMode)
-{
-	glUniform3fv(shader.getUniformCameraPosition(), 1, glm::value_ptr(cameraPosition));
+void Mesh::renderMesh(PBRShader& shader, GLenum renderMode) {
 	glUniform3fv(shader.getUniformAlbedo(), 1, glm::value_ptr(this->color));
 	glUniform1f(shader.getUniformAo(), this->ao);
 	glUniform1f(shader.getUniformMetallic(), this->metallic);
@@ -91,7 +86,7 @@ void Mesh::renderMesh(PBRShader& shader, glm::vec3 cameraPosition, GLenum render
 	this->drawMesh(renderMode);
 }
 
-void Mesh::renderMeshWithOutline(PBRShader& shader, Shader& outlineShader, GLenum renderMode, glm::vec3 cameraPosition)
+void Mesh::renderMeshWithOutline(PBRShader& shader, Shader& outlineShader, GLenum renderMode)
 {
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -99,7 +94,7 @@ void Mesh::renderMeshWithOutline(PBRShader& shader, Shader& outlineShader, GLenu
 	glStencilFunc(GL_ALWAYS, 1, 0xFF);
 	glStencilMask(0xFF);
 
-	this->renderMesh(shader, cameraPosition, renderMode);
+	this->renderMesh(shader, renderMode);
 
 	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 	glStencilMask(0x00);
@@ -123,6 +118,16 @@ void Mesh::renderMeshWithOutline(PBRShader& shader, Shader& outlineShader, GLenu
 }
 
 void Mesh::clearMesh() {
+	this->vertices.clear();
+	this->indices.clear();
+	this->renderData.clear();
+
+	delete this->diffuseMap;
+	delete this->normalMap;
+	delete this->depthMap;
+	delete this->roughnessMap;
+	delete this->metallicMap;
+
 	if (this->IBO != 0) {
 		glDeleteBuffers(1, &this->IBO);
 		this->IBO = 0;

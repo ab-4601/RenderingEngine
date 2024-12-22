@@ -76,6 +76,10 @@ public:
 	inline float getAO() const { return this->ao; }
 	inline bool isDrawIndexed() const { return this->drawIndexed; }
 
+	inline GLuint getVAO() const { return this->VAO; }
+	inline GLuint getVBO() const { return this->VBO; }
+	inline GLuint getIBO() const { return this->IBO; }
+
 	inline bool getDiffuseMapBool() const { return this->useDiffuseMap; }
 	inline bool getNormalMapBool() const { return this->useNormalMap; }
 	inline bool getMaterialMapBool() const { return this->useMaterialMap; }
@@ -103,9 +107,9 @@ public:
 	);
 
 	void drawMesh(GLenum renderMode);
-	void renderMesh(PBRShader& shader, glm::vec3 cameraPosition, GLenum renderMode = GL_TRIANGLES);
+	void renderMesh(PBRShader& shader, GLenum renderMode = GL_TRIANGLES);
 
-	void renderMeshWithOutline(PBRShader& shader, Shader& outlineShader, GLenum renderMode, glm::vec3 cameraPosition);
+	void renderMeshWithOutline(PBRShader& shader, Shader& outlineShader, GLenum renderMode);
 
 	void setMeshMaterial(float roughness, float metallic, float ao);
 

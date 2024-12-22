@@ -50,7 +50,7 @@ int main() {
     glm::vec3 spotLightPosition(300.0, 80.f, 300.f);
 
     Window window;
-    Camera camera{ {-300, 100, 0}, window.getBufferWidth(), window.getBufferHeight() };
+    Camera camera{ {-300, 500, 0}, window.getBufferWidth(), window.getBufferHeight() };
     Overlay overlay;
     HDR hdrBuffer{ window.getBufferWidth(), window.getBufferHeight() };
     BloomRenderer bloom{ window.getBufferWidth(), window.getBufferHeight() };
@@ -141,6 +141,8 @@ int main() {
     terrain.setModelMatrix(model);
     terrain.setColor(glm::vec3(0.2f, 0.2f, 0.2f));*/
 
+    meshes = Mesh::meshList;
+
     /*Model suntemple(
         "Models/SunTemple/SunTemple.fbx",
         "Models/SunTemple/Textures/",
@@ -157,8 +159,6 @@ int main() {
         aiTextureType_NORMALS,
         aiTextureType_METALNESS
     );
-
-    meshes = Mesh::meshList;
 
     models.push_back(&sponza);
     //models.push_back(&suntemple);
@@ -240,7 +240,7 @@ int main() {
 
             if (enableShadows) {
                 csm.calculateShadows(
-                    window.getWindowWidth(), window.getWindowHeight(), meshes, models, lightDirection, currFramebuffer
+                    window.getWindowWidth(), window.getWindowHeight(), Mesh::meshList, lightDirection, currFramebuffer
                 );
             }
 
@@ -259,12 +259,12 @@ int main() {
             if (drawWireframe)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-            sponza.renderModel(pbrShader, cameraPosition);
-            //suntemple.renderModel(pbrShader, cameraPosition);
+            sponza.renderModel(pbrShader);
+            //suntemple.renderModel(pbrShader);
 
             glm::vec2 mouseClickCoords = window.getViewportCoord();
 
-            if (window.getKeyPress(GLFW_KEY_TAB)) 
+            if (window.getKeyPress(GLFW_KEY_TAB))
             {
                 index = -1;
                 prevIndex = -1;
@@ -285,12 +285,12 @@ int main() {
 
                 overlay.manipulate(window.getWindowWidth(), window.getWindowHeight(), camera, meshes[index]);
 
-                meshes[index]->renderMeshWithOutline(pbrShader, outlineShader, GL_TRIANGLES, cameraPosition);
+                meshes[index]->renderMeshWithOutline(pbrShader, outlineShader, GL_TRIANGLES);
             }
 
             for (size_t i = 0; i < meshes.size(); i++) {
                 if ((int)i != index && meshes[i]->getObjectID() != -1)
-                    meshes[i]->renderMesh(pbrShader, cameraPosition, GL_TRIANGLES);
+                    meshes[i]->renderMesh(pbrShader, GL_TRIANGLES);
             }
 
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

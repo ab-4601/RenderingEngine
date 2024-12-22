@@ -43,7 +43,7 @@ void GBuffer::_init(int windowWidth, int windowHeight) {
 }
 
 void GBuffer::updateGbuffer(PBRShader& shader, const std::vector<Mesh*>& meshes, const std::vector<Model*>& models,
-	glm::vec3 cameraPosition, GLuint currFramebuffer)
+	GLuint currFramebuffer)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
 	glDrawBuffers(4, this->colorAttachments);
@@ -89,7 +89,7 @@ void GBuffer::updateGbuffer(PBRShader& shader, const std::vector<Mesh*>& meshes,
 		this->shader.setUint("useNormalMap", true);
 		this->shader.setUint("useMetalnessMap", true);
 		this->shader.setMat4("model", glm::mat4(1.f));
-		models[i]->renderModel(shader, cameraPosition);
+		models[i]->renderModel(shader);
 	}
 
 	this->shader.endShader();

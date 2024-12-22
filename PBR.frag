@@ -80,11 +80,10 @@ uniform float cascadePlanes[MAX_CASCADES];
 uniform float radius;
 uniform vec3 offsetTexSize;
 
-uniform vec3 cameraPos;
-
-layout (std140, binding = 0) uniform cameraSpaceMatrix {
+layout (std140, binding = 0) uniform cameraSpaceVariables {
 	mat4 projection;
 	mat4 view;
+	vec3 cameraPosition;
 };
 
 layout (std140, binding = 1) buffer LightSpaceMatrices {
@@ -94,7 +93,7 @@ layout (std140, binding = 1) buffer LightSpaceMatrices {
 vec3 N = normalize(data_in.normal);
 vec3 L = vec3(0.f);
 vec3 H = vec3(0.f);
-vec3 V = normalize(cameraPos - vec3(data_in.fragPos));
+vec3 V = normalize(cameraPosition - vec3(data_in.fragPos));
 vec3 F0 = vec3(0.04f);
 
 vec3 albedo = material.albedo;
@@ -310,13 +309,13 @@ void main() {
 		if(strippedNormalMap)
 			N *= -1.f;
 		
-		vec3 tang = normalize(data_in.tangent);
-		vec3 norm = normalize(data_in.normal);
+		vec3 tangent = normalize(data_in.tangent);
+		vec3 normal = normalize(data_in.normal);
 
-		tang = normalize(tang - dot(tang, norm) * norm);
-		vec3 biTang = cross(norm, tang);
+		tangent = normalize(tangent - dot(tangent, normal) * normal);
+		vec3 biTangent = cross(normal, tangent);
 
-		N = normalize(mat3(tang, biTang, norm) * N);
+		N = normalize(mat3(tangent, biTangent, normal) * N);
 	}
 
 	if(useMaterialMap) {
@@ -347,7 +346,7 @@ void main() {
 
 	vec4 finalColor = calcDirectionalLights() + calcPointLights() + calcSpotLights();
 
-	finalColor += vec4(ambient, 0.f);
+	finalColor += vec4(ambient, 1.f);
 
 	fragColor = finalColor;
 }

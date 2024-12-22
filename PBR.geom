@@ -19,9 +19,10 @@ out GEOM_DATA {
     vec4 fragPos;
 } data_out;
 
-layout (std140, binding = 0) uniform cameraSpaceMatrix {
+layout (std140, binding = 0) uniform cameraSpaceVariables {
 	mat4 projection;
 	mat4 view;
+	vec3 cameraPosition;
 };
 
 uniform mat4 model;

@@ -8,7 +8,7 @@ private:
 	glm::vec3 position, front, up, right;
 	glm::vec3 worldUpDir;
 
-	GLuint matrixBuffer = 0;
+	GLuint cameraBuffer = 0;
 
 	GLfloat pitch, yaw, roll;
 	glm::mat4 projection;

@@ -1,21 +1,27 @@
 #pragma once
 
+#include "Core.h"
 #include "Mesh.h"
+#include "Texture.h"
 
 #define ASSIMP_LOAD_FLAGS (aiProcess_Triangulate | aiProcess_FlipWindingOrder | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_OptimizeMeshes)
 
-class Model : public Mesh {
+class Model {
 private:
 	std::string texFolderPath;
+	std::vector<Mesh*> meshList;
 	std::vector<Texture*> diffuseMaps;
 	std::vector<Texture*> normalMaps;
 	std::vector<Texture*> heightMaps;
 	std::vector<Texture*> metalnessMaps;
+	std::vector<unsigned int> meshToTex;
 
-	void _loadNode(aiNode* node, const aiScene* const scene);
-	void _loadMesh(aiMesh* mesh, const aiScene* const scene);
-	void _updateRenderData(const aiScene* node);
-	void _loadMaterialMap(const aiScene* const scene, std::vector<Texture*>& maps, aiTextureType textureType) const;
+	std::vector<Vertex> vertices;
+	std::vector<uint> indices;
+
+	void _loadNode(aiNode* node, const aiScene* const scene, bool isStrippedNormal);
+	void _loadMesh(aiMesh* mesh, const aiScene* const scene, bool isStrippedNormal);
+	void _loadMaterialMap(const aiScene* const scene, std::vector<Texture*>& maps, aiTextureType textureType);
 
 public:
 	Model(std::string fileName = "", std::string texFolderPath = "",
@@ -26,10 +32,11 @@ public:
 	);
 
 	void loadModel(std::string fileName, aiTextureType diffuseMap,
-		aiTextureType normalMap, aiTextureType metallicMap);
+		aiTextureType normalMap, aiTextureType metallicMap, bool isStrippedNormal);
 
-	void drawModel(GLenum renderMode = GL_TRIANGLES);
-	void renderModel(PBRShader& shader, glm::vec3 cameraPosition, GLenum renderMode = GL_TRIANGLES);
+	void renderModel(PBRShader& shader);
+
+	void drawModel(GLenum renderMode);
 
 	void clearModel();
 
