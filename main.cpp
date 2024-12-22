@@ -154,10 +154,7 @@ int main() {
 
     Model sponza(
         "Models/Sponza/Sponza.gltf",
-        "Models/Sponza/",
-        aiTextureType_DIFFUSE,
-        aiTextureType_NORMALS,
-        aiTextureType_METALNESS
+        "Models/Sponza/"
     );
 
     models.push_back(&sponza);

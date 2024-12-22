@@ -6,7 +6,6 @@ Mesh::Mesh() {
 
 	this->vertices.clear();
 	this->indices.clear();
-	this->renderData.clear();
 }
 
 void Mesh::loadMesh(bool useDiffuseMap, bool drawIndexed, bool useNormalMap, bool useMaterialMap, bool isStrippedNormal) {
@@ -120,7 +119,6 @@ void Mesh::renderMeshWithOutline(PBRShader& shader, Shader& outlineShader, GLenu
 void Mesh::clearMesh() {
 	this->vertices.clear();
 	this->indices.clear();
-	this->renderData.clear();
 
 	delete this->diffuseMap;
 	delete this->normalMap;

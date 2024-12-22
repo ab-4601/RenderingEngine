@@ -9,12 +9,12 @@
 class Model {
 private:
 	std::string texFolderPath;
-	std::vector<Mesh*> meshList;
+	std::vector<Mesh*> meshes;
 	std::vector<Texture*> diffuseMaps;
 	std::vector<Texture*> normalMaps;
 	std::vector<Texture*> heightMaps;
 	std::vector<Texture*> metalnessMaps;
-	std::vector<unsigned int> meshToTex;
+	std::vector<uint> meshToTex;
 
 	std::vector<Vertex> vertices;
 	std::vector<uint> indices;

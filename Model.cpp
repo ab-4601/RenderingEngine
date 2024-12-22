@@ -1,22 +1,19 @@
 #include "Model.h"
 
-static std::ostream& operator<<(std::ostream& os, Vertex& vertex) {
-	os << "Position: " << vertex.position.x << ", " << vertex.position.y << ", " << vertex.position.z << "\n";
-	os << "Texel: " << vertex.normal.x << ", " << vertex.texel.y << "\n";
-	os << "Normal: " << vertex.normal.x << ", " << vertex.normal.y << ", " << vertex.normal.z << "\n";
-	os << "Tangent: " << vertex.tangent.x << ", " << vertex.tangent.y << ", " << vertex.tangent.z << "\n";
-
-	return os;
-}
-
 Model::Model(std::string fileName, std::string texFolderPath, aiTextureType diffuseMap,
 	aiTextureType normalMap, aiTextureType metallicMap, bool isStrippedNormal)
 	: texFolderPath{ texFolderPath }
 {
-	this->meshList.clear();
+	this->vertices.clear();
+	this->indices.clear();
 	this->meshToTex.clear();
+
+	this->meshes.clear();
+
 	this->diffuseMaps.clear();
 	this->heightMaps.clear();
+	this->normalMaps.clear();
+	this->metalnessMaps.clear();
 
 	this->loadModel(fileName, diffuseMap, normalMap, metallicMap, isStrippedNormal);
 }
@@ -32,6 +29,7 @@ void Model::_loadNode(aiNode* node, const aiScene* const scene, bool isStrippedN
 void Model::_loadMesh(aiMesh* mesh, const aiScene* const scene, bool isStrippedNormal) {
 	this->vertices.clear();
 	this->indices.clear();
+
 	Vertex vertex{};
 
 	for (size_t i = 0; i < mesh->mNumVertices; i++) {
@@ -57,7 +55,7 @@ void Model::_loadMesh(aiMesh* mesh, const aiScene* const scene, bool isStrippedN
 	currMesh->setIndices(this->indices);
 	currMesh->loadMesh(true, true, true, true, isStrippedNormal);
 
-	this->meshList.push_back(currMesh);
+	this->meshes.push_back(currMesh);
 	this->meshToTex.push_back(mesh->mMaterialIndex);
 }
 
@@ -132,14 +130,16 @@ void Model::loadModel(std::string fileName, aiTextureType diffuseMap,
 }
 
 void Model::drawModel(GLenum renderMode) {
-	for (size_t i = 0; i < this->meshList.size(); i++) {
-		this->meshList[i]->drawMesh(renderMode);
+	for (size_t i = 0; i < this->meshes.size(); i++) {
+		this->meshes[i]->drawMesh(renderMode);
 	}
 }
 
 void Model::renderModel(PBRShader& shader) {
-	for (size_t i = 0; i < this->meshList.size(); i++) {
-		uint materialIndex = this->meshToTex[i];
+	uint materialIndex = 0;
+
+	for (size_t i = 0; i < this->meshes.size(); i++) {
+		materialIndex = this->meshToTex[i];
 
 		if (materialIndex < this->diffuseMaps.size() && diffuseMaps[materialIndex]) {
 			this->diffuseMaps[materialIndex]->useTexture(GL_TEXTURE0);
@@ -157,17 +157,21 @@ void Model::renderModel(PBRShader& shader) {
 			this->metalnessMaps[materialIndex]->useTexture(GL_TEXTURE3);
 		}
 
-		this->meshList[i]->renderMesh(shader, GL_TRIANGLES);
+		this->meshes[i]->renderMesh(shader, GL_TRIANGLES);
 
 		glActiveTexture(GL_TEXTURE0);
 	}
 }
 
 void Model::clearModel() {
-	for (size_t i = 0; i < this->meshList.size(); i++) {
-		if (this->meshList[i]) {
-			delete this->meshList[i];
-			this->meshList[i] = nullptr;
+	this->vertices.clear();
+	this->indices.clear();
+	this->meshToTex.clear();
+
+	for (size_t i = 0; i < this->meshes.size(); i++) {
+		if (this->meshes[i]) {
+			delete this->meshes[i];
+			this->meshes[i] = nullptr;
 		}
 	}
 
@@ -178,10 +182,24 @@ void Model::clearModel() {
 		}
 	}
 
-	for (size_t i = 0; i < this->diffuseMaps.size(); i++) {
+	for (size_t i = 0; i < this->normalMaps.size(); i++) {
 		if (this->normalMaps[i]) {
 			delete this->normalMaps[i];
 			this->normalMaps[i] = nullptr;
+		}
+	}
+
+	for (size_t i = 0; i < this->heightMaps.size(); i++) {
+		if (this->heightMaps[i]) {
+			delete this->heightMaps[i];
+			this->heightMaps[i] = nullptr;
+		}
+	}
+
+	for (size_t i = 0; i < this->metalnessMaps.size(); i++) {
+		if (this->metalnessMaps[i]) {
+			delete this->metalnessMaps[i];
+			this->metalnessMaps[i] = nullptr;
 		}
 	}
 }

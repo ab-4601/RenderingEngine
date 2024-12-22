@@ -17,16 +17,6 @@ struct Vertex {
 	) : position{ position }, texel{ texel }, normal{ normal }, tangent{ tangent } {}
 };
 
-struct MeshMetaData {
-	uint baseVertex;
-	uint baseIndex;
-	uint numIndices;
-	uint materialIndex;
-
-	MeshMetaData(uint baseVertex = 0, uint baseIndex = 0, uint numIndices = 0, uint materialIndex = 0)
-		: baseVertex{ baseVertex }, baseIndex{ baseIndex }, numIndices{ numIndices }, materialIndex{ materialIndex } { }
-};
-
 class Mesh {
 protected:
 	static uint meshCount;
@@ -38,9 +28,7 @@ protected:
 
 	std::vector<Vertex> vertices;
 	std::vector<uint> indices;
-	std::vector<MeshMetaData> renderData;
 
-	uint indexOffset{ 0 }, vertexOffset{ 0 };
 	GLfloat metallic{ 0.f }, roughness{ 0.f }, ao{ 0.f };
 
 	GLuint VAO{ 0 };
