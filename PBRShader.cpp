@@ -179,21 +179,21 @@ void PBRShader::setGeneralUniforms(DirectionalLight& directionalLight, std::vect
 	for (size_t i = 0; i < ::MAX_CASCADES; i++)
 		glUniform1f(this->uniformCascadePlaneDistances[i], cascadePlanes[i]);
 
-	glActiveTexture(GL_TEXTURE5);
+	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
 
-	glActiveTexture(GL_TEXTURE6);
+	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterSampler);
 
-	glActiveTexture(GL_TEXTURE7);
+	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, brdfSampler);
 
-	glActiveTexture(GL_TEXTURE8);
+	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, pointShadowMap);
 
-	glActiveTexture(GL_TEXTURE9);
+	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, cascadedShadowMap);
 
-	glActiveTexture(GL_TEXTURE10);
+	glActiveTexture(GL_TEXTURE6);
 	glBindTexture(GL_TEXTURE_3D, noiseSampler);
 }

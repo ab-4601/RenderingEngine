@@ -6,6 +6,7 @@ Mesh::Mesh() {
 
 	this->vertices.clear();
 	this->indices.clear();
+	this->renderData.clear();
 }
 
 void Mesh::loadMesh(bool useDiffuseMap, bool drawIndexed, bool useNormalMap, bool useMaterialMap, bool isStrippedNormal) {

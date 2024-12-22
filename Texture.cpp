@@ -1,7 +1,7 @@
 #include "Texture.h"
 
 Texture::Texture(std::string fileLocation)
-	: fileLocation{ fileLocation }, width{ 0 }, height{ 0 }, bitDepth{ 0 }, textureID{ 0 } {
+	: fileLocation{ fileLocation } {
 
 }
 
@@ -177,12 +177,24 @@ bool Texture::loadTexture() {
 	return true;
 }
 
-void Texture::useTexture(GLenum textureLocation) const {
-	glActiveTexture(textureLocation);
-	glBindTexture(GL_TEXTURE_2D, this->textureID);
+bool Texture::makeBindless() {
+	if (!glewIsSupported("GL_ARB_bindless_texture")) {
+		std::cerr << "Bindless textures not supported" << std::endl;
+		return false;
+	}
+
+	this->textureHandle = glGetTextureHandleARB(this->textureID);
+	glMakeTextureHandleResidentARB(this->textureHandle);
+
+	return true;
 }
 
 void Texture::clearTexture() {
+	if (this->textureHandle != 0) {
+		glMakeTextureHandleNonResidentARB(this->textureHandle);
+		this->textureHandle = 0;
+	}
+
 	glDeleteTextures(1, &this->textureID);
 
 	this->textureID = 0;

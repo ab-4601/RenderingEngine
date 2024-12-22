@@ -54,17 +54,17 @@ uniform PointLight pointLights[MAX_POINT_LIGHTS];
 uniform SpotLight spotLights[MAX_SPOT_LIGHTS];
 uniform Material material;
 
-layout (binding = 0) uniform sampler2D diffuseMap;
-layout (binding = 1) uniform sampler2D normalMap;
-layout (binding = 2) uniform sampler2D depthMap;
-layout (binding = 3) uniform sampler2D metallicMap;
-layout (binding = 4) uniform sampler2D roughnessMap;
-layout (binding = 5) uniform samplerCube irradianceMap;
-layout (binding = 6) uniform samplerCube prefilterMap;
-layout (binding = 7) uniform sampler2D brdfLUT;
-layout (binding = 8) uniform samplerCube pointShadowMap;
-layout (binding = 9) uniform sampler2DArray cascadedShadowMap;
-layout (binding = 10) uniform sampler3D randomOffsets;
+uniform sampler2D diffuseMap;
+uniform sampler2D normalMap;
+uniform sampler2D depthMap;
+uniform sampler2D metallicMap;
+uniform sampler2D roughnessMap;
+layout (binding = 1) uniform samplerCube irradianceMap;
+layout (binding = 2) uniform samplerCube prefilterMap;
+layout (binding = 3) uniform sampler2D brdfLUT;
+layout (binding = 4) uniform samplerCube pointShadowMap;
+layout (binding = 5) uniform sampler2DArray cascadedShadowMap;
+layout (binding = 6) uniform sampler3D randomOffsets;
 
 uniform bool useDiffuseMap;
 uniform bool useNormalMap;

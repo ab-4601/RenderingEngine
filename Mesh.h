@@ -12,9 +12,21 @@ struct Vertex {
 	glm::vec3 tangent;
 
 	Vertex(
-		glm::vec3 position = glm::vec3(0.f), glm::vec2 texel = glm::vec2(0.f), 
+		glm::vec3 position = glm::vec3(0.f), glm::vec2 texel = glm::vec2(0.f),
 		glm::vec3 normal = glm::vec3(0.f), glm::vec3 tangent = glm::vec3(0.f)
-	) : position{ position }, texel{ texel }, normal{ normal }, tangent{ tangent } {}
+	) : position{ position }, texel{ texel }, normal{ normal }, tangent{ tangent } {
+	}
+};
+
+struct MeshMetaData {
+	uint baseVertex;
+	uint baseIndex;
+	uint numIndices;
+	uint materialIndex;
+
+	MeshMetaData(uint baseVertex = 0, uint baseIndex = 0, uint numIndices = 0, uint materialIndex = 0)
+		: baseVertex{ baseVertex }, baseIndex{ baseIndex }, numIndices{ numIndices }, materialIndex{ materialIndex } {
+	}
 };
 
 class Mesh {
@@ -28,7 +40,9 @@ protected:
 
 	std::vector<Vertex> vertices;
 	std::vector<uint> indices;
+	std::vector<MeshMetaData> renderData;
 
+	uint indexOffset{ 0 }, vertexOffset{ 0 };
 	GLfloat metallic{ 0.f }, roughness{ 0.f }, ao{ 0.f };
 
 	GLuint VAO{ 0 };
@@ -63,10 +77,6 @@ public:
 	inline float getRoughness() const { return this->roughness; }
 	inline float getAO() const { return this->ao; }
 	inline bool isDrawIndexed() const { return this->drawIndexed; }
-
-	inline GLuint getVAO() const { return this->VAO; }
-	inline GLuint getVBO() const { return this->VBO; }
-	inline GLuint getIBO() const { return this->IBO; }
 
 	inline bool getDiffuseMapBool() const { return this->useDiffuseMap; }
 	inline bool getNormalMapBool() const { return this->useNormalMap; }

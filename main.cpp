@@ -13,7 +13,6 @@
 #include "Cube.h"
 #include "UVSphere.h"
 #include "Icosphere.h"
-#include "Model.h"
 #include "Terrain.h"
 #include "LightSources.h"
 #include "CascadedShadows.h"
@@ -237,7 +236,7 @@ int main() {
 
             if (enableShadows) {
                 csm.calculateShadows(
-                    window.getWindowWidth(), window.getWindowHeight(), Mesh::meshList, lightDirection, currFramebuffer
+                    window.getWindowWidth(), window.getWindowHeight(), meshes, models, lightDirection, currFramebuffer
                 );
             }
 

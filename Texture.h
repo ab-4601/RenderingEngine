@@ -39,10 +39,11 @@ struct DDSHeader {
 
 class Texture {
 protected:
-	GLuint textureID;
-	int width, height, bitDepth;
+	GLuint textureID{ 0 };
+	GLuint64 textureHandle{ 0 };
+	int width{ 0 }, height{ 0 }, bitDepth{ 0 };
 
-	std::string fileLocation;
+	std::string fileLocation{ "" };
 	bool isCompressed = false;
 
 public:
@@ -56,7 +57,17 @@ public:
 
 	bool loadDDSTexture();
 	bool loadTexture();
-	void useTexture(GLenum textureLocation = GL_TEXTURE0) const;
+	bool makeBindless();
+
+	void useTexture(GLenum textureLocation = GL_TEXTURE0) const {
+		glActiveTexture(textureLocation);
+		glBindTexture(GL_TEXTURE_2D, this->textureID);
+	}
+
+	void useTextureBindless(GLuint textureLocation) const {
+		glUniformHandleui64ARB(textureLocation, this->textureHandle);
+	}
+
 	void clearTexture();
 
 	inline GLuint getTextureID() const { return this->textureID; }

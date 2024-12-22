@@ -2,34 +2,44 @@
 
 Model::Model(std::string fileName, std::string texFolderPath, aiTextureType diffuseMap,
 	aiTextureType normalMap, aiTextureType metallicMap, bool isStrippedNormal)
-	: texFolderPath{ texFolderPath }
+	: Mesh(), texFolderPath{ texFolderPath }
 {
-	this->vertices.clear();
-	this->indices.clear();
-	this->meshToTex.clear();
+	this->diffuseTextures.clear();
+	this->normalTextures.clear();
+	this->heightTextures.clear();
+	this->metalnessTextures.clear();
 
-	this->meshes.clear();
+	this->loadModel(fileName, diffuseMap, normalMap, metallicMap);
+	this->loadMesh(true, true, true, true, isStrippedNormal);
 
-	this->diffuseMaps.clear();
-	this->heightMaps.clear();
-	this->normalMaps.clear();
-	this->metalnessMaps.clear();
-
-	this->loadModel(fileName, diffuseMap, normalMap, metallicMap, isStrippedNormal);
+	Mesh::meshList.pop_back();
 }
 
-void Model::_loadNode(aiNode* node, const aiScene* const scene, bool isStrippedNormal) {
+void Model::_updateRenderData(const aiScene* scene) {
+	this->renderData.resize(scene->mNumMeshes);
+
+	for (size_t i = 0; i < this->renderData.size(); i++) {
+		this->renderData[i].materialIndex = scene->mMeshes[i]->mMaterialIndex;
+		this->renderData[i].numIndices = scene->mMeshes[i]->mNumFaces * 3;
+		this->renderData[i].baseVertex = this->vertexOffset;
+		this->renderData[i].baseIndex = this->indexOffset;
+
+		this->vertexOffset += scene->mMeshes[i]->mNumVertices;
+		this->indexOffset += this->renderData[i].numIndices;
+	}
+
+	this->vertexOffset = 0;
+}
+
+void Model::_loadNode(aiNode* node, const aiScene* const scene) {
 	for (size_t i = 0; i < node->mNumMeshes; i++)
-		this->_loadMesh(scene->mMeshes[node->mMeshes[i]], scene, isStrippedNormal);
+		this->_loadMesh(scene->mMeshes[node->mMeshes[i]], scene);
 
 	for (size_t i = 0; i < node->mNumChildren; i++)
-		this->_loadNode(node->mChildren[i], scene, isStrippedNormal);
+		this->_loadNode(node->mChildren[i], scene);
 }
 
-void Model::_loadMesh(aiMesh* mesh, const aiScene* const scene, bool isStrippedNormal) {
-	this->vertices.clear();
-	this->indices.clear();
-
+void Model::_loadMesh(aiMesh* mesh, const aiScene* const scene) {
 	Vertex vertex{};
 
 	for (size_t i = 0; i < mesh->mNumVertices; i++) {
@@ -48,18 +58,9 @@ void Model::_loadMesh(aiMesh* mesh, const aiScene* const scene, bool isStrippedN
 			this->indices.push_back(face.mIndices[j]);
 		}
 	}
-
-	Mesh* currMesh = new Mesh();
-	currMesh->setObjectID(-1);
-	currMesh->setVertices(this->vertices);
-	currMesh->setIndices(this->indices);
-	currMesh->loadMesh(true, true, true, true, isStrippedNormal);
-
-	this->meshes.push_back(currMesh);
-	this->meshToTex.push_back(mesh->mMaterialIndex);
 }
 
-void Model::_loadMaterialMap(const aiScene* const scene, std::vector<Texture*>& maps, aiTextureType textureType) {
+void Model::_loadMaterialMap(const aiScene* const scene, std::vector<Texture*>& maps, aiTextureType textureType) const {
 	maps.resize(scene->mNumMaterials);
 
 	for (size_t i = 0; i < scene->mNumMaterials; i++) {
@@ -70,10 +71,10 @@ void Model::_loadMaterialMap(const aiScene* const scene, std::vector<Texture*>& 
 			aiString path;
 
 			if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS) {
-				int idx = std::string(path.data).rfind("\\");
+				size_t idx = std::string(path.data).rfind("\\");
 				std::string filename = std::string(path.data).substr(idx + 1);
 
-				int extIdx = filename.rfind(".");
+				size_t extIdx = filename.rfind(".");
 				std::string extension = filename.substr(extIdx + 1);
 
 				std::string texPath = this->texFolderPath + filename;
@@ -87,6 +88,10 @@ void Model::_loadMaterialMap(const aiScene* const scene, std::vector<Texture*>& 
 						delete maps[i];
 						maps[i] = nullptr;
 					}
+
+					if (!maps[i]->makeBindless()) {
+						std::cerr << "Failed to load texture to GPU memory: " << texPath << std::endl;
+					}
 				}
 				else {
 					if (!maps[i]->loadDDSTexture()) {
@@ -95,6 +100,10 @@ void Model::_loadMaterialMap(const aiScene* const scene, std::vector<Texture*>& 
 						delete maps[i];
 						maps[i] = nullptr;
 					}
+
+					if (!maps[i]->makeBindless()) {
+						std::cerr << "Failed to load texture to GPU memory: " << texPath << std::endl;
+					}
 				}
 			}
 		}
@@ -102,12 +111,13 @@ void Model::_loadMaterialMap(const aiScene* const scene, std::vector<Texture*>& 
 		if (maps[i] == nullptr) {
 			maps[i] = new Texture("Textures/prototype.png");
 			maps[i]->loadTexture();
+			maps[i]->makeBindless();
 		}
 	}
 }
 
 void Model::loadModel(std::string fileName, aiTextureType diffuseMap,
-	aiTextureType normalMap, aiTextureType metallicMap, bool isStrippedNormal) {
+	aiTextureType normalMap, aiTextureType metallicMap) {
 	if (fileName == "") {
 		std::cout << "No file path specified" << std::endl;
 		return;
@@ -122,84 +132,90 @@ void Model::loadModel(std::string fileName, aiTextureType diffuseMap,
 		return;
 	}
 
-	this->_loadNode(scene->mRootNode, scene, isStrippedNormal);
-	this->_loadMaterialMap(scene, this->diffuseMaps, diffuseMap);
-	this->_loadMaterialMap(scene, this->normalMaps, normalMap);
-	this->_loadMaterialMap(scene, this->metalnessMaps, metallicMap);
-	this->_loadMaterialMap(scene, this->heightMaps, aiTextureType_DIFFUSE_ROUGHNESS);
+	this->_updateRenderData(scene);
+	this->_loadNode(scene->mRootNode, scene);
+	this->_loadMaterialMap(scene, this->diffuseTextures, diffuseMap);
+	this->_loadMaterialMap(scene, this->normalTextures, normalMap);
+	this->_loadMaterialMap(scene, this->metalnessTextures, metallicMap);
+	this->_loadMaterialMap(scene, this->heightTextures, aiTextureType_DIFFUSE_ROUGHNESS);
 }
 
 void Model::drawModel(GLenum renderMode) {
-	for (size_t i = 0; i < this->meshes.size(); i++) {
-		this->meshes[i]->drawMesh(renderMode);
-	}
+	glBindVertexArray(this->VAO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->IBO);
+
+	for (const auto& mesh : this->renderData)
+		glDrawElementsBaseVertex(
+			renderMode, mesh.numIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * mesh.baseIndex), mesh.baseVertex
+		);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 }
 
-void Model::renderModel(PBRShader& shader) {
-	uint materialIndex = 0;
+void Model::renderModel(PBRShader& shader, GLenum renderMode) {
+	glUniform1ui(shader.getUniformTextureBool(), this->useDiffuseMap);
+	glUniform1ui(shader.getUniformNormalMapBool(), this->useNormalMap);
+	glUniform1ui(shader.getUniformUseMaterialMap(), this->useMaterialMap);
+	glUniform1ui(shader.getUniformStrippedNormalBool(), this->strippedNormalMap);
 
-	for (size_t i = 0; i < this->meshes.size(); i++) {
-		materialIndex = this->meshToTex[i];
+	glUniformMatrix4fv(shader.getUniformModel(), 1, GL_FALSE, glm::value_ptr(this->model));
 
-		if (materialIndex < this->diffuseMaps.size() && diffuseMaps[materialIndex]) {
-			this->diffuseMaps[materialIndex]->useTexture(GL_TEXTURE0);
+	glBindVertexArray(this->VAO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->IBO);
+
+	for (const auto& mesh: this->renderData) {
+		if (mesh.materialIndex < this->diffuseTextures.size() && diffuseTextures[mesh.materialIndex]) {
+			this->diffuseTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformDiffuseSampler());
 		}
 
-		if (materialIndex < this->normalMaps.size() && this->normalMaps[materialIndex]) {
-			this->normalMaps[materialIndex]->useTexture(GL_TEXTURE1);
+		if (mesh.materialIndex < this->normalTextures.size() && this->normalTextures[mesh.materialIndex]) {
+			this->normalTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformNormalSampler());
 		}
 
-		if (materialIndex < this->heightMaps.size() && this->heightMaps[materialIndex]) {
-			this->heightMaps[materialIndex]->useTexture(GL_TEXTURE2);
+		if (mesh.materialIndex < this->heightTextures.size() && this->heightTextures[mesh.materialIndex]) {
+			this->heightTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformDepthSampler());
 		}
 
-		if (materialIndex < this->metalnessMaps.size() && this->metalnessMaps[materialIndex]) {
-			this->metalnessMaps[materialIndex]->useTexture(GL_TEXTURE3);
+		if (mesh.materialIndex < this->metalnessTextures.size() && this->metalnessTextures[mesh.materialIndex]) {
+			this->metalnessTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformMetallicSampler());
 		}
 
-		this->meshes[i]->renderMesh(shader, GL_TRIANGLES);
-
-		glActiveTexture(GL_TEXTURE0);
+		glDrawElementsBaseVertex(
+			renderMode, mesh.numIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * mesh.baseIndex), mesh.baseVertex
+		);
 	}
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 }
 
 void Model::clearModel() {
-	this->vertices.clear();
-	this->indices.clear();
-	this->meshToTex.clear();
-
-	for (size_t i = 0; i < this->meshes.size(); i++) {
-		if (this->meshes[i]) {
-			delete this->meshes[i];
-			this->meshes[i] = nullptr;
+	for (size_t i = 0; i < this->diffuseTextures.size(); i++) {
+		if (this->diffuseTextures[i]) {
+			delete this->diffuseTextures[i];
+			this->diffuseTextures[i] = nullptr;
 		}
 	}
 
-	for (size_t i = 0; i < this->diffuseMaps.size(); i++) {
-		if (this->diffuseMaps[i]) {
-			delete this->diffuseMaps[i];
-			this->diffuseMaps[i] = nullptr;
+	for (size_t i = 0; i < this->normalTextures.size(); i++) {
+		if (this->normalTextures[i]) {
+			delete this->normalTextures[i];
+			this->normalTextures[i] = nullptr;
 		}
 	}
 
-	for (size_t i = 0; i < this->normalMaps.size(); i++) {
-		if (this->normalMaps[i]) {
-			delete this->normalMaps[i];
-			this->normalMaps[i] = nullptr;
+	for (size_t i = 0; i < this->heightTextures.size(); i++) {
+		if (this->heightTextures[i]) {
+			delete this->heightTextures[i];
+			this->heightTextures[i] = nullptr;
 		}
 	}
 
-	for (size_t i = 0; i < this->heightMaps.size(); i++) {
-		if (this->heightMaps[i]) {
-			delete this->heightMaps[i];
-			this->heightMaps[i] = nullptr;
-		}
-	}
-
-	for (size_t i = 0; i < this->metalnessMaps.size(); i++) {
-		if (this->metalnessMaps[i]) {
-			delete this->metalnessMaps[i];
-			this->metalnessMaps[i] = nullptr;
+	for (size_t i = 0; i < this->metalnessTextures.size(); i++) {
+		if (this->metalnessTextures[i]) {
+			delete this->metalnessTextures[i];
+			this->metalnessTextures[i] = nullptr;
 		}
 	}
 }
