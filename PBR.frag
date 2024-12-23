@@ -75,6 +75,7 @@ uniform bool useDiffuseMap;
 uniform bool useNormalMap;
 uniform bool strippedNormalMap;
 uniform bool useMaterialMap;
+uniform bool useEmissiveMap;
 uniform bool calcShadows;
 uniform bool enableSSAO;
 uniform bool drawWireframe;
@@ -103,6 +104,7 @@ vec3 V = normalize(cameraPosition - vec3(data_in.fragPos));
 vec3 F0 = vec3(0.04f);
 
 vec3 albedo = material.albedo;
+vec3 emissive = vec3(0.f);
 float metallic = material.metallic;
 float roughness = material.roughness;
 float ao = material.ao;
@@ -330,6 +332,10 @@ void main() {
 		metallic = texture2D(metallicMap, data_in.texel).b;
 	}
 
+	if(useEmissiveMap) {
+		emissive = texture2D(emissiveMap, data_in.texel).rgb;
+	}
+
 	F0 = mix(F0, albedo, metallic);
 
 	vec3 R = reflect(-V, N);
@@ -353,6 +359,7 @@ void main() {
 	vec4 finalColor = calcDirectionalLights() + calcPointLights() + calcSpotLights();
 
 	finalColor += vec4(ambient, 1.f);
+	finalColor += vec4(emissive, 0.f);
 
 	float d = 0.f, mixVal = 0.f;
 

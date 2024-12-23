@@ -69,7 +69,7 @@ void Mesh::drawMesh(GLenum renderMode) {
 	glBindVertexArray(0);
 }
 
-void Mesh::renderMesh(PBRShader& shader, GLenum renderMode) {
+void Mesh::renderMesh(const PBRShader& shader, GLenum renderMode) {
 	glUniform3fv(shader.getUniformAlbedo(), 1, glm::value_ptr(this->color));
 	glUniform1f(shader.getUniformAo(), this->ao);
 	glUniform1f(shader.getUniformMetallic(), this->metallic);
@@ -86,7 +86,7 @@ void Mesh::renderMesh(PBRShader& shader, GLenum renderMode) {
 	this->drawMesh(renderMode);
 }
 
-void Mesh::renderMeshWithOutline(PBRShader& shader, Shader& outlineShader, GLenum renderMode)
+void Mesh::renderMeshWithOutline(const PBRShader& shader, Shader& outlineShader, GLenum renderMode)
 {
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);

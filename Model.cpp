@@ -1,8 +1,9 @@
 #include "Model.h"
 
 Model::Model(std::string fileName, std::string texFolderPath, aiTextureType diffuseMap,
-	aiTextureType normalMap, aiTextureType metallicMap, bool isStrippedNormal)
-	: Mesh(), texFolderPath{ texFolderPath }
+	aiTextureType normalMap, aiTextureType metallicMap, aiTextureType emissiveMap,
+	bool isStrippedNormal, bool hasEmissiveMaterial)
+	: Mesh(), texFolderPath{ texFolderPath }, useEmissiveMap{ hasEmissiveMaterial }
 {
 	this->diffuseTextures.clear();
 	this->normalTextures.clear();
@@ -10,7 +11,7 @@ Model::Model(std::string fileName, std::string texFolderPath, aiTextureType diff
 	this->metalnessTextures.clear();
 	this->emissiveTextures.clear();
 
-	this->loadModel(fileName, diffuseMap, normalMap, metallicMap);
+	this->loadModel(fileName, diffuseMap, normalMap, metallicMap, emissiveMap);
 	this->loadMesh(true, true, true, true, isStrippedNormal);
 
 	Mesh::meshList.pop_back();
@@ -110,15 +111,15 @@ void Model::_loadMaterialMap(const aiScene* const scene, std::vector<Texture*>& 
 		}
 
 		if (maps[i] == nullptr) {
-			maps[i] = new Texture("Textures/prototype.png");
-			maps[i]->loadTexture();
+			maps[i] = new Texture("Textures/black.dds");
+			maps[i]->loadDDSTexture();
 			maps[i]->makeBindless();
 		}
 	}
 }
 
 void Model::loadModel(std::string fileName, aiTextureType diffuseMap,
-	aiTextureType normalMap, aiTextureType metallicMap) {
+	aiTextureType normalMap, aiTextureType metallicMap, aiTextureType emissiveMap) {
 	if (fileName == "") {
 		std::cout << "No file path specified" << std::endl;
 		return;
@@ -139,6 +140,9 @@ void Model::loadModel(std::string fileName, aiTextureType diffuseMap,
 	this->_loadMaterialMap(scene, this->normalTextures, normalMap);
 	this->_loadMaterialMap(scene, this->metalnessTextures, metallicMap);
 	this->_loadMaterialMap(scene, this->heightTextures, aiTextureType_DIFFUSE_ROUGHNESS);
+
+	if(this->useEmissiveMap)
+		this->_loadMaterialMap(scene, this->emissiveTextures, emissiveMap);
 }
 
 void Model::drawModel(GLenum renderMode) {
@@ -154,11 +158,12 @@ void Model::drawModel(GLenum renderMode) {
 	glBindVertexArray(0);
 }
 
-void Model::renderModel(PBRShader& shader, GLenum renderMode) {
+void Model::renderModel(const PBRShader& shader, GLenum renderMode) {
 	glUniform1ui(shader.getUniformTextureBool(), this->useDiffuseMap);
 	glUniform1ui(shader.getUniformNormalMapBool(), this->useNormalMap);
 	glUniform1ui(shader.getUniformUseMaterialMap(), this->useMaterialMap);
 	glUniform1ui(shader.getUniformStrippedNormalBool(), this->strippedNormalMap);
+	glUniform1ui(shader.getUniformUseEmissiveMap(), this->useEmissiveMap);
 
 	glUniformMatrix4fv(shader.getUniformModel(), 1, GL_FALSE, glm::value_ptr(this->model));
 
@@ -166,21 +171,20 @@ void Model::renderModel(PBRShader& shader, GLenum renderMode) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->IBO);
 
 	for (const auto& mesh: this->renderData) {
-		if (mesh.materialIndex < this->diffuseTextures.size() && diffuseTextures[mesh.materialIndex]) {
+		if (mesh.materialIndex < this->diffuseTextures.size() && diffuseTextures[mesh.materialIndex]) 
 			this->diffuseTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformDiffuseSampler());
-		}
 
-		if (mesh.materialIndex < this->normalTextures.size() && this->normalTextures[mesh.materialIndex]) {
+		if (mesh.materialIndex < this->normalTextures.size() && this->normalTextures[mesh.materialIndex]) 
 			this->normalTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformNormalSampler());
-		}
 
-		if (mesh.materialIndex < this->heightTextures.size() && this->heightTextures[mesh.materialIndex]) {
+		if (mesh.materialIndex < this->heightTextures.size() && this->heightTextures[mesh.materialIndex])
 			this->heightTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformDepthSampler());
-		}
 
-		if (mesh.materialIndex < this->metalnessTextures.size() && this->metalnessTextures[mesh.materialIndex]) {
+		if (mesh.materialIndex < this->metalnessTextures.size() && this->metalnessTextures[mesh.materialIndex])
 			this->metalnessTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformMetallicSampler());
-		}
+
+		if (mesh.materialIndex < this->emissiveTextures.size() && this->emissiveTextures[mesh.materialIndex]) 
+			this->emissiveTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformEmissiveSampler());
 
 		glDrawElementsBaseVertex(
 			renderMode, mesh.numIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * mesh.baseIndex), mesh.baseVertex

@@ -13,6 +13,8 @@ private:
 	std::vector<Texture*> metalnessTextures;
 	std::vector<Texture*> emissiveTextures;
 
+	bool useEmissiveMap{ false };
+
 	void _loadNode(aiNode* node, const aiScene* const scene);
 	void _loadMesh(aiMesh* mesh, const aiScene* const scene);
 	void _updateRenderData(const aiScene* node);
@@ -23,14 +25,15 @@ public:
 		aiTextureType diffuseMap = aiTextureType_DIFFUSE,
 		aiTextureType normalMap = aiTextureType_NORMALS,
 		aiTextureType metallicMap = aiTextureType_METALNESS,
-		bool isStrippedNormal = false
+		aiTextureType emissiveMap = aiTextureType_EMISSIVE,
+		bool isStrippedNormal = false, bool hasEmissiveMaterial = false
 	);
 
 	void loadModel(std::string fileName, aiTextureType diffuseMap,
-		aiTextureType normalMap, aiTextureType metallicMap);
+		aiTextureType normalMap, aiTextureType metallicMap, aiTextureType emissiveMap);
 
 	void drawModel(GLenum renderMode = GL_TRIANGLES);
-	void renderModel(PBRShader& shader, GLenum renderMode = GL_TRIANGLES);
+	void renderModel(const PBRShader& shader, GLenum renderMode = GL_TRIANGLES);
 
 	void clearModel();
 

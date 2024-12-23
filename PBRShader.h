@@ -10,7 +10,7 @@ private:
 	GLuint uniformModel{ 0 }, uniformViewportMatrix{ 0 }, uniformColor{ 0 }, uniformStrippedNormalBool{ 0 };
 	GLuint uniformCameraPosition{ 0 }, uniformAlbedo{ 0 }, uniformMetallic{ 0 }, uniformRoughness{ 0 }, uniformAo{ 0 };
 	GLuint uniformTextureBool{ 0 }, uniformSSAObool{ 0 }, uniformWireframeBool{ 0 };
-	GLuint uniformEmissiveSampler{ 0 }, uniformUseNormalMap{ 0 }, uniformUseMaterialMap{ 0 };
+	GLuint uniformEmissiveSampler{ 0 }, uniformUseNormalMap{ 0 }, uniformUseMaterialMap{ 0 }, uniformUseEmissiveMap{ 0 };
 	GLuint uniformCSMSampler{ 0 }, uniformCascadePlaneDistances[::MAX_CASCADES], uniformCascadeCount{ 0 };
 	GLuint uniformIrradianceSampler{ 0 }, uniformBRDFSampler{ 0 }, uniformPrefilterSampler{ 0 }, uniformSSAOSampler{ 0 };
 	GLuint uniformDiffuseSampler{ 0 }, uniformNormalSampler{ 0 }, uniformMetallicSampler{ 0 }, uniformRoughnessSampler{ 0 };
@@ -109,6 +109,7 @@ public:
 	inline GLuint getUniformOffsetSampler() const { return this->uniformRandomOffsetSampler; }
 	inline GLuint getUniformPCFRadius() const { return this->uniformRadius; }
 	inline GLuint getUniformStrippedNormalBool() const { return this->uniformStrippedNormalBool; }
+	inline GLuint getUniformUseEmissiveMap() const { return this->uniformUseEmissiveMap; };
 
 	inline GLuint getUniformAlbedo() const { return this->uniformAlbedo; }
 	inline GLuint getUniformMetallic() const { return this->uniformMetallic; }

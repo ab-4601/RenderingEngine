@@ -105,9 +105,9 @@ public:
 	);
 
 	void drawMesh(GLenum renderMode);
-	void renderMesh(PBRShader& shader, GLenum renderMode = GL_TRIANGLES);
+	void renderMesh(const PBRShader& shader, GLenum renderMode = GL_TRIANGLES);
 
-	void renderMeshWithOutline(PBRShader& shader, Shader& outlineShader, GLenum renderMode);
+	void renderMeshWithOutline(const PBRShader& shader, Shader& outlineShader, GLenum renderMode);
 
 	void setMeshMaterial(float roughness, float metallic, float ao);
 

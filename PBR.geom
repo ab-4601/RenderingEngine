@@ -25,7 +25,7 @@ uniform mat4 viewportMatrix;
 uniform bool drawWireframe;
 
 void main() {
-	vec3 edgeDistances[3];
+	vec3 edgeDistances[3] = vec3[](vec3(0.f), vec3(0.f), vec3(0.f));
 
 	if(drawWireframe) {
 		vec4 p = vec4(0.f);

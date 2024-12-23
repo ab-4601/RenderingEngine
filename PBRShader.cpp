@@ -47,6 +47,7 @@ void PBRShader::getUniformLocations() {
 	this->uniformUseNormalMap = glGetUniformLocation(this->programID, "useNormalMap");
 	this->uniformStrippedNormalBool = glGetUniformLocation(this->programID, "strippedNormalMap");
 	this->uniformUseMaterialMap = glGetUniformLocation(this->programID, "useMaterialMap");
+	this->uniformUseEmissiveMap = glGetUniformLocation(this->programID, "useEmissiveMap");
 	this->uniformWireframeBool = glGetUniformLocation(this->programID, "drawWireframe");
 
 	this->uniformDiffuseSampler = glGetUniformLocation(this->programID, "diffuseMap");

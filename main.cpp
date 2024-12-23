@@ -150,22 +150,23 @@ int main() {
 
     meshes = Mesh::meshList;
 
-    Model suntemple(
+    /*Model suntemple(
         "Models/SunTemple/SunTemple.fbx",
         "Models/SunTemple/Textures/",
         aiTextureType_DIFFUSE,
         aiTextureType_NORMALS,
         aiTextureType_SPECULAR,
-        true
-    );
-
-    /*Model sponza(
-        "Models/Sponza/Sponza.gltf",
-        "Models/Sponza/"
+        aiTextureType_EMISSIVE,
+        true, true
     );*/
 
-    //models.push_back(&sponza);
-    models.push_back(&suntemple);
+    Model sponza(
+        "Models/Sponza/Sponza.gltf",
+        "Models/Sponza/"
+    );
+
+    models.push_back(&sponza);
+    //models.push_back(&suntemple);
 
     coordSystem.createCoordinateSystem();
 
@@ -262,8 +263,8 @@ int main() {
             glUniform1f(pbrShader.getUniformPCFRadius(), shadowRadius);
             glUniform1ui(pbrShader.getUniformWireframeBool(), drawWireframe);
 
-            //sponza.renderModel(pbrShader);
-            suntemple.renderModel(pbrShader);
+            sponza.renderModel(pbrShader);
+            //suntemple.renderModel(pbrShader);
 
             glm::vec2 mouseClickCoords = window.getViewportCoord();
 

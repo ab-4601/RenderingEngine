@@ -65,6 +65,9 @@ public:
 	}
 
 	void useTextureBindless(GLuint textureLocation) const {
+		if (this->textureHandle == 0)
+			this->useTexture(GL_TEXTURE0 + textureLocation);
+
 		glUniformHandleui64ARB(textureLocation, this->textureHandle);
 	}
 
@@ -77,4 +80,3 @@ public:
 
 	~Texture();
 };
-
