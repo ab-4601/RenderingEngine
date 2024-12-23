@@ -5,6 +5,8 @@
 const int MAX_POINT_LIGHTS = 3;
 const int MAX_SPOT_LIGHTS = 3;
 const int MAX_CASCADES = 16;
+const float wireframeWidth = 0.5f;
+const vec4 wireframeColor = vec4(0.f, 1.f, 1.f, 1.f);
 
 out vec4 fragColor;
 
@@ -15,6 +17,8 @@ in GEOM_DATA {
 	vec3 tangent;
     vec4 fragPos;
 } data_in;
+
+noperspective in vec3 edgeDistance;
 
 struct Light {
 	vec3 color;
@@ -59,6 +63,7 @@ uniform sampler2D normalMap;
 uniform sampler2D depthMap;
 uniform sampler2D metallicMap;
 uniform sampler2D roughnessMap;
+uniform sampler2D emissiveMap;
 layout (binding = 1) uniform samplerCube irradianceMap;
 layout (binding = 2) uniform samplerCube prefilterMap;
 layout (binding = 3) uniform sampler2D brdfLUT;
@@ -72,6 +77,7 @@ uniform bool strippedNormalMap;
 uniform bool useMaterialMap;
 uniform bool calcShadows;
 uniform bool enableSSAO;
+uniform bool drawWireframe;
 
 uniform float nearPlane;
 uniform float farPlane;
@@ -348,5 +354,23 @@ void main() {
 
 	finalColor += vec4(ambient, 1.f);
 
-	fragColor = finalColor;
+	float d = 0.f, mixVal = 0.f;
+
+	if(drawWireframe) {
+		d = min(edgeDistance.x, edgeDistance.y);
+		d = min(d, edgeDistance.z);
+
+		if(d < wireframeWidth - 1.f)
+			mixVal = 1.f;
+		else if(d > wireframeWidth + 1.f)
+			mixVal = 0.f;
+		else {
+			float x = d - (wireframeWidth - 1.f);
+			mixVal = exp2(-2.f * x * x);
+		}
+
+		fragColor = mix(finalColor, wireframeColor, mixVal);
+	}
+	else
+		fragColor = finalColor;
 }

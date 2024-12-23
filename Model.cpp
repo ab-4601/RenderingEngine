@@ -8,6 +8,7 @@ Model::Model(std::string fileName, std::string texFolderPath, aiTextureType diff
 	this->normalTextures.clear();
 	this->heightTextures.clear();
 	this->metalnessTextures.clear();
+	this->emissiveTextures.clear();
 
 	this->loadModel(fileName, diffuseMap, normalMap, metallicMap);
 	this->loadMesh(true, true, true, true, isStrippedNormal);

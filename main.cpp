@@ -67,7 +67,15 @@ int main() {
     std::vector<Mesh*> meshes{};
     std::vector<Model*> models{};
 
-    GLfloat aspect = (float)window.getBufferWidth() / window.getBufferHeight();
+    float windowWidth = (float)window.getBufferWidth();
+    float windowHeight = (float)window.getBufferHeight();
+
+    glm::mat4 viewportMatrix {
+        glm::vec4(windowWidth / 2.f, 0.f, 0.f, windowWidth / 2.f),
+        glm::vec4(0.f, windowHeight / 2.f, 0.f, windowHeight / 2.f),
+        glm::vec4(0.f, 0.f, 1.f, 0.f),
+        glm::vec4(0.f, 0.f, 0.f, 1.f)
+    };
 
     glm::mat4 model(1.f);
     glm::mat4 view(1.f);
@@ -142,22 +150,22 @@ int main() {
 
     meshes = Mesh::meshList;
 
-    /*Model suntemple(
+    Model suntemple(
         "Models/SunTemple/SunTemple.fbx",
         "Models/SunTemple/Textures/",
         aiTextureType_DIFFUSE,
         aiTextureType_NORMALS,
         aiTextureType_SPECULAR,
         true
-    );*/
-
-    Model sponza(
-        "Models/Sponza/Sponza.gltf",
-        "Models/Sponza/"
     );
 
-    models.push_back(&sponza);
-    //models.push_back(&suntemple);
+    /*Model sponza(
+        "Models/Sponza/Sponza.gltf",
+        "Models/Sponza/"
+    );*/
+
+    //models.push_back(&sponza);
+    models.push_back(&suntemple);
 
     coordSystem.createCoordinateSystem();
 
@@ -167,7 +175,7 @@ int main() {
 
     /*ParticleTexture fire("Textures/fire.png", 8.f);
     glm::vec3 fireParticlePosition{ 1125.f, 120.f, 400.f };
-    ParticleSystem fireSystem(particleColor, 30, -30.f, 1.f, 30.f, fire);*/
+    ParticleSystem fireSystem(particleColor, 30.f, -30.f, 1.f, 30.f, fire);*/
 
     ImGuiIO& io = overlay._init(window.getGlfwWindow());
 
@@ -177,8 +185,9 @@ int main() {
 
     pbrShader.setGeneralUniforms(
         mainLight, pointLights, pointLightCount, spotLights, spotLightCount,
-        csm.getNumCascades(), csm.cascadePlanes(), shadowRadius, csm.getNoiseTextureSize(), skybox.getIrradianceMap(),
-        skybox.getBRDFTexture(), skybox.getPrefilterTexture(), csm.noiseBuffer(), csm.getShadowMaps(), 0
+        csm.getNumCascades(), csm.cascadePlanes(), shadowRadius, csm.getNoiseTextureSize(), viewportMatrix,
+        skybox.getIrradianceMap(), skybox.getBRDFTexture(), skybox.getPrefilterTexture(),
+        csm.noiseBuffer(), csm.getShadowMaps(), 0
     );
 
     // main render loop
@@ -251,12 +260,10 @@ int main() {
             glUniform1i(pbrShader.getUniformShadowBool(), enableShadows);
             glUniform1i(pbrShader.getUniformSSAObool(), enableSSAO);
             glUniform1f(pbrShader.getUniformPCFRadius(), shadowRadius);
+            glUniform1ui(pbrShader.getUniformWireframeBool(), drawWireframe);
 
-            if (drawWireframe)
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-            sponza.renderModel(pbrShader);
-            //suntemple.renderModel(pbrShader);
+            //sponza.renderModel(pbrShader);
+            suntemple.renderModel(pbrShader);
 
             glm::vec2 mouseClickCoords = window.getViewportCoord();
 
@@ -288,8 +295,6 @@ int main() {
                 if ((int)i != index && meshes[i]->getObjectID() != -1)
                     meshes[i]->renderMesh(pbrShader, GL_TRIANGLES);
             }
-
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 // ----------------------------------------------------------------------------------------------------------------
 

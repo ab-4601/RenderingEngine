@@ -11,6 +11,7 @@ private:
 	std::vector<Texture*> normalTextures;
 	std::vector<Texture*> heightTextures;
 	std::vector<Texture*> metalnessTextures;
+	std::vector<Texture*> emissiveTextures;
 
 	void _loadNode(aiNode* node, const aiScene* const scene);
 	void _loadMesh(aiMesh* mesh, const aiScene* const scene);

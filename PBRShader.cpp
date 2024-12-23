@@ -24,6 +24,7 @@ PBRShader::PBRShader(std::string vertFileName, std::string fragFileName, std::st
 
 void PBRShader::getUniformLocations() {
 	this->uniformModel = glGetUniformLocation(this->programID, "model");
+	this->uniformViewportMatrix = glGetUniformLocation(this->programID, "viewportMatrix");
 
 	this->uniformColor = glGetUniformLocation(this->programID, "color");
 
@@ -46,12 +47,14 @@ void PBRShader::getUniformLocations() {
 	this->uniformUseNormalMap = glGetUniformLocation(this->programID, "useNormalMap");
 	this->uniformStrippedNormalBool = glGetUniformLocation(this->programID, "strippedNormalMap");
 	this->uniformUseMaterialMap = glGetUniformLocation(this->programID, "useMaterialMap");
+	this->uniformWireframeBool = glGetUniformLocation(this->programID, "drawWireframe");
 
 	this->uniformDiffuseSampler = glGetUniformLocation(this->programID, "diffuseMap");
 	this->uniformNormalSampler = glGetUniformLocation(this->programID, "normalMap");
 	this->uniformDepthSampler = glGetUniformLocation(this->programID, "depthMap");
 	this->uniformMetallicSampler = glGetUniformLocation(this->programID, "metallicMap");
 	this->uniformRoughnessSampler = glGetUniformLocation(this->programID, "roughnessMap");
+	this->uniformEmissiveSampler = glGetUniformLocation(this->programID, "emissiveMap");
 	this->uniformIrradianceSampler = glGetUniformLocation(this->programID, "irradianceMap");
 	this->uniformBRDFSampler = glGetUniformLocation(this->programID, "brdfLUT");
 	this->uniformPrefilterSampler = glGetUniformLocation(this->programID, "prefilterMap");
@@ -161,8 +164,9 @@ void PBRShader::setSpotLights(SpotLight* spotLights, unsigned int lightCount) {
 
 void PBRShader::setGeneralUniforms(DirectionalLight& directionalLight, std::vector<PointLight>& pointLights,
 	int pointLightCount, std::vector<SpotLight>& spotLights, int spotLightCount, int numCascades,
-	const float* const cascadePlanes, float shadowRadius, glm::vec3 offsetTextureSize, GLuint irradianceMap,
-	GLuint brdfSampler, GLuint prefilterSampler, GLuint noiseSampler, GLuint cascadedShadowMap, GLuint pointShadowMap)
+	const float* const cascadePlanes, float shadowRadius, glm::vec3 offsetTextureSize, glm::mat4 viewportMat,
+	GLuint irradianceMap, GLuint brdfSampler, GLuint prefilterSampler,
+	GLuint noiseSampler, GLuint cascadedShadowMap, GLuint pointShadowMap)
 {
 	glUseProgram(this->programID);
 
@@ -174,6 +178,7 @@ void PBRShader::setGeneralUniforms(DirectionalLight& directionalLight, std::vect
 	glUniform1f(this->uniformNearPlane, ::near_plane);
 	glUniform1f(this->uniformRadius, shadowRadius);
 	glUniform3fv(this->uniformOffsetTextureSize, 1, glm::value_ptr(offsetTextureSize));
+	glUniformMatrix4fv(this->uniformViewportMatrix, 1, GL_FALSE, glm::value_ptr(viewportMat));
 	glUniform1i(this->uniformCascadeCount, numCascades);
 
 	for (size_t i = 0; i < ::MAX_CASCADES; i++)

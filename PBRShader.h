@@ -7,9 +7,10 @@
 
 class PBRShader : public IShaderLoader {
 private:
-	GLuint uniformModel{ 0 }, uniformColor{ 0 }, uniformStrippedNormalBool{ 0 };
+	GLuint uniformModel{ 0 }, uniformViewportMatrix{ 0 }, uniformColor{ 0 }, uniformStrippedNormalBool{ 0 };
 	GLuint uniformCameraPosition{ 0 }, uniformAlbedo{ 0 }, uniformMetallic{ 0 }, uniformRoughness{ 0 }, uniformAo{ 0 };
-	GLuint uniformTextureBool{ 0 }, uniformUseNormalMap{ 0 }, uniformUseMaterialMap{ 0 }, uniformSSAObool{ 0 };
+	GLuint uniformTextureBool{ 0 }, uniformSSAObool{ 0 }, uniformWireframeBool{ 0 };
+	GLuint uniformEmissiveSampler{ 0 }, uniformUseNormalMap{ 0 }, uniformUseMaterialMap{ 0 };
 	GLuint uniformCSMSampler{ 0 }, uniformCascadePlaneDistances[::MAX_CASCADES], uniformCascadeCount{ 0 };
 	GLuint uniformIrradianceSampler{ 0 }, uniformBRDFSampler{ 0 }, uniformPrefilterSampler{ 0 }, uniformSSAOSampler{ 0 };
 	GLuint uniformDiffuseSampler{ 0 }, uniformNormalSampler{ 0 }, uniformMetallicSampler{ 0 }, uniformRoughnessSampler{ 0 };
@@ -69,11 +70,12 @@ public:
 
 	void setGeneralUniforms(DirectionalLight& directionalLight, std::vector<PointLight>& pointLights, int pointLightCount,
 		std::vector<SpotLight>& spotLights, int spotLightCount, int numCascades, const float* const cascadePlanes,
-		float shadowRadius, glm::vec3 offsetTextureSize, GLuint irradianceMap, GLuint brdfSampler,
+		float shadowRadius, glm::vec3 offsetTextureSize, glm::mat4 viewportMat, GLuint irradianceMap, GLuint brdfSampler,
 		GLuint prefilterSampler, GLuint noiseSampler, GLuint cascadedShadowMap, GLuint pointShadowMap);
 
 	inline GLuint getUniformModel() const { return this->uniformModel; }
 	inline GLuint getUniformColor() const { return this->uniformColor; }
+	inline GLuint getUniformViewportMatrix() const { return this->uniformViewportMatrix; }
 	inline GLuint getAmbientIntensityLocation() const { return this->uniformDirectionalLight.uniformAmbientIntensity; }
 	inline GLuint getAmbientColorLocation() const { return this->uniformDirectionalLight.uniformAmbientColor; }
 	inline GLuint getDiffuseIntensityLocation() const { return this->uniformDirectionalLight.uniformDiffuseIntensity; }
@@ -81,12 +83,14 @@ public:
 	inline GLuint getUniformCameraPosition() const { return this->uniformCameraPosition; }
 	inline GLuint getUniformTextureBool() const { return this->uniformTextureBool; }
 	inline GLuint getUniformNormalMapBool() const { return this->uniformUseNormalMap; }
+	inline GLuint getUniformWireframeBool() const { return this->uniformWireframeBool; }
 	inline GLuint getUniformUseMaterialMap() const { return this->uniformUseMaterialMap; }
 	inline GLuint getUniformDiffuseSampler() const { return this->uniformDiffuseSampler; }
 	inline GLuint getUniformNormalSampler() const { return this->uniformNormalSampler; }
 	inline GLuint getUniformDepthSampler() const { return this->uniformDepthSampler; }
 	inline GLuint getUniformMetallicSampler() const { return this->uniformMetallicSampler; }
 	inline GLuint getUniformRoughnessSampler() const { return this->uniformRoughnessSampler; }
+	inline GLuint getUniformEmissiveSampler() const { return this->uniformEmissiveSampler; }
 	inline GLuint getUniformIrradianceSampler() const { return this->uniformIrradianceSampler; }
 	inline GLuint getUniformBRDFSampler() const { return this->uniformBRDFSampler; }
 	inline GLuint getUniformPrefilterSampler() const { return this->uniformPrefilterSampler; }
