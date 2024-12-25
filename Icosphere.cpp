@@ -2,6 +2,7 @@
 
 Icosphere::Icosphere()
     : Mesh() {
+    this->tempIndices.clear();
     this->_generateIcosahedron();
 }
 
@@ -11,9 +12,12 @@ void Icosphere::_generateIcosahedron() {
     const float N = 0.f;
 
     this->vertices = {
-        Vertex({-X,N,Z}), Vertex({X,N,Z}), Vertex({-X,N,-Z}),  Vertex({X,N,-Z}),
-        Vertex({N,Z,X}),  Vertex({N,Z,-X}), Vertex({N,-Z,X}),  Vertex({N,-Z,-X}),
-        Vertex({Z,X,N}), Vertex({-Z,X,N}),  Vertex({Z,-X,N}), Vertex({-Z,-X,N})
+        Vertex({-X,N,Z}, {0.f, 0.f}, {-X,N,Z}), Vertex({X,N,Z}, {0.f, 0.f}, {X,N,Z}),
+        Vertex({-X,N,-Z}, {0.f, 0.f}, {-X,N,-Z}),  Vertex({X,N,-Z}, {0.f, 0.f}, {X,N,-Z}),
+        Vertex({N,Z,X}, {0.f, 0.f}, {N,Z,X}),  Vertex({N,Z,-X}, {0.f, 0.f}, {N,Z,-X}),
+        Vertex({N,-Z,X}, {0.f, 0.f}, {N,-Z,X}),  Vertex({N,-Z,-X}, {0.f, 0.f}, {N,-Z,-X}),
+        Vertex({Z,X,N}, {0.f, 0.f}, {Z,X,N}), Vertex({-Z,X,N}, {0.f, 0.f}, {-Z,X,N}),
+        Vertex({Z,-X,N}, {0.f, 0.f}, {Z,-X,N}), Vertex({-Z,-X,N}, {0.f, 0.f}, {-Z,-X,N})
     };
 
     this->indices = {

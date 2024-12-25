@@ -8,6 +8,8 @@ const int MAX_CASCADES = 16;
 const float wireframeWidth = 0.5f;
 const vec4 wireframeColor = vec4(0.f, 1.f, 1.f, 1.f);
 
+const float levels = 4.f;
+
 out vec4 fragColor;
 
 in GEOM_DATA {

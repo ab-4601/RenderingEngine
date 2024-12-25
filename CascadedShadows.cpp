@@ -6,9 +6,9 @@ CascadedShadows::CascadedShadows(int windowWidth, int windowHeight, float lambda
 	for (int i = 0; i < ::MAX_CASCADES; i++)
 		this->cascadeSplits[i] = 0;
 
+	this->genRandomOffsetData(size, samplesU, samplesV);
 	this->calcSplitDepths(lambda);
 	this->setComputeUniforms();
-	this->genRandomOffsetData(size, samplesU, samplesV);
 	this->_init();
 }
 

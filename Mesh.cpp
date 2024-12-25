@@ -9,10 +9,13 @@ Mesh::Mesh() {
 	this->renderData.clear();
 }
 
-void Mesh::loadMesh(bool useDiffuseMap, bool drawIndexed, bool useNormalMap, bool useMaterialMap, bool isStrippedNormal) {
+void Mesh::loadMesh(bool useDiffuseMap, bool drawIndexed, bool useNormalMap, bool useMaterialMap,
+	bool useEmissiveMap, bool isStrippedNormal) 
+{
 	this->useDiffuseMap = useDiffuseMap;
 	this->useNormalMap = useNormalMap;
 	this->useMaterialMap = useMaterialMap;
+	this->useEmissiveMap = useEmissiveMap;
 	this->strippedNormalMap = isStrippedNormal;
 	this->drawIndexed = drawIndexed;
 
@@ -78,6 +81,7 @@ void Mesh::renderMesh(const PBRShader& shader, GLenum renderMode) {
 	glUniform1ui(shader.getUniformTextureBool(), this->useDiffuseMap);
 	glUniform1ui(shader.getUniformNormalMapBool(), this->useNormalMap);
 	glUniform1ui(shader.getUniformUseMaterialMap(), this->useMaterialMap);
+	glUniform1ui(shader.getUniformUseEmissiveMap(), this->useEmissiveMap);
 	glUniform1ui(shader.getUniformStrippedNormalBool(), this->strippedNormalMap);
 
 	glUniformMatrix4fv(shader.getUniformModel(), 1, GL_FALSE, glm::value_ptr(this->model));

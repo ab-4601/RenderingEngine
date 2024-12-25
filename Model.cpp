@@ -3,7 +3,7 @@
 Model::Model(std::string fileName, std::string texFolderPath, aiTextureType diffuseMap,
 	aiTextureType normalMap, aiTextureType metallicMap, aiTextureType emissiveMap,
 	bool isStrippedNormal, bool hasEmissiveMaterial)
-	: Mesh(), texFolderPath{ texFolderPath }, useEmissiveMap{ hasEmissiveMaterial }
+	: Mesh(), texFolderPath{ texFolderPath }
 {
 	this->diffuseTextures.clear();
 	this->normalTextures.clear();
@@ -11,8 +11,10 @@ Model::Model(std::string fileName, std::string texFolderPath, aiTextureType diff
 	this->metalnessTextures.clear();
 	this->emissiveTextures.clear();
 
+	this->useEmissiveMap = hasEmissiveMaterial;
+
 	this->loadModel(fileName, diffuseMap, normalMap, metallicMap, emissiveMap);
-	this->loadMesh(true, true, true, true, isStrippedNormal);
+	this->loadMesh(true, true, true, true, hasEmissiveMaterial, isStrippedNormal);
 
 	Mesh::meshList.pop_back();
 }

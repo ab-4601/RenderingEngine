@@ -13,8 +13,6 @@ private:
 	std::vector<Texture*> metalnessTextures;
 	std::vector<Texture*> emissiveTextures;
 
-	bool useEmissiveMap{ false };
-
 	void _loadNode(aiNode* node, const aiScene* const scene);
 	void _loadMesh(aiMesh* mesh, const aiScene* const scene);
 	void _updateRenderData(const aiScene* node);

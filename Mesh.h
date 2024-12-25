@@ -59,6 +59,7 @@ protected:
 	bool useNormalMap{ false };
 	bool strippedNormalMap{ false };
 	bool useMaterialMap{ false };
+	bool useEmissiveMap{ false };
 	bool drawIndexed{ true };
 	bool calcShadows{ false };
 	bool enableSSAO{ false };
@@ -101,7 +102,7 @@ public:
 	void loadMesh(
 		bool useDiffuseMap = false, bool drawIndexed = true,
 		bool useNormalMap = false, bool useMaterialMap = false,
-		bool isStrippedNormal = false
+		bool useEmissiveMap = false, bool isStrippedNormal = false
 	);
 
 	void drawMesh(GLenum renderMode);

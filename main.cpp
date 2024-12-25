@@ -59,7 +59,7 @@ int main() {
     Skybox skybox{ window.getBufferWidth(), window.getBufferHeight() };
     DirectionalLight mainLight{ 0.1f, 0.5f, lightDirection, { 1.f, 1.f, 1.f } };
     LightSources lightSources;
-    CascadedShadows csm{ window.getBufferWidth(), window.getBufferHeight(), 0.4f };
+    CascadedShadows csm{ window.getBufferWidth(), window.getBufferHeight(), 0.4f, 20, 6, 6 };
 
     PBRShader pbrShader;
     Shader outlineShader{ "highlight.vert", "highlight.frag" };
@@ -144,7 +144,7 @@ int main() {
     terrain.generateHeightMaps(3);
     terrain.setMeshMaterial(0.f, 1.f, 1.f);
     terrain.generateTerrain();
-    terrain.loadMesh(true);
+    terrain.loadMesh();
     terrain.setModelMatrix(model);
     terrain.setColor(glm::vec3(0.2f, 0.2f, 0.2f));*/
 
@@ -258,18 +258,17 @@ int main() {
             pbrShader.setPointLights(pointLights.data(), pointLightCount);
             pbrShader.setSpotLights(spotLights.data(), spotLightCount);
 
-            glUniform1i(pbrShader.getUniformShadowBool(), enableShadows);
-            glUniform1i(pbrShader.getUniformSSAObool(), enableSSAO);
-            glUniform1f(pbrShader.getUniformPCFRadius(), shadowRadius);
+            glUniform1ui(pbrShader.getUniformShadowBool(), enableShadows);
+            glUniform1ui(pbrShader.getUniformSSAObool(), enableSSAO);
             glUniform1ui(pbrShader.getUniformWireframeBool(), drawWireframe);
+            glUniform1f(pbrShader.getUniformPCFRadius(), shadowRadius);
 
             sponza.renderModel(pbrShader);
             //suntemple.renderModel(pbrShader);
 
             glm::vec2 mouseClickCoords = window.getViewportCoord();
 
-            if (window.getKeyPress(GLFW_KEY_TAB))
-            {
+            if (window.getKeyPress(GLFW_KEY_TAB)) {
                 index = -1;
                 prevIndex = -1;
             }

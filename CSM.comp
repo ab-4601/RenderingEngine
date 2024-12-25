@@ -1,8 +1,5 @@
 #version 450 core
 
-precision highp float;
-precision highp int;
-
 layout (local_size_x = 1) in;
 
 const float MAX_FLOAT = 3.402823466e+38f;
