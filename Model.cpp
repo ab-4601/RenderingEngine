@@ -151,42 +151,43 @@ void Model::drawModel(GLenum renderMode) {
 	glBindVertexArray(this->VAO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->IBO);
 
-	for (const auto& mesh : this->renderData)
+	for (const auto& mesh : this->renderData) {
 		glDrawElementsBaseVertex(
 			renderMode, mesh.numIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * mesh.baseIndex), mesh.baseVertex
 		);
+	}
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
 
-void Model::renderModel(const PBRShader& shader, GLenum renderMode) {
-	glUniform1ui(shader.getUniformTextureBool(), this->useDiffuseMap);
-	glUniform1ui(shader.getUniformNormalMapBool(), this->useNormalMap);
-	glUniform1ui(shader.getUniformUseMaterialMap(), this->useMaterialMap);
-	glUniform1ui(shader.getUniformStrippedNormalBool(), this->strippedNormalMap);
-	glUniform1ui(shader.getUniformUseEmissiveMap(), this->useEmissiveMap);
+void Model::renderModel(Shader& shader, GLenum renderMode) {
+	shader.setMat4("model", this->model);
 
-	glUniformMatrix4fv(shader.getUniformModel(), 1, GL_FALSE, glm::value_ptr(this->model));
+	shader.setUint("useDiffuseMap", this->useDiffuseMap);
+	shader.setUint("useNormalMap", this->useNormalMap);
+	shader.setUint("strippedNormalMap", this->strippedNormalMap);
+	shader.setUint("useMaterialMap", this->useMaterialMap);
+	shader.setUint("useEmissiveMap", this->useEmissiveMap);
 
 	glBindVertexArray(this->VAO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->IBO);
 
 	for (const auto& mesh: this->renderData) {
-		if (mesh.materialIndex < this->diffuseTextures.size() && diffuseTextures[mesh.materialIndex]) 
-			this->diffuseTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformDiffuseSampler());
+		if (mesh.materialIndex < this->diffuseTextures.size() && diffuseTextures[mesh.materialIndex])
+			shader.setTexture("diffuseMap", this->diffuseTextures[mesh.materialIndex]->getTextureHandle());
 
-		if (mesh.materialIndex < this->normalTextures.size() && this->normalTextures[mesh.materialIndex]) 
-			this->normalTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformNormalSampler());
+		if (mesh.materialIndex < this->normalTextures.size() && this->normalTextures[mesh.materialIndex])
+			shader.setTexture("normalMap", this->normalTextures[mesh.materialIndex]->getTextureHandle());
 
 		if (mesh.materialIndex < this->heightTextures.size() && this->heightTextures[mesh.materialIndex])
-			this->heightTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformDepthSampler());
+			shader.setTexture("depthMap", this->heightTextures[mesh.materialIndex]->getTextureHandle());
 
 		if (mesh.materialIndex < this->metalnessTextures.size() && this->metalnessTextures[mesh.materialIndex])
-			this->metalnessTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformMetallicSampler());
+			shader.setTexture("metallicMap", this->metalnessTextures[mesh.materialIndex]->getTextureHandle());
 
-		if (mesh.materialIndex < this->emissiveTextures.size() && this->emissiveTextures[mesh.materialIndex]) 
-			this->emissiveTextures[mesh.materialIndex]->useTextureBindless(shader.getUniformEmissiveSampler());
+		if (mesh.materialIndex < this->emissiveTextures.size() && this->emissiveTextures[mesh.materialIndex])
+			shader.setTexture("emissiveMap", this->emissiveTextures[mesh.materialIndex]->getTextureHandle());
 
 		glDrawElementsBaseVertex(
 			renderMode, mesh.numIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * mesh.baseIndex), mesh.baseVertex

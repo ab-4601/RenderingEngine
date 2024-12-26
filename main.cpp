@@ -40,6 +40,105 @@ GLfloat elapsedTime = 0.f;
 
 float filterRadius = 0.005f;
 
+static void setLightingUniforms(Shader& shader, const DirectionalLight& light, const std::vector<PointLight>& pointLights,
+    uint pointLightCount, const std::vector<SpotLight>& spotLights, uint spotLightCount) 
+{
+    shader.setVec3("directionalLight.base.color", light.getColor());
+    shader.setVec3("directionalLight.direction", light.getLightDirection());
+
+    if (pointLightCount > ::MAX_POINT_LIGHTS)
+        pointLightCount = ::MAX_POINT_LIGHTS;
+
+    if (spotLightCount > ::MAX_SPOT_LIGHTS)
+        spotLightCount = ::MAX_SPOT_LIGHTS;
+
+    shader.setUint("pointLightCount", pointLightCount);
+    shader.setUint("spotLightCount", spotLightCount);
+
+    char buffer[64]{ '\0' };
+
+    for (int i = 0; i < pointLightCount; i++) {
+
+        snprintf(buffer, sizeof(buffer), "pointLights[%i].base.color", i);
+        shader.setVec3(buffer, pointLights[i].getColor());
+
+        snprintf(buffer, sizeof(buffer), "pointLights[%i].position", i);
+        shader.setVec3(buffer, pointLights[i].getPosition());
+
+        snprintf(buffer, sizeof(buffer), "pointLights[%i].constant", i);
+        shader.setFloat(buffer, pointLights[i].getAttenuationConstant());
+
+        snprintf(buffer, sizeof(buffer), "pointLights[%i].linear", i);
+        shader.setFloat(buffer, pointLights[i].getAttenuationLinear());
+
+        snprintf(buffer, sizeof(buffer), "pointLights[%i].exponent", i);
+        shader.setFloat(buffer, pointLights[i].getAttenuationExponent());
+    }
+
+    for (int i = 0; i < spotLightCount; i++) {
+        snprintf(buffer, sizeof(buffer), "spotLights[%i].base.base.color", i);
+        shader.setVec3(buffer, spotLights[i].getColor());
+
+        snprintf(buffer, sizeof(buffer), "spotLights[%i].base.position", i);
+        shader.setVec3(&buffer[0], spotLights[i].getPosition());
+
+        snprintf(buffer, sizeof(buffer), "spotLights[%i].base.constant", i);
+        shader.setFloat(&buffer[0], spotLights[i].getAttenuationConstant());
+
+        snprintf(buffer, sizeof(buffer), "spotLights[%i].base.linear", i);
+        shader.setFloat(&buffer[0], spotLights[i].getAttenuationLinear());
+
+        snprintf(buffer, sizeof(buffer), "spotLights[%i].base.exponent", i);
+        shader.setFloat(&buffer[0], spotLights[i].getAttenuationExponent());
+
+        snprintf(buffer, sizeof(buffer), "spotLights[%i].direction", i);
+        shader.setVec3(&buffer[0], spotLights[i].getDirection());
+
+        snprintf(buffer, sizeof(buffer), "spotLights[%i].edge", i);
+        shader.setFloat(&buffer[0], spotLights[i].getProcEdge());
+    }
+}
+
+static void setGlobalPBRUniforms(Shader& shader, int numCascades, const float* cascadePlanes,
+    glm::vec3 offsetTextureSize, glm::mat4 viewportMatrix, GLuint irradianceMap, GLuint brdfSampler,
+    GLuint prefilterSampler, GLuint noiseSampler, GLuint cascadedShadowMaps, GLuint pointShadowMap) 
+{
+    shader.useShader();
+
+    shader.setFloat("nearPlane", ::near_plane);
+    shader.setFloat("farPlane", ::far_plane);
+    shader.setInt("cascadeCount", numCascades);
+    shader.setVec3("offsetTexSize", offsetTextureSize);
+    shader.setMat4("viewportMatrix", viewportMatrix);
+    
+    char buffer[64]{ '\0' };
+
+    for (int i = 0; i < ::MAX_CASCADES; i++) {
+        snprintf(buffer, sizeof(buffer), "cascadePlanes[%i]", i);
+        shader.setFloat(buffer, cascadePlanes[i]);
+    }
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterSampler);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, brdfSampler);
+
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, pointShadowMap);
+
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, cascadedShadowMaps);
+
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_3D, noiseSampler);
+
+    shader.endShader();
+}
+
 int main() {
     srand((uint)time(0));
 
@@ -61,7 +160,7 @@ int main() {
     LightSources lightSources;
     CascadedShadows csm{ window.getBufferWidth(), window.getBufferHeight(), 0.4f, 20, 6, 6 };
 
-    PBRShader pbrShader;
+    Shader lightingShader{ "PBR.vert", "PBR.frag", "PBR.geom" };
     Shader outlineShader{ "highlight.vert", "highlight.frag" };
 
     std::vector<Mesh*> meshes{};
@@ -93,11 +192,10 @@ int main() {
     /*pointLights.at(0) = PointLight(0.01f, 0.4f, pointLightPosition1, 1.f, 0.001f, 0.001f, { 500.f, 500.f, 500.f });
     pointLightCount++;
 
-    pointLights.at(1) = PointLight(0.01f, 0.4f, pointLightPosition2, 1.f, 0.0001f, 0.0001f, {500.f, 500.f, 500.f});
+    pointLights.at(1) = PointLight(0.01f, 0.4f, pointLightPosition2, 1.f, 0.0001f, 0.0001f, { 500.f, 500.f, 500.f });
     pointLightCount++;
 
-    spotLights.at(0) = SpotLight(0.01f, 0.4f, spotLightPosition, 1.f, 0.0001f, 0.0001f,
-        { 0.f, 0.f, 500.f }, { 0.f, -1.f, 0.f }, 45);
+    spotLights.at(0) = SpotLight(0.01f, 0.4f, spotLightPosition, 1.f, 0.0001f, 0.0001f, { 0.f, 0.f, 500.f }, { 0.f, -1.f, 0.f }, 45);
     spotLightCount++;*/
 
     bool drawSkybox = true;
@@ -110,7 +208,7 @@ int main() {
     bool displayGrid = false;
 
     float exposure = 1.f;
-    float shadowRadius = 1.5f;
+    float shadowRadius = 2.f;
     float bloomThreshold = 1.f;
 
     GLuint gridSize = 500;
@@ -184,10 +282,9 @@ int main() {
 
     GLuint currFramebuffer = 0;
 
-    pbrShader.setGeneralUniforms(
-        mainLight, pointLights, pointLightCount, spotLights, spotLightCount,
-        csm.getNumCascades(), csm.cascadePlanes(), shadowRadius, csm.getNoiseTextureSize(), viewportMatrix,
-        skybox.getIrradianceMap(), skybox.getBRDFTexture(), skybox.getPrefilterTexture(),
+    setGlobalPBRUniforms(
+        lightingShader, csm.getNumCascades(), csm.cascadePlanes(), csm.getNoiseTextureSize(),
+        viewportMatrix, skybox.getIrradianceMap(), skybox.getBRDFTexture(), skybox.getPrefilterTexture(),
         csm.noiseBuffer(), csm.getShadowMaps(), 0
     );
 
@@ -246,25 +343,23 @@ int main() {
 
             if (enableShadows) {
                 csm.calculateShadows(
-                    window.getWindowWidth(), window.getWindowHeight(), meshes, models, lightDirection, currFramebuffer
+                    window.getBufferWidth(), window.getBufferHeight(), meshes, models, lightDirection, currFramebuffer
                 );
             }
 
             selection.pickingPhase(meshes, currFramebuffer);
 
-            glUseProgram(pbrShader.getProgramID());
+            lightingShader.useShader();
 
-            pbrShader.setDirectionalLight(&mainLight);
-            pbrShader.setPointLights(pointLights.data(), pointLightCount);
-            pbrShader.setSpotLights(spotLights.data(), spotLightCount);
+            setLightingUniforms(lightingShader, mainLight, pointLights, pointLightCount, spotLights, spotLightCount);
 
-            glUniform1ui(pbrShader.getUniformShadowBool(), enableShadows);
-            glUniform1ui(pbrShader.getUniformSSAObool(), enableSSAO);
-            glUniform1ui(pbrShader.getUniformWireframeBool(), drawWireframe);
-            glUniform1f(pbrShader.getUniformPCFRadius(), shadowRadius);
+            lightingShader.setUint("calcShadows", enableShadows);
+            lightingShader.setUint("enableSSAO", enableSSAO);
+            lightingShader.setUint("drawWireframe", drawWireframe);
+            lightingShader.setFloat("radius", shadowRadius);
 
-            sponza.renderModel(pbrShader);
-            //suntemple.renderModel(pbrShader);
+            sponza.renderModel(lightingShader);
+            //suntemple.renderModel(lightingShader);
 
             glm::vec2 mouseClickCoords = window.getViewportCoord();
 
@@ -288,12 +383,12 @@ int main() {
 
                 overlay.manipulate(window.getWindowWidth(), window.getWindowHeight(), camera, meshes[index]);
 
-                meshes[index]->renderMeshWithOutline(pbrShader, outlineShader, GL_TRIANGLES);
+                meshes[index]->renderMeshWithOutline(lightingShader, outlineShader, GL_TRIANGLES);
             }
 
             for (size_t i = 0; i < meshes.size(); i++) {
                 if ((int)i != index && meshes[i]->getObjectID() != -1)
-                    meshes[i]->renderMesh(pbrShader, GL_TRIANGLES);
+                    meshes[i]->renderMesh(lightingShader, GL_TRIANGLES);
             }
 
 // ----------------------------------------------------------------------------------------------------------------

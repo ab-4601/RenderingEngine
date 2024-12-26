@@ -29,14 +29,3 @@ void PointLight::operator=(PointLight&& rhs) noexcept {
 	this->linear = rhs.linear;
 	this->exponent = rhs.exponent;
 }
-
-void PointLight::useLight(GLuint ambientIntensityLocation, GLuint ambientColorLocation, GLuint diffuseIntensityLocation,
-	GLuint positionLocation, GLuint constantLocation, GLuint linearLocation, GLuint exponentLocation) {
-
-	Light::useLight(ambientIntensityLocation, ambientColorLocation, diffuseIntensityLocation);
-
-	glUniform3f(positionLocation, this->position.x, this->position.y, this->position.z);
-	glUniform1f(constantLocation, this->constant);
-	glUniform1f(linearLocation, this->linear);
-	glUniform1f(exponentLocation, this->exponent);
-}

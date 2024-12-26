@@ -35,14 +35,3 @@ void SpotLight::operator=(SpotLight&& rhs) noexcept {
 	this->edge = rhs.edge;
 	this->procEdge = rhs.procEdge;
 }
-
-void SpotLight::useLight(GLuint ambientIntensityLocation, GLuint ambientColorLocation, GLuint diffuseIntensityLocation,
-	GLuint positionLocation, GLuint constantLocation, GLuint linearLocation, GLuint exponentLocation,
-	GLuint directionLocation, GLuint edgeLocation) {
-
-	PointLight::useLight(ambientIntensityLocation, ambientColorLocation, diffuseIntensityLocation,
-		positionLocation, constantLocation, linearLocation, exponentLocation);
-
-	glUniform3fv(directionLocation, 1, glm::value_ptr(this->direction));
-	glUniform1f(edgeLocation, this->procEdge);
-}

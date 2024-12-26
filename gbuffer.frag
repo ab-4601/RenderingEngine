@@ -18,7 +18,9 @@ uniform bool useMetalnessMap;
 
 uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
-uniform sampler2D metalnessMap;
+uniform sampler2D metallicMap;
+
+uniform bool strippedNormalMap;
 
 void main() {
 	gPosition = fragPos;
@@ -35,6 +37,8 @@ void main() {
 		vec3 B = cross(N, T);
 
 		vNormal = normalize(mat3(T, B, N) * vNormal);
+		if(strippedNormalMap) vNormal *= -1.f;
+
 		gNormal = vNormal;
 	}
 	else
@@ -46,7 +50,7 @@ void main() {
 		gAlbedo = color;
 
 	if(useMetalnessMap)
-		gMetallic = texture(metalnessMap, texel).rgb;
+		gMetallic = texture(metallicMap, texel).rgb;
 	else
 		gMetallic = vec3(0.95f);
 }

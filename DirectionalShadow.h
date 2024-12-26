@@ -29,8 +29,8 @@ public:
 	void calculateShadows(int windowWidth, int windowHeight, std::vector<Mesh*>& meshes, 
 		glm::vec3 lightPosition, GLuint currentFramebuffer = 0);
 
-	inline glm::mat4 getLightSpaceMatrix() const { return this->projection * this->view; }
-	inline GLuint getDirectionalShadowMap() const { return this->depthMap; }
+	glm::mat4 getLightSpaceMatrix() const { return this->projection * this->view; }
+	GLuint getDirectionalShadowMap() const { return this->depthMap; }
 
 	~DirectionalShadow();
 };

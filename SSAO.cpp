@@ -87,13 +87,12 @@ void SSAO::_init(int windowWidth, int windowHeight) {
 	}
 }
 
-void SSAO::calcSSAO(GLuint gPosition, GLuint gNormal, const glm::mat4& projection, GLuint currFramebuffer) {
+void SSAO::calcSSAO(GLuint gPosition, GLuint gNormal, GLuint currFramebuffer) {
 	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	this->shader.useShader();
 
-	this->shader.setMat4("projection", projection);
 	this->shader.setInt("gPosition", 0);
 	this->shader.setInt("gNormal", 1);
 	this->shader.setInt("noise", 2);
@@ -102,7 +101,7 @@ void SSAO::calcSSAO(GLuint gPosition, GLuint gNormal, const glm::mat4& projectio
 	this->shader.setInt("kernelSize", 64);
 	this->shader.setFloat("radius", 0.5f);
 	this->shader.setFloat("bias", 0.035f);
-	this->shader.setFloat("occlusionPower", 100.f);
+	this->shader.setFloat("occlusionPower", 1000.f);
 
 	std::string buffer{};
 	for (uint i = 0; i < 64; i++) {

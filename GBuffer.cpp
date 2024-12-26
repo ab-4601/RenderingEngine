@@ -42,7 +42,7 @@ void GBuffer::_init(int windowWidth, int windowHeight) {
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 }
 
-void GBuffer::updateGbuffer(PBRShader& shader, const std::vector<Mesh*>& meshes, const std::vector<Model*>& models,
+void GBuffer::updateGbuffer(Shader& shader, const std::vector<Mesh*>& meshes, const std::vector<Model*>& models,
 	GLuint currFramebuffer)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
@@ -51,10 +51,6 @@ void GBuffer::updateGbuffer(PBRShader& shader, const std::vector<Mesh*>& meshes,
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	this->shader.useShader();
-
-	this->shader.setInt("diffuseMap", 0);
-	this->shader.setInt("normalMap", 1);
-	this->shader.setInt("metalnessMap", 3);
 	
 	for (size_t i = 0; i < meshes.size(); i++) {
 		this->shader.setVec3("vColor", meshes[i]->getColor());
@@ -88,8 +84,9 @@ void GBuffer::updateGbuffer(PBRShader& shader, const std::vector<Mesh*>& meshes,
 		this->shader.setUint("useDiffuseMap", true);
 		this->shader.setUint("useNormalMap", true);
 		this->shader.setUint("useMetalnessMap", true);
+		this->shader.setUint("isStrippedNormal", models[i]->getStrippedNormalBool());
 		this->shader.setMat4("model", glm::mat4(1.f));
-		models[i]->renderModel(shader);
+		models[i]->renderModel(this->shader, GL_TRIANGLES);
 	}
 
 	this->shader.endShader();

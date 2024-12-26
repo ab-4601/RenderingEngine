@@ -17,14 +17,18 @@ uniform float occlusionPower;
 
 uniform vec2 screenRes;
 
-const vec2 noiseScale = screenRes / 4.f;
+const vec2 noiseScale = screenRes / vec2(textureSize(noise, 0));
 
-uniform mat4 projection;
+layout (std140, binding = 0) uniform cameraSpaceVariables {
+	mat4 projection;
+	mat4 view;
+	vec3 cameraPosition;
+};
 
 void main() {
-	vec3 fragPos = texture(gPosition, texel).xyz;
-	vec3 normal = normalize(texture(gNormal, texel).rgb);
-	vec3 random = normalize(texture(noise, texel * noiseScale).xyz);
+	vec3 fragPos = texture2D(gPosition, texel).xyz;
+	vec3 normal = normalize(texture2D(gNormal, texel).rgb);
+	vec3 random = normalize(texture2D(noise, texel * noiseScale).xyz);
 
 	vec3 tangent = normalize(random - normal * dot(random, normal));
 	vec3 bitangent = cross(normal, tangent);

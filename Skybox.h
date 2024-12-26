@@ -100,9 +100,9 @@ public:
 	void loadEquirectangularMap(const char* file_name);
     void renderSkybox();
 
-    inline GLuint getIrradianceMap() const { return this->irradianceMap; }
-    inline GLuint getBRDFTexture() const { return this->brdfTexture; };
-    inline GLuint getPrefilterTexture() const { return this->prefilterMap; }
+    GLuint getIrradianceMap() const { return this->irradianceMap; }
+    GLuint getBRDFTexture() const { return this->brdfTexture; };
+    GLuint getPrefilterTexture() const { return this->prefilterMap; }
 
     ~Skybox() {
         if (this->FBO != 0)

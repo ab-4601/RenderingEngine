@@ -50,7 +50,7 @@ public:
 	inline GLuint occlusionBuffer() const { return this->colorBufferBlur; }
 
 	void _init(int windowWidth, int windowHeight);
-	void calcSSAO(GLuint gPosition, GLuint gNormal, const glm::mat4& projection, GLuint currFramebuffer = 0);
+	void calcSSAO(GLuint gPosition, GLuint gNormal, GLuint currFramebuffer = 0);
 
 	~SSAO() {
 		if (this->FBO != 0)

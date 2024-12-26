@@ -237,12 +237,6 @@
     <ClCompile Include="Cube.cpp">
       <Filter>Source Files\CoreDependencies\Engine Core\Model\Geometry</Filter>
     </ClCompile>
-    <ClCompile Include="LightingShader.cpp">
-      <Filter>Source Files\CoreDependencies\ShaderLoaders</Filter>
-    </ClCompile>
-    <ClCompile Include="ShaderLoader.cpp">
-      <Filter>Source Files\CoreDependencies\ShaderLoaders</Filter>
-    </ClCompile>
     <ClCompile Include="imGUI\imgui_draw.cpp">
       <Filter>Source Files\imGUI</Filter>
     </ClCompile>
@@ -284,9 +278,6 @@
     </ClCompile>
     <ClCompile Include="Quad.cpp">
       <Filter>Source Files\CoreDependencies\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="PBRShader.cpp">
-      <Filter>Source Files\CoreDependencies\ShaderLoaders</Filter>
     </ClCompile>
     <ClCompile Include="BloomFBO.cpp">
       <Filter>Source Files\CoreDependencies\PostProcessing\Bloom</Filter>
@@ -407,12 +398,6 @@
     <ClInclude Include="Core.h">
       <Filter>Header Files\CoreDependencies\Engine Core</Filter>
     </ClInclude>
-    <ClInclude Include="LightingShader.h">
-      <Filter>Header Files\CoreDependencies\ShaderLoaders</Filter>
-    </ClInclude>
-    <ClInclude Include="ShaderLoader.h">
-      <Filter>Header Files\CoreDependencies\ShaderLoaders</Filter>
-    </ClInclude>
     <ClInclude Include="imGUI\imgui_impl_opengl3_loader.h">
       <Filter>Header Files\imGUI</Filter>
     </ClInclude>
@@ -463,9 +448,6 @@
     </ClInclude>
     <ClInclude Include="Quad.h">
       <Filter>Header Files\CoreDependencies\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="PBRShader.h">
-      <Filter>Header Files\CoreDependencies\ShaderLoaders</Filter>
     </ClInclude>
     <ClInclude Include="BloomFBO.h">
       <Filter>Header Files\CoreDependencies\PostProcessing\Bloom</Filter>

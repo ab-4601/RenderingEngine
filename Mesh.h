@@ -3,7 +3,6 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "Texture.h"
-#include "PBRShader.h"
 
 struct Vertex {
 	glm::vec3 position;
@@ -68,36 +67,37 @@ public:
 	static std::vector<Mesh*> meshList;
 	Mesh();
 
-	virtual inline void setVertices(const std::vector<Vertex>& vertices) { this->vertices = vertices; }
-	virtual inline void setIndices(const std::vector<uint>& indices) { this->indices = indices; }
+	virtual void setVertices(const std::vector<Vertex>& vertices) { this->vertices = vertices; }
+	virtual void setIndices(const std::vector<uint>& indices) { this->indices = indices; }
 
-	inline glm::mat4& getModelMatrix() { return this->model; }
-	inline glm::vec3 getColor() const { return this->color; }
-	inline uint getObjectID() const { return this->objectID; }
-	inline float getMetallic() const { return this->metallic; }
-	inline float getRoughness() const { return this->roughness; }
-	inline float getAO() const { return this->ao; }
-	inline bool isDrawIndexed() const { return this->drawIndexed; }
+	glm::mat4& getModelMatrix() { return this->model; }
+	glm::vec3 getColor() const { return this->color; }
+	uint getObjectID() const { return this->objectID; }
+	float getMetallic() const { return this->metallic; }
+	float getRoughness() const { return this->roughness; }
+	float getAO() const { return this->ao; }
+	bool isDrawIndexed() const { return this->drawIndexed; }
 
-	inline bool getDiffuseMapBool() const { return this->useDiffuseMap; }
-	inline bool getNormalMapBool() const { return this->useNormalMap; }
-	inline bool getMaterialMapBool() const { return this->useMaterialMap; }
+	bool getDiffuseMapBool() const { return this->useDiffuseMap; }
+	bool getNormalMapBool() const { return this->useNormalMap; }
+	bool getMaterialMapBool() const { return this->useMaterialMap; }
+	bool getStrippedNormalBool() const { return this->strippedNormalMap; }
 
-	inline void setDiffuseMap(Texture* materialMap) { this->diffuseMap = materialMap; }
-	inline void setNormalMap(Texture* materialMap) { this->normalMap = materialMap; }
-	inline void setMetallicMap(Texture* materialMap) { this->metallicMap = materialMap; }
-	inline void setRoughnessMap(Texture* materialMap) { this->roughnessMap = materialMap; }
+	void setDiffuseMap(Texture* materialMap) { this->diffuseMap = materialMap; }
+	void setNormalMap(Texture* materialMap) { this->normalMap = materialMap; }
+	void setMetallicMap(Texture* materialMap) { this->metallicMap = materialMap; }
+	void setRoughnessMap(Texture* materialMap) { this->roughnessMap = materialMap; }
 
-	inline void bindDiffuseMap() const { this->diffuseMap->useTexture(GL_TEXTURE0); }
-	inline void bindNormalMap() const { this->normalMap->useTexture(GL_TEXTURE1); }
-	inline void bindRoughnessMap() const { this->roughnessMap->useTexture(GL_TEXTURE2); }
-	inline void bindMetallicMap() const { this->metallicMap->useTexture(GL_TEXTURE3); }
+	void bindDiffuseMap() const { this->diffuseMap->useTexture(GL_TEXTURE0); }
+	void bindNormalMap() const { this->normalMap->useTexture(GL_TEXTURE1); }
+	void bindRoughnessMap() const { this->roughnessMap->useTexture(GL_TEXTURE2); }
+	void bindMetallicMap() const { this->metallicMap->useTexture(GL_TEXTURE3); }
 
-	inline void setModelMatrix(const glm::mat4& matrix) { this->model = matrix; }
-	inline void setColor(glm::vec3 color) { this->color = color; }
-	inline void setObjectID(int objectID) { this->objectID = objectID; }
-	void inline setShadowBoolUniform(bool calcShadows) { this->calcShadows = calcShadows; }
-	void inline setSSAOboolUniform(bool enableSSAO) { this->enableSSAO = enableSSAO; }
+	void setModelMatrix(const glm::mat4& matrix) { this->model = matrix; }
+	void setColor(glm::vec3 color) { this->color = color; }
+	void setObjectID(int objectID) { this->objectID = objectID; }
+	void setShadowBoolUniform(bool calcShadows) { this->calcShadows = calcShadows; }
+	void setSSAOboolUniform(bool enableSSAO) { this->enableSSAO = enableSSAO; }
 
 	void loadMesh(
 		bool useDiffuseMap = false, bool drawIndexed = true,
@@ -106,9 +106,9 @@ public:
 	);
 
 	void drawMesh(GLenum renderMode);
-	void renderMesh(const PBRShader& shader, GLenum renderMode = GL_TRIANGLES);
+	void renderMesh(Shader& shader, GLenum renderMode = GL_TRIANGLES);
 
-	void renderMeshWithOutline(const PBRShader& shader, Shader& outlineShader, GLenum renderMode);
+	void renderMeshWithOutline(Shader& shader, Shader& outlineShader, GLenum renderMode);
 
 	void setMeshMaterial(float roughness, float metallic, float ao);
 

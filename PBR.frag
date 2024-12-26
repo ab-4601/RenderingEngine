@@ -52,8 +52,8 @@ struct Material {
 	float ao;
 };
 
-uniform int pointLightCount;
-uniform int spotLightCount;
+uniform uint pointLightCount;
+uniform uint spotLightCount;
 
 uniform DirectionalLight directionalLight;
 uniform PointLight pointLights[MAX_POINT_LIGHTS];
@@ -182,7 +182,7 @@ float calculateDirectionalShadow() {
 	int samplesDiv2 = int(offsetTexSize.z);
 	vec4 sc = vec4(projCoords, 1.f);
 	float depth = 0.f;
-	vec2 texelSize = 2.f / vec2(textureSize(cascadedShadowMap, 0));
+	vec2 texelSize = 1.f / vec2(textureSize(cascadedShadowMap, 0));
 
 	for(int i = 0; i < 4; i++) {
 		offsetCoord.z = i;

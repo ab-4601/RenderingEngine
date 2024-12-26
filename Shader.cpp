@@ -70,7 +70,7 @@ void Shader::readFile(std::string fileName, char*& shader) {
 	shader[shaderSource.length()] = NULL;
 }
 
-void Shader::compileShader(GLuint& shaderID, const char* shader, GLenum shaderType) {
+void Shader::compileShader(GLuint& shaderID, const char* shader, GLenum shaderType) const {
 	shaderID = glCreateShader(shaderType);
 	glShaderSource(shaderID, 1, &shader, NULL);
 	glCompileShader(shaderID);

@@ -72,25 +72,25 @@ void Mesh::drawMesh(GLenum renderMode) {
 	glBindVertexArray(0);
 }
 
-void Mesh::renderMesh(const PBRShader& shader, GLenum renderMode) {
-	glUniform3fv(shader.getUniformAlbedo(), 1, glm::value_ptr(this->color));
-	glUniform1f(shader.getUniformAo(), this->ao);
-	glUniform1f(shader.getUniformMetallic(), this->metallic);
-	glUniform1f(shader.getUniformRoughness(), this->roughness);
+void Mesh::renderMesh(Shader& shader, GLenum renderMode) {
+	shader.setMat4("model", this->model);
+	shader.setVec3("color", this->color);
 
-	glUniform1ui(shader.getUniformTextureBool(), this->useDiffuseMap);
-	glUniform1ui(shader.getUniformNormalMapBool(), this->useNormalMap);
-	glUniform1ui(shader.getUniformUseMaterialMap(), this->useMaterialMap);
-	glUniform1ui(shader.getUniformUseEmissiveMap(), this->useEmissiveMap);
-	glUniform1ui(shader.getUniformStrippedNormalBool(), this->strippedNormalMap);
+	shader.setVec3("material.albedo", this->color);
+	shader.setFloat("material.metallic", this->metallic);
+	shader.setFloat("material.roughness", this->roughness);
+	shader.setFloat("material.ao", this->ao);
 
-	glUniformMatrix4fv(shader.getUniformModel(), 1, GL_FALSE, glm::value_ptr(this->model));
-	glUniform3fv(shader.getUniformColor(), 1, glm::value_ptr(this->color));
+	shader.setUint("useDiffuseMap", this->useDiffuseMap);
+	shader.setUint("useNormalMap", this->useNormalMap);
+	shader.setUint("strippedNormalMap", this->strippedNormalMap);
+	shader.setUint("useMaterialMap", this->useMaterialMap);
+	shader.setUint("useEmissiveMap", this->useEmissiveMap);
 
 	this->drawMesh(renderMode);
 }
 
-void Mesh::renderMeshWithOutline(const PBRShader& shader, Shader& outlineShader, GLenum renderMode)
+void Mesh::renderMeshWithOutline(Shader& shader, Shader& outlineShader, GLenum renderMode)
 {
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -118,7 +118,7 @@ void Mesh::renderMeshWithOutline(const PBRShader& shader, Shader& outlineShader,
 
 	outlineShader.endShader();
 
-	glUseProgram(shader.getProgramID());
+	shader.useShader();
 }
 
 void Mesh::clearMesh() {

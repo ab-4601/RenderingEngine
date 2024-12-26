@@ -64,19 +64,14 @@ public:
 		glBindTexture(GL_TEXTURE_2D, this->textureID);
 	}
 
-	void useTextureBindless(GLuint textureLocation) const {
-		if (this->textureHandle == 0)
-			this->useTexture(GL_TEXTURE0 + textureLocation);
-
-		glUniformHandleui64ARB(textureLocation, this->textureHandle);
-	}
-
 	void clearTexture();
 
-	inline GLuint getTextureID() const { return this->textureID; }
-	inline int getWidth() const { return this->width; }
-	inline int getHeight() const { return this->height; }
-	inline int getBitDepth() const { return this->bitDepth; }
+	GLuint getTextureID() const { return this->textureID; }
+	GLuint64 getTextureHandle() const { return this->textureHandle; }
+
+	int getWidth() const { return this->width; }
+	int getHeight() const { return this->height; }
+	int getBitDepth() const { return this->bitDepth; }
 
 	~Texture();
 };

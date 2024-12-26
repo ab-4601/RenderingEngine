@@ -16,7 +16,9 @@ public:
 		return this->color;
 	}
 
-	void useLight(GLuint ambientIntensityLocation, GLuint ambientColorLocation, GLuint diffuseIntensityLocation);
+	glm::vec3 getColor() const { return this->color; }
+	GLfloat getAmbientIntensity() const { return this->ambientIntensity; }
+	GLfloat getDiffuseIntensity() const { return this->diffuseIntensity; }
 
 	~Light() = default;
 };

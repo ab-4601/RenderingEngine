@@ -5,7 +5,7 @@
 #define ASSIMP_LOAD_FLAGS (aiProcess_Triangulate | aiProcess_FlipWindingOrder | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_OptimizeMeshes)
 
 class Model : public Mesh {
-private:
+protected:
 	std::string texFolderPath;
 	std::vector<Texture*> diffuseTextures;
 	std::vector<Texture*> normalTextures;
@@ -31,7 +31,7 @@ public:
 		aiTextureType normalMap, aiTextureType metallicMap, aiTextureType emissiveMap);
 
 	void drawModel(GLenum renderMode = GL_TRIANGLES);
-	void renderModel(const PBRShader& shader, GLenum renderMode = GL_TRIANGLES);
+	void renderModel(Shader& shader, GLenum renderMode = GL_TRIANGLES);
 
 	void clearModel();
 

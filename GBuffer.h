@@ -22,7 +22,7 @@ public:
 	inline GLuint getAlbedoBuffer() const { return this->gAlbedo; }
 	inline GLuint getMetallicBuffer() const { return this->gMetallic; }
 
-	void updateGbuffer(PBRShader& shader, const std::vector<Mesh*>& meshes, const std::vector<Model*>& models, 
+	void updateGbuffer(Shader& shader, const std::vector<Mesh*>& meshes, const std::vector<Model*>& models, 
 		GLuint currFramebuffer = 0);
 
 	~GBuffer() {

@@ -105,7 +105,7 @@ void CascadedShadows::_init() {
 
 	glGenBuffers(1, &this->SSBO);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->SSBO);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::mat4x4) * 16, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::mat4x4) * 16, NULL, GL_DYNAMIC_DRAW);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->SSBO);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
@@ -128,10 +128,11 @@ void CascadedShadows::calcSplitDepths(float lambda) {
 void CascadedShadows::setComputeUniforms() {
 	this->computeShader.useShader();
 
-	std::string buffer{};
-	for (int i = 0; i < this->numCascades; i++) {
-		buffer = "cascadeSplits[" + std::to_string(i) + "]";
-		this->computeShader.setFloat(buffer.c_str(), this->cascadeSplits[i]);
+	char buffer[50]{ '\0' };
+
+	for (int i = 0; i < ::MAX_CASCADES; i++) {
+		snprintf(buffer, sizeof(buffer), "cascadeSplits[%i]", i);
+		this->computeShader.setFloat(buffer, this->cascadeSplits[i]);
 	}
 
 	this->computeShader.setFloat("nearPlane", ::near_plane);
@@ -148,7 +149,9 @@ void CascadedShadows::calculateShadows(int windowWidth, int windowHeight, const 
 	this->computeShader.useShader();
 	this->computeShader.setVec3("lightDirection", lightPosition);
 	
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->SSBO);
 	this->computeShader.dispatchComputeShader(1, 1, 1, GL_SHADER_STORAGE_BARRIER_BIT);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 	this->computeShader.endShader();
 
@@ -159,7 +162,7 @@ void CascadedShadows::calculateShadows(int windowWidth, int windowHeight, const 
 	glViewport(0, 0, this->mapResolution, this->mapResolution);
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
-	glPolygonOffset(3.f, 3.f);
+	glPolygonOffset(2.f, 2.f);
 
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_CLAMP);

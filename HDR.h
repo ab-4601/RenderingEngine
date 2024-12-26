@@ -39,10 +39,10 @@ public:
 	void _init();
 	void _initMSAA();
 
-	inline GLuint getFramebufferID() const { return this->FBO; }
-	inline GLuint getColorbufferID() const { return this->colorBuffer; }
+	GLuint getFramebufferID() const { return this->FBO; }
+	GLuint getColorbufferID() const { return this->colorBuffer; }
 
-	inline void enableHDRWriting() const { glBindFramebuffer(GL_FRAMEBUFFER, this->FBO); }
+	void enableHDRWriting() const { glBindFramebuffer(GL_FRAMEBUFFER, this->FBO); }
 
 	void renderToDefaultBuffer(float exposure = 1.f, GLuint bloomBuffer = 0, bool enableBloom = false);
 	void renderToDefaultBufferMSAA(

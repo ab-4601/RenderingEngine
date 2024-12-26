@@ -15,18 +15,16 @@ public:
 	PointLight(PointLight&& source) noexcept;
 	PointLight(const PointLight& source) noexcept;
 
+	glm::vec3 getPosition() const { return this->position; }
+	GLfloat getAttenuationConstant() const { return this->constant; }
+	GLfloat getAttenuationLinear() const { return this->linear; }
+	GLfloat getAttenuationExponent() const { return this->exponent; }
+
 	virtual void updateLightLocation(glm::vec3 pos) {
 		this->position = pos;
 	}
 
-	virtual glm::vec3 getPosition() {
-		return this->position;
-	}
-
 	void operator=(PointLight&& rhs) noexcept;
-
-	void useLight(GLuint ambientIntensityLocation, GLuint ambientColorLocation, GLuint diffuseIntensityLocation,
-		GLuint positionLocation, GLuint constantLocation, GLuint linearLocation, GLuint exponentLocation);
 
 	~PointLight() = default;
 };

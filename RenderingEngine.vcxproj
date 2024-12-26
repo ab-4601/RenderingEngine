@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -159,7 +159,6 @@
     <ClCompile Include="imGUI\imgui_tables.cpp" />
     <ClCompile Include="imGUI\imgui_widgets.cpp" />
     <ClCompile Include="imGUI\ImSequencer.cpp" />
-    <ClCompile Include="LightingShader.cpp" />
     <ClCompile Include="CoordinateSystem.cpp" />
     <ClCompile Include="Crosshair.cpp" />
     <ClCompile Include="DirectionalLight.cpp" />
@@ -175,7 +174,6 @@
     <ClCompile Include="ParticleMaster.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="ParticleTexture.cpp" />
-    <ClCompile Include="PBRShader.cpp" />
     <ClCompile Include="PerlinNoise.cpp" />
     <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="main.cpp" />
@@ -184,7 +182,6 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="SelectionTexture.cpp" />
     <ClCompile Include="Shader.cpp" />
-    <ClCompile Include="ShaderLoader.cpp" />
     <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="SpotLight.cpp" />
@@ -219,7 +216,6 @@
     <ClInclude Include="imGUI\imstb_textedit.h" />
     <ClInclude Include="imGUI\imstb_truetype.h" />
     <ClInclude Include="imGUI\ImZoomSlider.h" />
-    <ClInclude Include="LightingShader.h" />
     <ClInclude Include="CoordinateSystem.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="Crosshair.h" />
@@ -236,7 +232,6 @@
     <ClInclude Include="ParticleMaster.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="ParticleTexture.h" />
-    <ClInclude Include="PBRShader.h" />
     <ClInclude Include="PerlinNoise.h" />
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="ParticleRenderer.h" />
@@ -244,7 +239,6 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="SelectionTexture.h" />
     <ClInclude Include="Shader.h" />
-    <ClInclude Include="ShaderLoader.h" />
     <ClInclude Include="ShadowMap.h" />
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="SpotLight.h" />

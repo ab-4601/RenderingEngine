@@ -14,12 +14,7 @@ public:
 		this->direction = pos;
 	}
 
-	inline glm::vec3 getLightDirection() const {
-		return this->direction;
-	}
-
-	void useLight(GLuint ambientIntensityLocation, GLuint ambientColorLocation, GLuint diffuseIntensityLocation,
-		GLuint directionLocation);
+	glm::vec3 getLightDirection() const { return this->direction; }
 
 	~DirectionalLight() = default;
 };

@@ -36,11 +36,11 @@ public:
 
 	void _init();
 
-	inline GLuint getNumCascades() const { return this->numCascades; }
-	inline GLuint getShadowMaps() const { return this->shadowMaps; }
-	inline GLuint noiseBuffer() const { return this->randomOffset; }
-	inline const float* const cascadePlanes() const { return &this->cascadeSplits[0]; }
-	inline glm::vec3 getNoiseTextureSize() const { return this->noiseTextureSize; }
+	GLuint getNumCascades() const { return this->numCascades; }
+	GLuint getShadowMaps() const { return this->shadowMaps; }
+	GLuint noiseBuffer() const { return this->randomOffset; }
+	const float* const cascadePlanes() const { return &this->cascadeSplits[0]; }
+	glm::vec3 getNoiseTextureSize() const { return this->noiseTextureSize; }
 
 	void calculateShadows(int windowWidth, int windowHeight, const std::vector<Mesh*>& meshes,
 		const std::vector<Model*>& models, glm::vec3 lightPosition, GLuint currFramebuffer = 0);

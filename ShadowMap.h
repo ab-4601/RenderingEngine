@@ -26,7 +26,7 @@ public:
 	void calculateShadowMap(std::vector<Mesh*>& meshes, int windowWidth, int windowHeight,
 		glm::vec3 lightPosition, GLuint currentFramebuffer = 0);
 
-	inline GLuint getShadowCubemapID() const { return this->depthMap; }
+	GLuint getShadowCubemapID() const { return this->depthMap; }
 
 	~ShadowMap();
 };
