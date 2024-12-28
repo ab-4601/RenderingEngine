@@ -12,6 +12,8 @@ private:
 
 	glm::vec2 scrResolution{ 0.f };
 
+	float radius{ 50.f }, bias{ 2.f }, occlusionPower{ 10.f };
+
 	Shader shader{ "ssao.vert", "ssao.frag" };
 	Shader blurShader{ "ssao.vert", "ssaoBlur.frag" };
 
@@ -47,7 +49,11 @@ private:
 public:
 	SSAO(int windowWidth, int windowHeight);
 
-	inline GLuint occlusionBuffer() const { return this->colorBufferBlur; }
+	GLuint occlusionBuffer() const { return this->colorBufferBlur; }
+
+	void setRadius(float radius) { this->radius = radius; }
+	void setBias(float bias) { this->bias = bias; }
+	void setOcclusionPower(float power) { this->occlusionPower = power; }
 
 	void _init(int windowWidth, int windowHeight);
 	void calcSSAO(GLuint gPosition, GLuint gNormal, GLuint currFramebuffer = 0);

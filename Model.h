@@ -31,11 +31,12 @@ public:
 		aiTextureType normalMap, aiTextureType metallicMap, aiTextureType emissiveMap);
 
 	void drawModel(GLenum renderMode = GL_TRIANGLES);
+	void drawDepth(Shader& shader, GLenum renderModel = GL_TRIANGLES);
 	void renderModel(Shader& shader, GLenum renderMode = GL_TRIANGLES);
 
 	void clearModel();
 
 	~Model() {
-		this->clearModel();
+		clearModel();
 	}
 };

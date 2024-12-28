@@ -1,7 +1,7 @@
 #include "DirectionalShadow.h"
 
 DirectionalShadow::DirectionalShadow(float viewFrustumSize, float nearPlane, float farPlane) {
-	this->projection = glm::ortho(
+	projection = glm::ortho(
 		-viewFrustumSize, viewFrustumSize, -viewFrustumSize, viewFrustumSize, nearPlane, farPlane
 	);
 }
@@ -16,14 +16,14 @@ void DirectionalShadow::checkFramebufferStatus(const char* errorMessage) {
 }
 
 void DirectionalShadow::_init() {
-	glGenFramebuffers(1, &this->FBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+	glGenFramebuffers(1, &FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-	glGenTextures(1, &this->depthMap);
-	glBindTexture(GL_TEXTURE_2D, this->depthMap);
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
 
 	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, this->SHADOW_WIDTH, this->SHADOW_HEIGHT,
+		GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT,
 		0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL
 	);
 
@@ -35,11 +35,11 @@ void DirectionalShadow::_init() {
 	float borderColor[] = { 1.f, 1.f, 1.f, 1.f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->depthMap, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
 	glReadBuffer(GL_NONE);
 	glDrawBuffer(GL_NONE);
 
-	this->checkFramebufferStatus("Shadow framebuffer initialization failed");
+	checkFramebufferStatus("Shadow framebuffer initialization failed");
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -48,26 +48,26 @@ void DirectionalShadow::_init() {
 void DirectionalShadow::calculateShadows(int windowWidth, int windowHeight, 
 	std::vector<Mesh*>& meshes, glm::vec3 lightPosition, GLuint currentFramebuffer) 
 {
-	glViewport(0, 0, this->SHADOW_WIDTH, this->SHADOW_HEIGHT);
-	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-	this->shader.useShader();
+	shader.useShader();
 
-	this->view = glm::lookAt(
+	view = glm::lookAt(
 		lightPosition,
 		glm::vec3(0.f, 0.f, 0.f),
 		glm::vec3(0.f, 1.f, 0.f)
 	);
 
-	this->shader.setMat4("projection", this->projection);
-	this->shader.setMat4("view", this->view);
+	shader.setMat4("projection", projection);
+	shader.setMat4("view", view);
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glPolygonOffset(3.f, 3.f);
 
 	for (size_t i = 0; i < meshes.size(); i++) {
-		this->shader.setMat4("model", meshes[i]->getModelMatrix());
+		shader.setMat4("model", meshes[i]->getModelMatrix());
 		meshes[i]->drawMesh(GL_TRIANGLES);
 	}
 
@@ -76,13 +76,13 @@ void DirectionalShadow::calculateShadows(int windowWidth, int windowHeight,
 	glBindFramebuffer(GL_FRAMEBUFFER, currentFramebuffer);
 	glViewport(0, 0, windowWidth, windowHeight);
 
-	this->shader.endShader();
+	shader.endShader();
 }
 
 DirectionalShadow::~DirectionalShadow() {
-	if (this->FBO != 0)
-		glDeleteFramebuffers(1, &this->FBO);
+	if (FBO != 0)
+		glDeleteFramebuffers(1, &FBO);
 
-	if (this->depthMap != 0)
-		glDeleteTextures(1, &this->depthMap);
+	if (depthMap != 0)
+		glDeleteTextures(1, &depthMap);
 }

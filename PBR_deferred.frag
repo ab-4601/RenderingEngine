@@ -5,22 +5,13 @@
 const int MAX_POINT_LIGHTS = 3;
 const int MAX_SPOT_LIGHTS = 3;
 const int MAX_CASCADES = 16;
-const float wireframeWidth = 0.5f;
-const vec4 wireframeColor = vec4(0.f, 1.f, 1.f, 1.f);
+const float gamma = 2.2f;
 
 const float levels = 4.f;
 
 out vec4 fragColor;
 
-in GEOM_DATA {
-	vec4 color;
-    vec2 texel;
-    vec3 normal;
-	vec3 tangent;
-    vec4 fragPos;
-} data_in;
-
-noperspective in vec3 edgeDistance;
+in vec2 texel;
 
 struct Light {
 	vec3 color;
@@ -60,12 +51,6 @@ uniform PointLight pointLights[MAX_POINT_LIGHTS];
 uniform SpotLight spotLights[MAX_SPOT_LIGHTS];
 uniform Material material;
 
-uniform sampler2D diffuseMap;
-uniform sampler2D normalMap;
-uniform sampler2D depthMap;
-uniform sampler2D metallicMap;
-uniform sampler2D roughnessMap;
-uniform sampler2D emissiveMap;
 layout (binding = 1) uniform samplerCube irradianceMap;
 layout (binding = 2) uniform samplerCube prefilterMap;
 layout (binding = 3) uniform sampler2D brdfLUT;
@@ -73,14 +58,11 @@ layout (binding = 4) uniform samplerCube pointShadowMap;
 layout (binding = 5) uniform sampler2DArray cascadedShadowMap;
 layout (binding = 6) uniform sampler3D randomOffsets;
 
-uniform bool useDiffuseMap;
-uniform bool useNormalMap;
-uniform bool strippedNormalMap;
-uniform bool useMaterialMap;
-uniform bool useEmissiveMap;
-uniform bool calcShadows;
-uniform bool enableSSAO;
-uniform bool drawWireframe;
+layout (binding = 8) uniform sampler2D gPosition;
+layout (binding = 9) uniform sampler2D gAlbedo;
+layout (binding = 10) uniform sampler2D gNormal;
+layout (binding = 11) uniform sampler2D gMetallic;
+layout (binding = 12) uniform sampler2D occlusionSampler;
 
 uniform float nearPlane;
 uniform float farPlane;
@@ -88,6 +70,8 @@ uniform int cascadeCount;
 uniform float cascadePlanes[MAX_CASCADES];
 uniform float radius;
 uniform vec3 offsetTexSize;
+uniform bool enableSSAO;
+uniform bool calcShadows;
 
 layout (std140, binding = 0) uniform cameraSpaceVariables {
 	mat4 projection;
@@ -99,17 +83,19 @@ layout (std140, binding = 1) buffer LightSpaceMatrices {
 	mat4 lightSpaceMatrices[16];
 };
 
-vec3 N = normalize(data_in.normal);
+vec4 fragPos = texture2D(gPosition, texel);
+
+vec3 N = texture2D(gNormal, texel).rgb;
 vec3 L = vec3(0.f);
 vec3 H = vec3(0.f);
-vec3 V = normalize(cameraPosition - vec3(data_in.fragPos));
+vec3 V = normalize(cameraPosition - fragPos.xyz);
 vec3 F0 = vec3(0.04f);
 
-vec3 albedo = material.albedo;
+vec3 albedo = texture2D(gAlbedo, texel).rgb;
 vec3 emissive = vec3(0.f);
-float metallic = material.metallic;
-float roughness = material.roughness;
-float ao = material.ao;
+float ao = texture2D(gMetallic, texel).r;
+float roughness = texture2D(gMetallic, texel).g;
+float metallic = texture2D(gMetallic, texel).b;
 
 float DistributionGGX() {
 	float a = roughness * roughness;
@@ -152,7 +138,7 @@ vec3 fresnelSchlickRoughness(float theta) {
 }
 
 float calculateDirectionalShadow() {
-	vec4 fragPosViewSpace = view * data_in.fragPos;
+	vec4 fragPosViewSpace = view * fragPos;
 	float depthVal = abs(fragPosViewSpace.z);
 
 	int layer = -1;
@@ -166,7 +152,7 @@ float calculateDirectionalShadow() {
 	if(layer == -1)
 		layer = cascadeCount;
 
-	vec4 shadowCoord = lightSpaceMatrices[layer] * data_in.fragPos;
+	vec4 shadowCoord = lightSpaceMatrices[layer] * fragPos;
 	vec3 projCoords = shadowCoord.xyz / shadowCoord.w;
 	projCoords = projCoords * 0.5f + vec3(0.5f);
 
@@ -248,16 +234,12 @@ vec4 calculateLighting(Light light, vec3 direction) {
 	return vec4(Lo, 1.f);
 }
 
-float linearizeDepth(float depth) {
-	return (2.f * nearPlane * farPlane) / (farPlane + nearPlane - (depth * 2.f - 1.f) * (farPlane - nearPlane));
-}
-
 vec4 calcDirectionalLights() {
 	return calculateLighting(directionalLight.base, directionalLight.direction);
 }
 
 vec4 calcPointLight(PointLight pointLight) {
-	vec3 direction = pointLight.position - vec3(data_in.fragPos);
+	vec3 direction = pointLight.position - vec3(fragPos);
 	float dist = length(direction);
 
 	vec4 pointLightColor = calculateLighting(pointLight.base, direction);
@@ -268,7 +250,7 @@ vec4 calcPointLight(PointLight pointLight) {
 }
 
 vec4 calcSpotLight(SpotLight spotLight) {
-	vec3 direction = normalize(spotLight.base.position - vec3(data_in.fragPos));
+	vec3 direction = normalize(spotLight.base.position - vec3(fragPos));
 	float theta = dot(direction, normalize(-spotLight.direction));
 	
 	vec4 spotLightColor = vec4(0.f, 0.f, 0.f, 1.f);
@@ -303,41 +285,7 @@ vec4 calcSpotLights() {
 }
 
 void main() {
-	if(useDiffuseMap) {
-		vec4 texColor = texture2D(diffuseMap, data_in.texel);
-		if(texColor.a < 0.1f)
-			discard;
-
-		albedo = texColor.rgb;
-	}
-
-	if(useNormalMap) {
-		//texel = parallaxMapping(data_in.texel, eyePosition - vec3(data_in.fragPos));
-		N = texture2D(normalMap, data_in.texel).rgb;
-		N = normalize(N * 2.f - 1.f);
-
-		if(strippedNormalMap)
-			N *= -1.f;
-		
-		vec3 tangent = normalize(data_in.tangent);
-		vec3 normal = normalize(data_in.normal);
-
-		tangent = normalize(tangent - dot(tangent, normal) * normal);
-		vec3 biTangent = cross(normal, tangent);
-
-		N = normalize(mat3(tangent, biTangent, normal) * N);
-	}
-
-	if(useMaterialMap) {
-		ao = 0.3f;
-		roughness = texture2D(metallicMap, data_in.texel).g;
-		metallic = texture2D(metallicMap, data_in.texel).b;
-	}
-
-	if(useEmissiveMap) {
-		emissive = texture2D(emissiveMap, data_in.texel).rgb;
-	}
-
+	ao = enableSSAO ? texture2D(occlusionSampler, texel).r : ao;
 	F0 = mix(F0, albedo, metallic);
 
 	vec3 R = reflect(-V, N);
@@ -363,23 +311,7 @@ void main() {
 	finalColor += vec4(ambient, 1.f);
 	finalColor += vec4(emissive, 0.f);
 
-	float d = 0.f, mixVal = 0.f;
+	//finalColor = gammaCorrected ? pow(finalColor, vec4(1.f / gamma)) : finalColor;
 
-	if(drawWireframe) {
-		d = min(edgeDistance.x, edgeDistance.y);
-		d = min(d, edgeDistance.z);
-
-		if(d < wireframeWidth - 1.f)
-			mixVal = 1.f;
-		else if(d > wireframeWidth + 1.f)
-			mixVal = 0.f;
-		else {
-			float x = d - (wireframeWidth - 1.f);
-			mixVal = exp2(-2.f * x * x);
-		}
-
-		fragColor = mix(finalColor, wireframeColor, mixVal);
-	}
-	else
-		fragColor = finalColor;
+	fragColor = finalColor;
 }

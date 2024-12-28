@@ -3,18 +3,18 @@
 BloomRenderer::BloomRenderer(int windowWidth, int windowHeight) {
 	quad.createQuad();
 
-	this->_init(windowWidth, windowHeight);
+	_init(windowWidth, windowHeight);
 }
 
 void BloomRenderer::renderDownsamples(GLuint srcTexture) {
-	const std::vector<BloomMip>& mipChain = this->mFBO.mipChain();
+	const std::vector<BloomMip>& mipChain = mFBO.mipChain();
 
-	this->downsampleShader.useShader();
+	downsampleShader.useShader();
 
-	this->downsampleShader.setInt("srcTexture", 0);
-	this->downsampleShader.setVec2("srcResolution", this->srcViewportSizeFLT);
-	this->downsampleShader.setInt("mipLevel", 0);
-	this->downsampleShader.setFloat("bloomThreshold", this->knee);
+	downsampleShader.setInt("srcTexture", 0);
+	downsampleShader.setVec2("srcResolution", srcViewportSizeFLT);
+	downsampleShader.setInt("mipLevel", 0);
+	downsampleShader.setFloat("bloomThreshold", knee);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, srcTexture);
@@ -23,28 +23,28 @@ void BloomRenderer::renderDownsamples(GLuint srcTexture) {
 	for (size_t i = 0; i < mipChain.size(); i++) {
 		const BloomMip& mip = mipChain[i];
 		
-		glViewport(0, 0, mip.size.x, mip.size.y);
+		glViewport(0, 0, (GLsizei)mip.size.x, (GLsizei)mip.size.y);
 		glFramebufferTexture2D(
 			GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mip.texture, 0
 		);
 
 		quad.renderQuad();
 
-		this->downsampleShader.setVec2("srcResolution", mip.size);
+		downsampleShader.setVec2("srcResolution", mip.size);
 
 		glBindTexture(GL_TEXTURE_2D, mip.texture);
 	}
 
-	this->downsampleShader.endShader();
+	downsampleShader.endShader();
 }
 
 void BloomRenderer::renderUpsamples(float filterRadius) {
-	const std::vector<BloomMip>& mipChain = this->mFBO.mipChain();
+	const std::vector<BloomMip>& mipChain = mFBO.mipChain();
 
-	this->upsampleShader.useShader();
+	upsampleShader.useShader();
 
-	this->upsampleShader.setInt("srcTexture", 0);
-	this->upsampleShader.setFloat("filterRadius", filterRadius);
+	upsampleShader.setInt("srcTexture", 0);
+	upsampleShader.setFloat("filterRadius", filterRadius);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_ONE, GL_ONE);
@@ -56,7 +56,7 @@ void BloomRenderer::renderUpsamples(float filterRadius) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mip.texture);
 
-		glViewport(0, 0, nextMip.size.x, nextMip.size.y);
+		glViewport(0, 0, (GLsizei)nextMip.size.x, (GLsizei)nextMip.size.y);
 		glFramebufferTexture2D(
 			GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, nextMip.texture, 0
 		);
@@ -66,16 +66,16 @@ void BloomRenderer::renderUpsamples(float filterRadius) {
 
 	glDisable(GL_BLEND);
 
-	this->upsampleShader.endShader();
+	upsampleShader.endShader();
 }
 
 void BloomRenderer::_initIntermediateFBO(int width, int height) {
-	glGenFramebuffers(1, &this->intermediateFBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, this->intermediateFBO);
+	glGenFramebuffers(1, &intermediateFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, intermediateFBO);
 
-	glGenTextures(1, &this->screenBuffer);
+	glGenTextures(1, &screenBuffer);
 
-	glBindTexture(GL_TEXTURE_2D, this->screenBuffer);
+	glBindTexture(GL_TEXTURE_2D, screenBuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -83,7 +83,7 @@ void BloomRenderer::_initIntermediateFBO(int width, int height) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->screenBuffer, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenBuffer, 0);
 
 	GLuint status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
@@ -98,10 +98,10 @@ void BloomRenderer::_initIntermediateFBO(int width, int height) {
 
 bool BloomRenderer::_init(int windowWidth, int windowHeight)
 {
-	if (this->isInit) return true;
+	if (isInit) return true;
 
-	this->srcViewportSize = glm::ivec2(windowWidth, windowHeight);
-	this->srcViewportSizeFLT = glm::vec2((float)windowWidth, (float)windowHeight);
+	srcViewportSize = glm::ivec2(windowWidth, windowHeight);
+	srcViewportSizeFLT = glm::vec2((float)windowWidth, (float)windowHeight);
 
 	const uint iterations = 6;
 	bool status = mFBO._init(windowWidth, windowHeight, iterations);
@@ -110,38 +110,38 @@ bool BloomRenderer::_init(int windowWidth, int windowHeight)
 		exit(-1);
 	}
 
-	this->_initIntermediateFBO(windowWidth, windowHeight);
+	_initIntermediateFBO(windowWidth, windowHeight);
 
-	this->isInit = true;
+	isInit = true;
 	return true;
 }
 
 void BloomRenderer::renderBloomTexture(GLuint srcTexture, float filterRadius, GLuint currFramebuffer) {
-	this->mFBO.enableWriting();
+	mFBO.enableWriting();
 
-	this->renderDownsamples(srcTexture);
-	this->renderUpsamples(filterRadius);
+	renderDownsamples(srcTexture);
+	renderUpsamples(filterRadius);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, currFramebuffer);
 
-	glViewport(0, 0, this->srcViewportSize.x, this->srcViewportSize.y);
+	glViewport(0, 0, srcViewportSize.x, srcViewportSize.y);
 }
 
 void BloomRenderer::renderBloomTextureMSAA(float filterRadius, GLuint currFramebuffer) {
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, currFramebuffer);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->intermediateFBO);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediateFBO);
 	glBlitFramebuffer(
-		0, 0, this->srcViewportSize.x, this->srcViewportSize.y,
-		0, 0, this->srcViewportSize.x, this->srcViewportSize.y,
+		0, 0, srcViewportSize.x, srcViewportSize.y,
+		0, 0, srcViewportSize.x, srcViewportSize.y,
 		GL_COLOR_BUFFER_BIT, GL_NEAREST
 	);
 
-	this->mFBO.enableWriting();
+	mFBO.enableWriting();
 
-	this->renderDownsamples(this->screenBuffer);
-	this->renderUpsamples(filterRadius);
+	renderDownsamples(screenBuffer);
+	renderUpsamples(filterRadius);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, currFramebuffer);
 
-	glViewport(0, 0, this->srcViewportSize.x, this->srcViewportSize.y);
+	glViewport(0, 0, srcViewportSize.x, srcViewportSize.y);
 }

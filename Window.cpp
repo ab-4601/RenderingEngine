@@ -6,7 +6,7 @@ Window::Window(uint windowWidth, uint windowHeight)
     LMBPressed{ false }, RMBPressed{ false }, viewportX{0}, viewportY{0} {
 
     for (size_t i = 0; i < 1024; i++)
-        this->keys[i] = false;
+        keys[i] = false;
 
     setupWindow();
 }
@@ -96,7 +96,7 @@ void Window::setupWindow() {
     // Allow forward compatibility
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    if (this->windowWidth == 0 || this->windowHeight == 0) {
+    if (windowWidth == 0 || windowHeight == 0) {
         const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
         glfwWindowHint(GLFW_RED_BITS, mode->redBits);
@@ -104,28 +104,28 @@ void Window::setupWindow() {
         glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
         glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-        this->windowWidth = mode->width;
-        this->windowHeight = mode->height;
+        windowWidth = mode->width;
+        windowHeight = mode->height;
 
-        this->window = glfwCreateWindow(mode->width, mode->height, "Main window", glfwGetPrimaryMonitor(), NULL);
+        window = glfwCreateWindow(mode->width, mode->height, "Main window", glfwGetPrimaryMonitor(), NULL);
     }
     else
-        this->window = glfwCreateWindow(this->windowWidth, this->windowHeight, "Main window", NULL, NULL);
+        window = glfwCreateWindow(windowWidth, windowHeight, "Main window", NULL, NULL);
 
-    if (!this->window) {
+    if (!window) {
         std::cerr << "GLFW Window creation failed" << std::endl;
         glfwTerminate();
         exit(1);
     }
 
     // Get buffer size information
-    glfwGetFramebufferSize(this->window, &this->bufferWidth, &this->bufferHeight);
+    glfwGetFramebufferSize(window, &bufferWidth, &bufferHeight);
 
     // Set context for GLEW to use
-    glfwMakeContextCurrent(this->window);
+    glfwMakeContextCurrent(window);
 
     // Handle key and mouse input
-    this->createCallbacks();
+    createCallbacks();
 
     // Lock cursor to window
     //glfwSetInputMode(this->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -137,7 +137,7 @@ void Window::setupWindow() {
         GLenum result{};
         glewGetErrorString(result);
         std::cerr << "GLEW initialization failed\n" << result << std::endl;
-        glfwDestroyWindow(this->window);
+        glfwDestroyWindow(window);
         glfwTerminate();
         exit(1);
     }
@@ -149,7 +149,7 @@ void Window::setupWindow() {
     glEnable(GL_LINE_SMOOTH);
 
     // Create viewport
-    glViewport(0, 0, this->bufferWidth, this->bufferHeight);
+    glViewport(0, 0, bufferWidth, bufferHeight);
 
-    glfwSetWindowUserPointer(this->window, this);
+    glfwSetWindowUserPointer(window, this);
 }

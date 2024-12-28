@@ -1,7 +1,7 @@
 #include "CoordinateSystem.h"
 
 CoordinateSystem::CoordinateSystem() {
-    this->axes.clear();
+    axes.clear();
 }
 
 void CoordinateSystem::createCoordinateSystem() {
@@ -24,47 +24,47 @@ void CoordinateSystem::createCoordinateSystem() {
     YNegative->createMesh();
     ZNegative->createMesh();
 
-    this->axes.push_back(X);
-    this->axes.push_back(XNegative);
+    axes.push_back(X);
+    axes.push_back(XNegative);
 
-    this->axes.push_back(Y);
-    this->axes.push_back(YNegative);
+    axes.push_back(Y);
+    axes.push_back(YNegative);
 
-    this->axes.push_back(Z);
-    this->axes.push_back(ZNegative);
+    axes.push_back(Z);
+    axes.push_back(ZNegative);
 }
 
 void CoordinateSystem::drawCoordinateSystem(GLint windowHeight, GLint windowWidth, GLint bufferWidth,
     GLint bufferHeight, const Camera& camera) 
 {
-    this->shader.useShader();
+    shader.useShader();
 
-    this->model = glm::mat4(1.f);
+    model = glm::mat4(1.f);
 
-    this->model = glm::scale(this->model, glm::vec3(INT_MAX));
-    this->shader.setMat4("model", this->model);
+    model = glm::scale(model, glm::vec3((float)INT_MAX));
+    shader.setMat4("model", model);
 
     glLineWidth(5.f);
 
-    for (const auto& elem : this->axes) {
-        this->shader.setVec3("vColor", elem->getColor());
+    for (const auto& elem : axes) {
+        shader.setVec3("vColor", elem->getColor());
         elem->renderMesh();
     }
 
-    this->model = glm::mat4(1.f);
+    model = glm::mat4(1.f);
 
     glm::vec3 axisPosition = camera.getCameraPosition() + glm::normalize(camera.getCameraLookDirection()) * 100.f;
-    this->model = glm::translate(this->model, axisPosition);
-    this->model = glm::scale(this->model, glm::vec3(200.f));
+    model = glm::translate(model, axisPosition);
+    model = glm::scale(model, glm::vec3(200.f));
 
-    this->shader.setMat4("model", this->model);
+    shader.setMat4("model", model);
 
     glViewport(windowWidth / 50, windowHeight / 50, bufferWidth / 12, bufferHeight / 12);
 
     glDisable(GL_DEPTH_TEST);
     glLineWidth(3.f);
-    for (const auto& elem : this->axes) {
-        this->shader.setVec3("vColor", elem->getColor());
+    for (const auto& elem : axes) {
+        shader.setVec3("vColor", elem->getColor());
         elem->renderMesh();
     }
     glEnable(GL_DEPTH_TEST);
@@ -73,10 +73,10 @@ void CoordinateSystem::drawCoordinateSystem(GLint windowHeight, GLint windowWidt
 
     glLineWidth((GLfloat)1.f);
 
-    this->shader.endShader();
+    shader.endShader();
 }
 
 CoordinateSystem::~CoordinateSystem() {
-    for (auto& elem : this->axes)
+    for (auto& elem : axes)
         delete elem;
 }

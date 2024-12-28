@@ -17,9 +17,8 @@ out GEOM_DATA {
     vec3 normal;
 	vec3 tangent;
     vec4 fragPos;
+	noperspective vec3 edgeDistance;
 } data_out;
-
-noperspective out vec3 edgeDistance;
 
 uniform mat4 viewportMatrix;
 uniform bool drawWireframe;
@@ -61,7 +60,7 @@ void main() {
 		data_out.normal = data_in[i].normal;
 		data_out.tangent = data_in[i].tangent;
 		data_out.fragPos = data_in[i].fragPos;
-		edgeDistance = edgeDistances[i];
+		data_out.edgeDistance = edgeDistances[i];
 		gl_Position = gl_in[i].gl_Position;
 		EmitVertex();
 	}

@@ -22,6 +22,7 @@ ImGuiIO& Overlay::_init(GLFWwindow* window) {
     style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.9f, 0.41f, 0.f, 1.f);
     style.Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.5f);
     style.Colors[ImGuiCol_FrameBg] = ImVec4(0.05f, 0.05f, 0.05f, 1.f);
+    style.Colors[ImGuiCol_CheckMark] = ImVec4(0.9f, 0.41f, 0.f, 1.f);
     style.Colors[ImGuiCol_Header] = ImVec4(0.1f, 0.1f, 0.1f, 0.f);
     style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.9f, 0.41f, 0.f, 1.f);
     style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.9f, 0.41f, 0.f, 1.f);
@@ -134,7 +135,8 @@ void Overlay::DrawSliderFloat(const std::string& label, float* values, float min
     ImGui::PopID();
 }
 
-void Overlay::renderGUI(ImGuiIO& io, float& exposure, float& shadowRadius, float& filterRadius, float& bloomThreshold,
+void Overlay::render(ImGuiIO& io, float& exposure, float& shadowRadius, float& filterRadius, float& bloomThreshold,
+    float& ssaoRadius, float& ssaoBias, float& ssaoOcclusionPower,
     bool& drawSkybox, bool& displayGrid, bool& displayCoordinateSystem, bool& enableBloom, bool& enableWireframe,
     bool& enableShadows, bool& enableHDR, bool& enableSSAO, glm::vec3& dirLightLocation, Mesh* currMesh) 
 {
@@ -180,6 +182,17 @@ void Overlay::renderGUI(ImGuiIO& io, float& exposure, float& shadowRadius, float
     if (ImGui::TreeNode("Shadows")) {
         ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
             this->DrawDragFloat("PCF filter radius", &shadowRadius, 0.001f, 150.f);
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
+        ImGui::TreePop();
+    }
+
+    ImGui::NewLine();
+
+    if (ImGui::TreeNode("SSAO")) {
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
+            this->DrawDragFloat("Radius", &ssaoRadius, 0.1f, 150.f);
+            this->DrawDragFloat("Bias", &ssaoBias, 0.001f, 150.f);
+            this->DrawDragFloat("Occlusion Power", &ssaoOcclusionPower, 1.f, 150.f);
         ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.f);
         ImGui::TreePop();
     }
@@ -252,7 +265,7 @@ void Overlay::manipulate(int windowWidth, int windowHeight, const Camera& camera
     ImGuizmo::AllowAxisFlip(false);
     ImGuizmo::SetOrthographic(false);
     ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
-    ImGuizmo::SetRect(0, 0, windowWidth, windowHeight);
+    ImGuizmo::SetRect(0, 0, (float)windowWidth, (float)windowHeight);
     ImGuizmo::Manipulate(glm::value_ptr(camera.generateViewMatrix()), glm::value_ptr(camera.getProjectionMatrix()),
         transformOperation, ImGuizmo::WORLD, glm::value_ptr(mesh->getModelMatrix()));
     ImGuizmo::DecomposeMatrixToComponents(

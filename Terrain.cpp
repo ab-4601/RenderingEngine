@@ -1,64 +1,64 @@
 #include "Terrain.h"
 
-Terrain::Terrain(GLuint rows, GLuint cols, int maxAmplitude, int maxPersistence,
+Terrain::Terrain(int rows, int cols, int maxAmplitude, int maxPersistence,
 	int maxFrequency, int frequencyDivisor, int persistenceDivisor,
 	int maxRandomSeed, int maxOctaves)
 	: Mesh(), rows{ rows }, cols{ cols }, scale{ 1.f }, maxAmplitude{ maxAmplitude }, maxPersistence{ maxPersistence },
 	maxFrequency{ maxFrequency }, frequencyDivisor{ frequencyDivisor }, persistenceDivisor{ persistenceDivisor },
 	maxRandomSeed{ maxRandomSeed }, maxOctaves{ maxOctaves } 
 {
-	this->vertexCoords.clear();
-	this->noise.setOctaves(5);
+	vertexCoords.clear();
+	noise.setOctaves(5);
 }
 
 void Terrain::generateIndices() {
-	int num_of_points = this->rows * this->cols;
+	int num_of_points = rows * cols;
 
 	for (int i = 0; i < num_of_points; i++)
 	{
-		if ((i + 1) % (int)this->cols == 0)
+		if ((i + 1) % cols == 0)
 			continue;
 
-		if (i + this->cols >= num_of_points) {
-			this->indices.push_back(static_cast<unsigned int>(i));
-			this->indices.push_back(static_cast<unsigned int>(i - (int)this->cols));
-			this->indices.push_back(static_cast<unsigned int>(i + 1));
+		if (i + cols >= num_of_points) {
+			indices.push_back(static_cast<uint>(i));
+			indices.push_back(static_cast<uint>(i - cols));
+			indices.push_back(static_cast<uint>(i + 1));
 		}
-		else if (i - (int)this->cols < 0) {
-			this->indices.push_back(static_cast<unsigned int>(i));
-			this->indices.push_back(static_cast<unsigned int>(i + 1));
-			this->indices.push_back(static_cast<unsigned int>(i + 1 + this->cols));
+		else if (i - cols < 0) {
+			indices.push_back(static_cast<uint>(i));
+			indices.push_back(static_cast<uint>(i + 1));
+			indices.push_back(static_cast<uint>(i + 1 + cols));
 		}
 		else {
-			this->indices.push_back(static_cast<unsigned int>(i));
-			this->indices.push_back(static_cast<unsigned int>(i + 1));
-			this->indices.push_back(static_cast<unsigned int>(i + 1 + this->cols));
+			indices.push_back(static_cast<uint>(i));
+			indices.push_back(static_cast<uint>(i + 1));
+			indices.push_back(static_cast<uint>(i + 1 + cols));
 
-			this->indices.push_back(static_cast<unsigned int>(i));
-			this->indices.push_back(static_cast<unsigned int>(i - (int)this->cols));
-			this->indices.push_back(static_cast<unsigned int>(i + 1));
+			indices.push_back(static_cast<uint>(i));
+			indices.push_back(static_cast<uint>(i - cols));
+			indices.push_back(static_cast<uint>(i + 1));
 		}
 	}
 }
 
 void Terrain::generateTexCoords() {
-	for (int i = 0; i < this->rows; i++) {
-		for (int j = 0; j < this->cols; j++) {
-			this->texCoords.push_back((float)j / 10);
-			this->texCoords.push_back((float)i / 10);
+	for (float i = 0.f; i < (float)rows; i++) {
+		for (float j = 0.f; j < (float)cols; j++) {
+			texCoords.push_back(j / 10);
+			texCoords.push_back(i / 10);
 		}
 	}
 
 	int index = 0;
 
-	for (Vertex& vertex : this->vertices) {
-		vertex.texel = glm::vec2(this->texCoords[index], this->texCoords[index + 1]);
+	for (Vertex& vertex : vertices) {
+		vertex.texel = glm::vec2(texCoords[index], texCoords[index + 1]);
 		index += 2;
 	}
 }
 
 void Terrain::generateVertexNormals() {
-	int numOfPoints = this->rows * this->cols;
+	int numOfPoints = rows * cols;
 	int currRow = 1;
 
 	glm::vec3 currPoint{}, a{}, b{};
@@ -67,40 +67,40 @@ void Terrain::generateVertexNormals() {
 	if (noise.getAmplitude() == 0.f) {
 		normal = glm::vec3(0.f, 1.f, 0.f);
 		for (int i = 0; i < numOfPoints; i++)
-			this->vertices[i].normal = normal;
+			vertices[i].normal = normal;
 	}
 	else {
 		for (int i = 0; i < numOfPoints; i++) {
-			currPoint = this->vertices.at(i).position;
+			currPoint = vertices.at(i).position;
 
-			if (currRow == this->rows) {
-				if ((i + 1) % this->cols == 0) {
-					a = this->vertices.at(i - 1).position;
-					b = this->vertices.at(i - this->cols).position;
+			if (currRow == rows) {
+				if ((i + 1) % cols == 0) {
+					a = vertices.at(i - 1).position;
+					b = vertices.at(i - cols).position;
 				}
 				else {
-					a = this->vertices.at(i - this->cols).position;
-					b = this->vertices.at(i + 1).position;
+					a = vertices.at(i - cols).position;
+					b = vertices.at(i + 1).position;
 				}
 			}
 			else {
-				if ((i + 1) % this->cols == 0) {
-					a = this->vertices.at(i + this->cols).position;
-					b = this->vertices.at(i - 1).position;
+				if ((i + 1) % cols == 0) {
+					a = vertices.at(i + cols).position;
+					b = vertices.at(i - 1).position;
 				}
 				else {
-					a = this->vertices.at(i + 1).position;
-					b = this->vertices.at(i + 1 + this->cols).position;
+					a = vertices.at(i + 1).position;
+					b = vertices.at(i + 1 + cols).position;
 				}
 			}
 
-			if ((i + 1) % this->cols == 0)
+			if ((i + 1) % cols == 0)
 				++currRow;
 
 			normal = glm::cross(a - currPoint, b - currPoint);
 			normal = glm::normalize(normal);
 
-			this->vertices[i].normal = normal;
+			vertices[i].normal = normal;
 		}
 	}
 }
@@ -112,35 +112,35 @@ void Terrain::generateHeightMaps(int noOfMaps) {
 	while (noOfMaps > 0) {
 		currHeightMap.clear();
 
-		this->noise.setAmplitude(rand() % this->maxAmplitude);
-		this->noise.setRandomSeed(rand() % this->maxRandomSeed);
-		this->noise.setFrequency((float)(rand() % this->maxFrequency) / this->frequencyDivisor);
-		this->noise.setPersistence((float)(rand() % this->maxPersistence) / this->persistenceDivisor);
+		noise.setAmplitude(float(rand() % maxAmplitude));
+		noise.setRandomSeed(rand() % maxRandomSeed);
+		noise.setFrequency((float)(rand() % maxFrequency) / frequencyDivisor);
+		noise.setPersistence((float)(rand() % maxPersistence) / persistenceDivisor);
 
-		for (int r = 0; r < (int)this->rows; r++) {
-			for (int c = 0; c < (int)this->cols; c++) {
-				height = this->noise.getHeight(r, c);
+		for (float r = 0; r < (float)rows; r++) {
+			for (float c = 0; c < (float)cols; c++) {
+				height = noise.getHeight(r, c);
 
 				currHeightMap.push_back(height);
 			}
 		}
 
-		this->heightMaps.push_back(currHeightMap);
+		heightMaps.push_back(currHeightMap);
 
 		--noOfMaps;
 	}
 }
 
 void Terrain::generateTerrain(float scale) {
-	this->scale = scale;
+	scale = scale;
 	float height = 0.f;
 	
 	std::vector<float> finalHeightMap{};
 
-	for (int i = 0; i < this->rows * this->cols; i++) {
+	for (int i = 0; i < rows * cols; i++) {
 		height = 0.f;
-		for (size_t j = 0; j < this->heightMaps.size(); j++) {
-			height += this->heightMaps.at(j).at(i);
+		for (size_t j = 0; j < heightMaps.size(); j++) {
+			height += heightMaps.at(j).at(i);
 		}
 
 		finalHeightMap.push_back(height);
@@ -148,26 +148,26 @@ void Terrain::generateTerrain(float scale) {
 
 	int index = 0;
 
-	if (this->heightMaps.size() == 0) {
-		for (int r = -(int)this->rows / 2; r < (int)this->rows / 2; r++) {
-			for (int c = -(int)this->cols / 2; c < (int)this->cols / 2; c++) {
-				glm::vec3 vertex(r * this->scale, 0, c * this->scale);
+	if (heightMaps.size() == 0) {
+		for (int r = -rows / 2; r < rows / 2; r++) {
+			for (int c = -cols / 2; c < cols / 2; c++) {
+				glm::vec3 vertex(r * scale, 0, c * scale);
 
-				this->vertices.push_back(Vertex{ vertex });
+				vertices.push_back(Vertex{ vertex });
 			}
 		}
 	}
 	else {
-		for (int r = -(int)this->rows / 2; r < (int)this->rows / 2; r++) {
-			for (int c = -(int)this->cols / 2; c < (int)this->cols / 2; c++) {
-				glm::vec3 vertex(r * this->scale, finalHeightMap.at(index++), c * this->scale);
+		for (int r = -rows / 2; r < rows / 2; r++) {
+			for (int c = -cols / 2; c < cols / 2; c++) {
+				glm::vec3 vertex(r * scale, finalHeightMap.at(index++), c * scale);
 
-				this->vertices.push_back(Vertex{ vertex });
+				vertices.push_back(Vertex{ vertex });
 			}
 		}
 	}
 
-	this->generateIndices();
-	this->generateVertexNormals();
-	this->generateTexCoords();
+	generateIndices();
+	generateVertexNormals();
+	generateTexCoords();
 }

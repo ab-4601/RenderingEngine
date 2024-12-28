@@ -29,8 +29,9 @@ public:
 
 	void _newFrame();
 	void _updateTransformOperation(const Window& window);
-	void renderGUI(
+	void render(
 		ImGuiIO& io, float& exposure, float& shadowRadius, float& filterRadius, float &bloomThreshold,
+		float& ssaoRadius, float& ssaoBias, float& ssaoOcclusionPower,
 		bool& drawSkybox, bool& displayGrid, bool& displayCoordinateSystem, bool& enableBloom, bool& enableWireframe, 
 		bool& enableShadows, bool& enableHDR, bool& enableSSAO, glm::vec3& dirLightLocation, Mesh* currMesh = nullptr
 	);

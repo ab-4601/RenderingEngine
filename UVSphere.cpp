@@ -8,34 +8,34 @@ UVSphere::UVSphere(unsigned int stackCount, unsigned int sectorCount, float radi
 void UVSphere::addVertex(glm::vec3 position, glm::vec3 normal, glm::vec2 texel) {
 	Vertex vertex{ position, texel, normal };
 
-	this->vertices.push_back(vertex);
+	vertices.push_back(vertex);
 }
 
 void UVSphere::addIndices(unsigned int a, unsigned int b, unsigned int c) {
-	this->indices.push_back(a);
-	this->indices.push_back(b);
-	this->indices.push_back(c);
+	indices.push_back(a);
+	indices.push_back(b);
+	indices.push_back(c);
 }
 
 void UVSphere::generateSphere() {
 	GLfloat x{}, y{}, z{}, xy{};
-	GLfloat nx{}, ny{}, nz{}, lengthInv{ 1.f / this->radius };
+	GLfloat nx{}, ny{}, nz{}, lengthInv{ 1.f / radius };
 	GLfloat u{}, v{};
 
-	float sectorStep = 2 * PI / this->sectorCount;
-	float stackStep = PI / this->stackCount;
+	float sectorStep = 2.f * PI / sectorCount;
+	float stackStep = PI / stackCount;
 	float sectorAngle{}, stackAngle{};
 
 	glm::vec3 position{}, normal{};
 	glm::vec2 texel{};
 
-	for (int i = 0; i <= this->stackCount; i++) {
-		stackAngle = (PI / 2) - (i * stackStep);
-		xy = this->radius * cosf(stackAngle);
-		z = this->radius * sinf(stackAngle);
+	for (uint i = 0; i <= stackCount; i++) {
+		stackAngle = (PI / 2.f) - (i * stackStep);
+		xy = radius * cosf(stackAngle);
+		z = radius * sinf(stackAngle);
 		nz = z * lengthInv;
 
-		for (int j = 0; j <= this->sectorCount; j++) {
+		for (uint j = 0; j <= sectorCount; j++) {
 			sectorAngle = j * sectorStep;
 
 			x = xy * cosf(sectorAngle);
@@ -52,26 +52,26 @@ void UVSphere::generateSphere() {
 			v = (float)i / stackCount;
 
 			texel = glm::vec2(u, v);
-			this->addVertex(position, normal, texel);
+			addVertex(position, normal, texel);
 		}
 	}
 
-	this->generateIndices();
+	generateIndices();
 }
 
 void UVSphere::generateIndices() {
 	int k1{}, k2{};
 
-	for (int i = 0; i < (int)this->stackCount; i++) {
+	for (int i = 0; i < (int)stackCount; i++) {
 		k1 = i * (sectorCount + 1);
 		k2 = k1 + sectorCount + 1;
 
-		for (int j = 0; j < (int)this->sectorCount; j++, k1++, k2++) {
+		for (int j = 0; j < (int)sectorCount; j++, k1++, k2++) {
 			if (i != 0)
-				this->addIndices(k1, k2, k1 + 1);
+				addIndices(k1, k2, k1 + 1);
 
 			if (i != stackCount - 1)
-				this->addIndices(k1 + 1, k2, k2 + 1);
+				addIndices(k1 + 1, k2, k2 + 1);
 		}
 	}
 }

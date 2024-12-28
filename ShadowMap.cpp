@@ -3,24 +3,24 @@
 ShadowMap::ShadowMap(float nearPlane, float farPlane) 
 	: nearPlane{ nearPlane }, farPlane{ farPlane }
 {
-	this->projection = glm::perspective(
-		glm::radians(90.f), (float)this->SHADOW_WIDTH / (float)this->SHADOW_HEIGHT, this->nearPlane, this->farPlane
+	projection = glm::perspective(
+		glm::radians(90.f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, nearPlane, farPlane
 	);
 
-	this->_init();
+	_init();
 }
 
 void ShadowMap::_init() {
-	glGenFramebuffers(1, &this->FBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+	glGenFramebuffers(1, &FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-	glGenTextures(1, &this->depthMap);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, this->depthMap);
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, depthMap);
 
 	for (int i = 0; i < 6; i++) {
 		glTexImage2D(
 			GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, 
-			this->SHADOW_WIDTH, this->SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL
+			SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL
 		);
 	}
 
@@ -39,56 +39,56 @@ void ShadowMap::_init() {
 }
 
 void ShadowMap::calculateShadowTransforms(glm::vec3 lightPosition) {
-	this->shadowTransforms.clear();
+	shadowTransforms.clear();
 
-	this->shadowTransforms.push_back(
-		this->projection * glm::lookAt(lightPosition, lightPosition + glm::vec3(1.f, 0.f, 0.f), glm::vec3(0.f, -1.f, 0.f))
+	shadowTransforms.push_back(
+		projection * glm::lookAt(lightPosition, lightPosition + glm::vec3(1.f, 0.f, 0.f), glm::vec3(0.f, -1.f, 0.f))
 	);
 
-	this->shadowTransforms.push_back(
-		this->projection * glm::lookAt(lightPosition, lightPosition + glm::vec3(-1.f, 0.f, 0.f), glm::vec3(0.f, -1.f, 0.f))
+	shadowTransforms.push_back(
+		projection * glm::lookAt(lightPosition, lightPosition + glm::vec3(-1.f, 0.f, 0.f), glm::vec3(0.f, -1.f, 0.f))
 	);
 
-	this->shadowTransforms.push_back(
-		this->projection * glm::lookAt(lightPosition, lightPosition + glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f))
+	shadowTransforms.push_back(
+		projection * glm::lookAt(lightPosition, lightPosition + glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f))
 	);
 
-	this->shadowTransforms.push_back(
-		this->projection * glm::lookAt(lightPosition, lightPosition + glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, 0.f, -1.f))
+	shadowTransforms.push_back(
+		projection * glm::lookAt(lightPosition, lightPosition + glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, 0.f, -1.f))
 	);
 
-	this->shadowTransforms.push_back(
-		this->projection * glm::lookAt(lightPosition, lightPosition + glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, -1.f, 0.f))
+	shadowTransforms.push_back(
+		projection * glm::lookAt(lightPosition, lightPosition + glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, -1.f, 0.f))
 	);
 
-	this->shadowTransforms.push_back(
-		this->projection * glm::lookAt(lightPosition, lightPosition + glm::vec3(0.f, 0.f, -1.f), glm::vec3(0.f, -1.f, 0.f))
+	shadowTransforms.push_back(
+		projection * glm::lookAt(lightPosition, lightPosition + glm::vec3(0.f, 0.f, -1.f), glm::vec3(0.f, -1.f, 0.f))
 	);
 }
 
 void ShadowMap::calculateShadowMap(std::vector<Mesh*>& meshes, int windowWidth, int windowHeight, 
 	glm::vec3 lightPosition, GLuint currentFramebuffer) 
 {
-	glViewport(0, 0, this->SHADOW_WIDTH, this->SHADOW_HEIGHT);
-	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	glCullFace(GL_FRONT);
 
-	this->shader.useShader();
+	shader.useShader();
 
-	this->shader.setFloat("farPlane", this->farPlane);
-	this->shader.setVec3("lightPosition", lightPosition);
+	shader.setFloat("farPlane", farPlane);
+	shader.setVec3("lightPosition", lightPosition);
 
 	std::string buffer{};
 
 	for (int i = 0; i < 6; i++) {
 		buffer = "shadowMatrices[" + std::to_string(i) + "]";
-		this->shader.setMat4(buffer.data(), this->shadowTransforms[i]);
+		shader.setMat4(buffer.data(), shadowTransforms[i]);
 	}
 
 	for (int i = 0; i < meshes.size(); i++) {
-		this->shader.setMat4("model", meshes[i]->getModelMatrix());
+		shader.setMat4("model", meshes[i]->getModelMatrix());
 
 		meshes[i]->drawMesh(GL_TRIANGLES);
 	}
@@ -100,9 +100,9 @@ void ShadowMap::calculateShadowMap(std::vector<Mesh*>& meshes, int windowWidth, 
 }
 
 ShadowMap::~ShadowMap() {
-	if (this->FBO != 0)
-		glDeleteFramebuffers(1, &this->FBO);
+	if (FBO != 0)
+		glDeleteFramebuffers(1, &FBO);
 
-	if (this->depthMap != 0)
-		glDeleteTextures(1, &this->depthMap);
+	if (depthMap != 0)
+		glDeleteTextures(1, &depthMap);
 }

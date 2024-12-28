@@ -5,15 +5,15 @@ ParticleRenderer::ParticleRenderer(ParticleTexture texture)
 	this->texture = texture;
 	this->texture.loadTexture();
 
-	for (int i = 0; i < this->maxInstances * this->instanceDataLength; i++)
-		this->dataBuffer[i] = NULL;
+	for (int i = 0; i < maxInstances * instanceDataLength; i++)
+		dataBuffer[i] = NULL;
 
-	glGenVertexArrays(1, &this->VAO);
-	glBindVertexArray(this->VAO);
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
 
-	glGenBuffers(1, &this->VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(this->vertices), this->vertices, GL_STATIC_DRAW);
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(0);
@@ -21,22 +21,22 @@ ParticleRenderer::ParticleRenderer(ParticleTexture texture)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	this->createEmptyVBO(this->instanceDataLength * this->maxInstances);
+	createEmptyVBO(instanceDataLength * maxInstances);
 
-	this->addInstancedAttribute(1, 4, this->instanceDataLength, 0);
-	this->addInstancedAttribute(2, 4, this->instanceDataLength, 4);
-	this->addInstancedAttribute(3, 4, this->instanceDataLength, 8);
-	this->addInstancedAttribute(4, 4, this->instanceDataLength, 12);
+	addInstancedAttribute(1, 4, instanceDataLength, 0);
+	addInstancedAttribute(2, 4, instanceDataLength, 4);
+	addInstancedAttribute(3, 4, instanceDataLength, 8);
+	addInstancedAttribute(4, 4, instanceDataLength, 12);
   
-	this->addInstancedAttribute(5, 4, this->instanceDataLength, 16);
-	this->addInstancedAttribute(6, 1, this->instanceDataLength, 20);
+	addInstancedAttribute(5, 4, instanceDataLength, 16);
+	addInstancedAttribute(6, 1, instanceDataLength, 20);
 }
 
 void ParticleRenderer::createEmptyVBO(int floatCount) {
-	glBindVertexArray(this->VAO);
-	glGenBuffers(1, &this->iVBO);
+	glBindVertexArray(VAO);
+	glGenBuffers(1, &iVBO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, this->iVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, iVBO);
 	glBufferData(GL_ARRAY_BUFFER, floatCount * sizeof(float), NULL, GL_DYNAMIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -44,8 +44,8 @@ void ParticleRenderer::createEmptyVBO(int floatCount) {
 }
 
 void ParticleRenderer::addInstancedAttribute(int attribute, int dataSize, int instancedDataLength, int offset) {
-	glBindBuffer(GL_ARRAY_BUFFER, this->iVBO);
-	glBindVertexArray(this->VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, iVBO);
+	glBindVertexArray(VAO);
 
 	glVertexAttribPointer(attribute, dataSize, GL_FLOAT, GL_FALSE,
 		instancedDataLength * sizeof(float), (void*)(offset * sizeof(float)));
@@ -57,46 +57,46 @@ void ParticleRenderer::addInstancedAttribute(int attribute, int dataSize, int in
 }
 
 void ParticleRenderer::updateVBO() {
-	glBindBuffer(GL_ARRAY_BUFFER, this->iVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, iVBO);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(this->dataBuffer) * this->pointer, NULL, GL_DYNAMIC_DRAW);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(this->dataBuffer) * this->pointer, this->dataBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(dataBuffer) * pointer, NULL, GL_DYNAMIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(dataBuffer) * pointer, dataBuffer);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	for (int i = 0; i < this->pointer; i++)
-		this->dataBuffer[i] = NULL;
+	for (int i = 0; i < pointer; i++)
+		dataBuffer[i] = NULL;
 
-	this->pointer = 0;
+	pointer = 0;
 }
 
 void ParticleRenderer::updateTextureCoordInfo(const CParticle* const particle) {
 	float lifeFactor = particle->getElapsedTime() / particle->getLifeTime();
-	int stageCount = std::pow(this->texture.getNumberOfRows(), 2);
+	int stageCount = static_cast<int>(std::pow(texture.getNumberOfRows(), 2));
 	float atlasProgression = lifeFactor * stageCount;
 
 	int index1 = (int)std::floor(atlasProgression);
 	int index2 = index1 < stageCount - 1 ? index1 + 1 : index1;
 
-	this->blend = atlasProgression - std::floor(atlasProgression);
+	blend = atlasProgression - std::floor(atlasProgression);
 
-	this->setTextureOffset(this->texOffset1, index1);
-	this->setTextureOffset(this->texOffset2, index2);
+	setTextureOffset(texOffset1, index1);
+	setTextureOffset(texOffset2, index2);
 
-	this->dataBuffer[this->pointer++] = this->texOffset1.x;
-	this->dataBuffer[this->pointer++] = this->texOffset1.y;
-	this->dataBuffer[this->pointer++] = this->texOffset2.x;
-	this->dataBuffer[this->pointer++] = this->texOffset2.y;
+	dataBuffer[pointer++] = texOffset1.x;
+	dataBuffer[pointer++] = texOffset1.y;
+	dataBuffer[pointer++] = texOffset2.x;
+	dataBuffer[pointer++] = texOffset2.y;
 
-	this->dataBuffer[this->pointer++] = this->blend;
+	dataBuffer[pointer++] = blend;
 }
 
 void ParticleRenderer::setTextureOffset(glm::vec2& offset, int index) {
-	int col = index % (int)this->texture.getNumberOfRows();
-	int row = index / this->texture.getNumberOfRows();
+	int col = index % (int)texture.getNumberOfRows();
+	int row = index / (int)texture.getNumberOfRows();
 
-	offset.x = (float)col / this->texture.getNumberOfRows();
-	offset.y = (float)row / this->texture.getNumberOfRows();
+	offset.x = (float)col / texture.getNumberOfRows();
+	offset.y = (float)row / texture.getNumberOfRows();
 }
 
 inline void ParticleRenderer::updateModelViewMatrix(mat4& modelView, mat4& view, vec3 position, 
@@ -117,7 +117,7 @@ inline void ParticleRenderer::updateModelViewMatrix(mat4& modelView, mat4& view,
 
 	for (int i = 0; i < 4; i++)
 		for (int j = 0; j < 4; j++)
-			this->dataBuffer[this->pointer++] = modelView[i][j];
+			dataBuffer[pointer++] = modelView[i][j];
 }
 
 void ParticleRenderer::render(const std::vector<CParticle*>& particles, const Window* const currWindow,
@@ -128,45 +128,45 @@ void ParticleRenderer::render(const std::vector<CParticle*>& particles, const Wi
 
 	mat4 view = camera.generateViewMatrix();
 
-	this->shader.useShader();
+	shader.useShader();
 
-	this->shader.setVec3("vColor", glm::vec3(1.f, 0.f, 0.f));
-	this->shader.setMat4("projectionMatrix", projection);
-	this->shader.setFloat("numberOfRows", this->texture.getNumberOfRows());
+	shader.setVec3("vColor", glm::vec3(1.f, 0.f, 0.f));
+	shader.setMat4("projectionMatrix", projection);
+	shader.setFloat("numberOfRows", texture.getNumberOfRows());
 	
 	for (auto& particle : particles) {
 		modelViewMatrix = mat4(1.f);
 		
-		this->updateModelViewMatrix(modelViewMatrix, view, particle->getPosition(),
+		updateModelViewMatrix(modelViewMatrix, view, particle->getPosition(),
 			particle->getRotation(), particle->getScale());
-		this->updateTextureCoordInfo(&*particle);
+		updateTextureCoordInfo(&*particle);
 
-		glm::vec4 texOffset{ this->texOffset1.x, this->texOffset1.y, this->texOffset2.x, this->texOffset2.y };
+		glm::vec4 texOffset{ texOffset1.x, texOffset1.y, texOffset2.x, texOffset2.y };
 
-		this->texture.useTexture();
+		texture.useTexture();
 	}
 
-	this->updateVBO();
+	updateVBO();
 
 	glDepthMask(false);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_ONE, GL_ONE);
 
-	this->drawParticleSprites(particles.size());
+	drawParticleSprites(particles.size());
 
 	glDepthMask(true);
 	glDisable(GL_BLEND);
 }
 
 ParticleRenderer::~ParticleRenderer() {
-	if (this->VBO != 0)
-		glDeleteBuffers(1, &this->VBO);
+	if (VBO != 0)
+		glDeleteBuffers(1, &VBO);
 
-	if (this->IBO != 0)
-		glDeleteBuffers(1, &this->IBO);
+	if (IBO != 0)
+		glDeleteBuffers(1, &IBO);
 
-	if (this->VAO != 0)
-		glDeleteVertexArrays(1, &this->VAO);
+	if (VAO != 0)
+		glDeleteVertexArrays(1, &VAO);
 
-	delete[] this->dataBuffer;
+	delete[] dataBuffer;
 }

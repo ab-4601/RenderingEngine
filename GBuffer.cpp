@@ -1,7 +1,18 @@
 #include "GBuffer.h"
 
 GBuffer::GBuffer(int windowWidth, int windowHeight) {
-	this->_init(windowWidth, windowHeight);
+	viewportMatrix = {
+		glm::vec4((float)windowWidth / 2.f, 0.f, 0.f, (float)windowWidth / 2.f),
+		glm::vec4(0.f, (float)windowHeight / 2.f, 0.f, (float)windowHeight / 2.f),
+		glm::vec4(0.f, 0.f, 1.f, 0.f),
+		glm::vec4(0.f, 0.f, 0.f, 1.f)
+	};
+
+	_init(windowWidth, windowHeight);
+
+	shader.useShader();
+		shader.setMat4("viewportMatrix", viewportMatrix);
+	shader.endShader();
 }
 
 void GBuffer::genTexture(GLuint& texID, GLenum colorAttachment, int windowWidth, int windowHeight) {
@@ -16,20 +27,20 @@ void GBuffer::genTexture(GLuint& texID, GLenum colorAttachment, int windowWidth,
 }
 
 void GBuffer::_init(int windowWidth, int windowHeight) {
-	glGenFramebuffers(1, &this->FBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+	glGenFramebuffers(1, &FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-	this->genTexture(this->gPosition, GL_COLOR_ATTACHMENT0, windowWidth, windowHeight);
-	this->genTexture(this->gNormal, GL_COLOR_ATTACHMENT1, windowWidth, windowHeight);
-	this->genTexture(this->gAlbedo, GL_COLOR_ATTACHMENT2, windowWidth, windowHeight);
-	this->genTexture(this->gMetallic, GL_COLOR_ATTACHMENT3, windowWidth, windowHeight);
+	genTexture(gPosition, GL_COLOR_ATTACHMENT0, windowWidth, windowHeight);
+	genTexture(gNormal, GL_COLOR_ATTACHMENT1, windowWidth, windowHeight);
+	genTexture(gAlbedo, GL_COLOR_ATTACHMENT2, windowWidth, windowHeight);
+	genTexture(gMetallic, GL_COLOR_ATTACHMENT3, windowWidth, windowHeight);
 
-	glDrawBuffers(4, this->colorAttachments);
+	glDrawBuffers(4, colorAttachments);
 
-	glGenRenderbuffers(1, &this->RBO);
-	glBindRenderbuffer(GL_RENDERBUFFER, this->RBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, windowWidth, windowHeight);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, this->RBO);
+	glGenRenderbuffers(1, &RBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, windowWidth, windowHeight);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
 
 	GLuint status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
@@ -42,54 +53,29 @@ void GBuffer::_init(int windowWidth, int windowHeight) {
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 }
 
-void GBuffer::updateGbuffer(Shader& shader, const std::vector<Mesh*>& meshes, const std::vector<Model*>& models,
-	GLuint currFramebuffer)
+void GBuffer::updateBuffer(Shader& outlineShader, int meshId, const std::vector<Mesh*>& meshes,
+	const std::vector<Model*>& models, GLuint currFramebuffer)
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
-	glDrawBuffers(4, this->colorAttachments);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	glDrawBuffers(4, colorAttachments);
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	this->shader.useShader();
+	shader.useShader();
+	shader.setUint("drawWireframe", drawWireframe);
+
+	if (meshId < meshes.size() && meshId != -1)
+		meshes[meshId]->renderMeshWithOutline(shader, outlineShader, GL_TRIANGLES);
 	
 	for (size_t i = 0; i < meshes.size(); i++) {
-		this->shader.setVec3("vColor", meshes[i]->getColor());
-		this->shader.setMat4("model", meshes[i]->getModelMatrix());
-
-		if (meshes[i]->getDiffuseMapBool()) {
-			this->shader.setUint("useDiffuseMap", true);
-			meshes[i]->bindDiffuseMap();
-		}
-		else
-			this->shader.setUint("useDiffuseMap", false);
-
-		if (meshes[i]->getNormalMapBool()) {
-			this->shader.setUint("useNormalMap", true);
-			meshes[i]->bindNormalMap();
-		}
-		else
-			this->shader.setUint("useNormalMap", false);
-
-		if (meshes[i]->getMaterialMapBool()) {
-			this->shader.setUint("useMetalnessMap", true);
-			meshes[i]->bindMetallicMap();
-		}
-		else
-			this->shader.setUint("useMetalnessMap", false);
-
-		meshes[i]->drawMesh(GL_TRIANGLES);
+		if (i != meshId)
+			meshes[i]->renderMesh(shader, GL_TRIANGLES);
 	}
 
-	for (size_t i = 0; i < models.size(); i++) {
-		this->shader.setUint("useDiffuseMap", true);
-		this->shader.setUint("useNormalMap", true);
-		this->shader.setUint("useMetalnessMap", true);
-		this->shader.setUint("isStrippedNormal", models[i]->getStrippedNormalBool());
-		this->shader.setMat4("model", glm::mat4(1.f));
-		models[i]->renderModel(this->shader, GL_TRIANGLES);
-	}
+	for (size_t i = 0; i < models.size(); i++)
+		models[i]->renderModel(shader, GL_TRIANGLES);
 
-	this->shader.endShader();
+	shader.endShader();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, currFramebuffer);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);

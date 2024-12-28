@@ -33,19 +33,19 @@ ParticleMaster::ParticleMaster(ParticleMaster&& source) noexcept {
 }
 
 void ParticleMaster::update(float delta, glm::vec3 cameraPosition) {
-	if (this->particles.size() == 0)
+	if (particles.size() == 0)
 		return;
 
 	CParticle* particle = nullptr;
 
-	for (size_t i = 0; i < this->particles.size(); i++) {
-		particle = this->particles.at(i);
+	for (size_t i = 0; i < particles.size(); i++) {
+		particle = particles.at(i);
 		particle->updateDelta(delta);
 		bool stillVisible = particle->update(cameraPosition);
 
 		if (!stillVisible) {
-			auto iterator = this->particles.begin() + i;
-			this->particles.erase(iterator);
+			auto iterator = particles.begin() + i;
+			particles.erase(iterator);
 			delete particle;
 		}
 	}
@@ -56,7 +56,7 @@ void ParticleMaster::generateParticle(vec3 position, vec3 velocity, vec3 color, 
 
 	CParticle* particle = new CParticle(position, velocity, color, forceEffect,
 		rotation, scale, lifeTime);
-	this->particles.push_back(particle);
+	particles.push_back(particle);
 
 	/*auto compare = [](CParticle* a, CParticle* b) -> bool {
 		return a->getDistance() < b->getDistance();

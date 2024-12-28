@@ -9,20 +9,20 @@ CParticle::CParticle(vec3 position, vec3 velocity, vec3 color, float forceEffect
 }
 
 void CParticle::updateTextureCoordInfo() {
-	float lifeFactor = this->elapsedTime / this->lifeTime;
+	float lifeFactor = elapsedTime / lifeTime;
 }
 
 bool CParticle::update(glm::vec3 cameraPosition) {
 	float angle = (float)(rand() % 360);
-	this->velocity.y += GRAVITY * this->forceEffect * this->delta;
+	velocity.y += GRAVITY * forceEffect * delta;
 
-	vec3 change = this->velocity;
-	change *= this->delta;
+	vec3 change = velocity;
+	change *= delta;
 
-	this->position = change + position;
-	this->distance = glm::distance(cameraPosition, this->position);
+	position = change + position;
+	distance = glm::distance(cameraPosition, position);
 
-	this->elapsedTime += delta;
+	elapsedTime += delta;
 
-	return this->elapsedTime < this->lifeTime;
+	return elapsedTime < lifeTime;
 }

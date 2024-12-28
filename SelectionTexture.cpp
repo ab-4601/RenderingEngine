@@ -1,20 +1,20 @@
 #include "SelectionTexture.h"
 
 void SelectionTexture::init(unsigned int windowWidth, unsigned int windowHeight) {
-	glGenFramebuffers(1, &this->FBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+	glGenFramebuffers(1, &FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-	glGenTextures(1, &this->selectionTexture);
-	glBindTexture(GL_TEXTURE_2D, this->selectionTexture);
+	glGenTextures(1, &selectionTexture);
+	glBindTexture(GL_TEXTURE_2D, selectionTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32UI, windowWidth, windowHeight, 0, GL_RGB_INTEGER, GL_UNSIGNED_INT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->selectionTexture, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, selectionTexture, 0);
 
-	glGenTextures(1, &this->depthTexture);
-	glBindTexture(GL_TEXTURE_2D, this->depthTexture);
+	glGenTextures(1, &depthTexture);
+	glBindTexture(GL_TEXTURE_2D, depthTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, windowWidth, windowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->depthTexture, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
 
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
@@ -28,7 +28,7 @@ void SelectionTexture::init(unsigned int windowWidth, unsigned int windowHeight)
 }
 
 SelectionTexture::PixelInfo SelectionTexture::readPixel(int x, int y) {
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, this->FBO);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO);
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
 
 	PixelInfo Pixel;
@@ -41,15 +41,15 @@ SelectionTexture::PixelInfo SelectionTexture::readPixel(int x, int y) {
 }
 
 SelectionTexture::~SelectionTexture() {
-	if (this->FBO != 0)
-		glDeleteFramebuffers(1, &this->FBO);
+	if (FBO != 0)
+		glDeleteFramebuffers(1, &FBO);
 
-	if (this->selectionTexture != 0)
-		glDeleteTextures(1, &this->selectionTexture);
+	if (selectionTexture != 0)
+		glDeleteTextures(1, &selectionTexture);
 
-	if (this->depthTexture != 0)
-		glDeleteTextures(1, &this->depthTexture);
+	if (depthTexture != 0)
+		glDeleteTextures(1, &depthTexture);
 
-	if (this->depthBuffer != 0)
-		glDeleteRenderbuffers(1, &this->depthBuffer);
+	if (depthBuffer != 0)
+		glDeleteRenderbuffers(1, &depthBuffer);
 }

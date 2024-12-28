@@ -27,6 +27,6 @@ public:
 	void clearMesh();
 
 	~Crosshair() {
-		this->clearMesh();
+		clearMesh();
 	}
 };

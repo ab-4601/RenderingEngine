@@ -4,18 +4,17 @@ out float fragColor;
 
 in vec2 texel;
 
-uniform sampler2D gPosition;
-uniform sampler2D gNormal;
-uniform sampler2D noise;
+layout (binding = 0) uniform sampler2D gPosition;
+layout (binding = 1) uniform sampler2D gNormal;
+layout (binding = 2) uniform sampler2D noise;
 
 uniform vec3 samples[64];
+uniform vec2 screenRes;
 
 uniform int kernelSize;
 uniform float radius;
 uniform float bias;
 uniform float occlusionPower;
-
-uniform vec2 screenRes;
 
 const vec2 noiseScale = screenRes / vec2(textureSize(noise, 0));
 
@@ -26,9 +25,9 @@ layout (std140, binding = 0) uniform cameraSpaceVariables {
 };
 
 void main() {
-	vec3 fragPos = texture2D(gPosition, texel).xyz;
-	vec3 normal = normalize(texture2D(gNormal, texel).rgb);
-	vec3 random = normalize(texture2D(noise, texel * noiseScale).xyz);
+	vec4 fragPos = view * texture2D(gPosition, texel);
+	vec3 normal = normalize(mat3(view) * texture2D(gNormal, texel).rgb);
+	vec3 random = texture2D(noise, texel * noiseScale).rgb;
 
 	vec3 tangent = normalize(random - normal * dot(random, normal));
 	vec3 bitangent = cross(normal, tangent);
@@ -38,14 +37,14 @@ void main() {
 
 	for(int i = 0; i < kernelSize; i++) {
 		vec3 samplePos = TBN * samples[i];
-		samplePos = fragPos + samplePos * radius;
+		samplePos = fragPos.xyz + samplePos * radius;
 
 		vec4 offset = vec4(samplePos, 1.f);
 		offset = projection * offset;
 		offset.xyz /= offset.w;
 		offset.xyz = offset.xyz * 0.5f + 0.5f;
 
-		float sampleDepth = texture(gPosition, offset.xy).z;
+		float sampleDepth = vec3(view * texture2D(gPosition, offset.xy)).z;
 		float rangeCheck = smoothstep(0.f, 1.f, radius / abs(fragPos.z - sampleDepth));
 		
 		occlusion += (sampleDepth >= samplePos.z + bias ? 1.f : 0.f) * rangeCheck;
@@ -53,5 +52,7 @@ void main() {
 
 	occlusion = 1.f - (occlusion / kernelSize);
 
-	fragColor = pow(occlusion, occlusionPower);
+	occlusion = pow(occlusion, occlusionPower);
+
+	fragColor = occlusion;
 }

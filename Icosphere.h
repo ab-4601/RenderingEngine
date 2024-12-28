@@ -12,9 +12,9 @@ private:
 	}
 
 	void addTempIndices(unsigned int a, unsigned int b, unsigned int c) {
-		this->tempIndices.push_back(a);
-		this->tempIndices.push_back(b);
-		this->tempIndices.push_back(c);
+		tempIndices.push_back(a);
+		tempIndices.push_back(b);
+		tempIndices.push_back(c);
 	}
 
 public:
@@ -26,7 +26,7 @@ public:
 	void smoothSphere(int subdivisions);
 
 	~Icosphere() {
-		this->clearMesh();
+		clearMesh();
 	}
 };
 

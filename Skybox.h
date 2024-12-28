@@ -79,8 +79,8 @@ private:
     Quad quad;
 
     void renderCube() const {
-        glBindVertexArray(this->VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -100,28 +100,28 @@ public:
 	void loadEquirectangularMap(const char* file_name);
     void renderSkybox();
 
-    GLuint getIrradianceMap() const { return this->irradianceMap; }
-    GLuint getBRDFTexture() const { return this->brdfTexture; };
-    GLuint getPrefilterTexture() const { return this->prefilterMap; }
+    GLuint getIrradianceMap() const { return irradianceMap; }
+    GLuint getBRDFTexture() const { return brdfTexture; };
+    GLuint getPrefilterTexture() const { return prefilterMap; }
 
     ~Skybox() {
-        if (this->FBO != 0)
-            glDeleteFramebuffers(1, &this->FBO);
+        if (FBO != 0)
+            glDeleteFramebuffers(1, &FBO);
 
-        if (this->RBO != 0)
-            glDeleteRenderbuffers(1, &this->RBO);
+        if (RBO != 0)
+            glDeleteRenderbuffers(1, &RBO);
 
-        if (this->environmentMap != 0)
-            glDeleteTextures(1, &this->environmentMap);
+        if (environmentMap != 0)
+            glDeleteTextures(1, &environmentMap);
 
-        if (this->irradianceMap != 0)
-            glDeleteTextures(1, &this->irradianceMap);
+        if (irradianceMap != 0)
+            glDeleteTextures(1, &irradianceMap);
 
-        if (this->prefilterMap != 0)
-            glDeleteTextures(1, &this->prefilterMap);
+        if (prefilterMap != 0)
+            glDeleteTextures(1, &prefilterMap);
 
-        if (this->brdfTexture != 0)
-            glDeleteTextures(1, &this->brdfTexture);
+        if (brdfTexture != 0)
+            glDeleteTextures(1, &brdfTexture);
     }
 };
 

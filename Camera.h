@@ -25,11 +25,11 @@ public:
 	void keyFunctionality(const Window* currWindow, GLfloat deltaTime);
 	void mouseFunctionality(GLfloat xChange, GLfloat yChange, GLfloat scrollChange);
 
-	glm::mat4 getProjectionMatrix() const { return this->projection; };
-	glm::vec3 getCameraLookDirection() const { return this->front; }
-	glm::vec3 getCameraPosition() const { return this->position; }
+	glm::mat4 getProjectionMatrix() const { return projection; };
+	glm::vec3 getCameraLookDirection() const { return front; }
+	glm::vec3 getCameraPosition() const { return position; }
 
-	glm::mat4 generateViewMatrix() const { return glm::lookAt(this->position, this->position + this->front, this->up); }
+	glm::mat4 generateViewMatrix() const { return glm::lookAt(position, position + front, up); }
 
 	~Camera() = default;
 };

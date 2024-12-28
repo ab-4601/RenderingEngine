@@ -7,7 +7,7 @@
 #include "Camera.h"
 
 struct LightMesh {
-    GLuint VAO{}, VBO{};
+    GLuint VAO{ 0 }, VBO{ 0 };
 
 	std::vector<GLfloat> vertices = {
         -1.f, -1.f, -1.f,
@@ -54,12 +54,12 @@ struct LightMesh {
 	};
 
     void createMesh() {
-        glGenVertexArrays(1, &this->VAO);
-        glBindVertexArray(this->VAO);
+        glGenVertexArrays(1, &VAO);
+        glBindVertexArray(VAO);
 
-        glGenBuffers(1, &this->VBO);
-        glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-        glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(float), this->vertices.data(), GL_STATIC_DRAW);
+        glGenBuffers(1, &VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
@@ -69,10 +69,10 @@ struct LightMesh {
     }
 
     void renderMesh() const {
-        glBindVertexArray(this->VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-        glDrawArrays(GL_TRIANGLES, 0, this->vertices.size());
+        glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertices.size());
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);

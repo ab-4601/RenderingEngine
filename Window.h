@@ -28,10 +28,10 @@ private:
 	static void getMouseButton(GLFWwindow* window, int button, int action, int mods);
 
 	inline void createCallbacks() {
-		glfwSetKeyCallback(this->window, handleInput);
-		glfwSetCursorPosCallback(this->window, setMousePosition);
-		glfwSetScrollCallback(this->window, setMouseScroll);
-		glfwSetMouseButtonCallback(this->window, getMouseButton);
+		glfwSetKeyCallback(window, handleInput);
+		glfwSetCursorPosCallback(window, setMousePosition);
+		glfwSetScrollCallback(window, setMouseScroll);
+		glfwSetMouseButtonCallback(window, getMouseButton);
 	}
 
 public:
@@ -39,50 +39,50 @@ public:
 
 	// Setup window
 	void setupWindow();
-	GLFWwindow* getMainWindow() { return this->window; }
+	GLFWwindow* getMainWindow() { return window; }
 
 	// Get buffer dimensions
-	inline int getBufferWidth() const { return this->bufferWidth; }
-	inline int getBufferHeight() const { return this->bufferHeight; }
+	inline int getBufferWidth() const { return bufferWidth; }
+	inline int getBufferHeight() const { return bufferHeight; }
 
-	inline unsigned int getWindowWidth() const { return this->windowWidth; }
-	inline unsigned int getWindowHeight() const { return this->windowHeight; }
+	inline unsigned int getWindowWidth() const { return windowWidth; }
+	inline unsigned int getWindowHeight() const { return windowHeight; }
 
-	inline bool getKeyPress(unsigned int keyVal) const { return this->keys[keyVal]; }
+	inline bool getKeyPress(unsigned int keyVal) const { return keys[keyVal]; }
 
-	inline GLFWwindow* getGlfwWindow() const { return this->window; }
+	inline GLFWwindow* getGlfwWindow() const { return window; }
 	inline const Window* getCurrWindow() const { return this; }
 
-	inline void setLMBPressed(bool val) { this->LMBPressed = val; }
-	inline void setRMBPressed(bool val) { this->RMBPressed = val; }
+	inline void setLMBPressed(bool val) { LMBPressed = val; }
+	inline void setRMBPressed(bool val) { RMBPressed = val; }
 
-	inline bool getLMBPressed() const { return this->LMBPressed; }
-	inline bool getRMBPressed() const { return this->RMBPressed; }
+	inline bool getLMBPressed() const { return LMBPressed; }
+	inline bool getRMBPressed() const { return RMBPressed; }
 
-	inline glm::vec2 getViewportCoord() const { return glm::vec2(this->viewportX, this->viewportY); }
+	inline glm::vec2 getViewportCoord() const { return glm::vec2(viewportX, viewportY); }
 
 	GLfloat getXChange() {
-		GLfloat delta = this->XChange;
-		this->XChange = 0.f;
+		GLfloat delta = XChange;
+		XChange = 0.f;
 		return delta;
 	}
 
 	GLfloat getYChange() {
-		GLfloat delta = this->YChange;
-		this->YChange = 0.f;
+		GLfloat delta = YChange;
+		YChange = 0.f;
 		return delta;
 	}
 
 	GLfloat getScrollChange() {
-		GLfloat delta = this->scrollChange;
-		this->scrollChange = 0.f;
+		GLfloat delta = scrollChange;
+		scrollChange = 0.f;
 		return delta;
 	}
 
 	~Window() {
 		glDisable(GL_DEPTH_TEST);
 
-		glfwDestroyWindow(this->window);
+		glfwDestroyWindow(window);
 		glfwTerminate();
 	}
 };

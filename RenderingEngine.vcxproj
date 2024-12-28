@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Application.cpp" />
     <ClCompile Include="BloomFBO.cpp" />
     <ClCompile Include="BloomRenderer.cpp" />
     <ClCompile Include="Camera.cpp" />
@@ -193,6 +194,7 @@
     <ClCompile Include="Grid.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Application.h" />
     <ClInclude Include="BloomFBO.h" />
     <ClInclude Include="BloomRenderer.h" />
     <ClInclude Include="Camera.h" />
@@ -263,11 +265,14 @@
     <None Include="directionalShadow.vert" />
     <None Include="downsample.frag" />
     <None Include="gbuffer.frag" />
+    <None Include="gbuffer.geom" />
     <None Include="gbuffer.vert" />
     <None Include="HDRskybox.frag" />
     <None Include="HDRskybox.vert" />
     <None Include="irradiance.frag" />
     <None Include="particle.comp" />
+    <None Include="PBR_deferred.frag" />
+    <None Include="PBR_deferred.vert" />
     <None Include="prefilter.frag" />
     <None Include="raytracer.frag" />
     <None Include="raytracer.vert" />
@@ -294,12 +299,12 @@
     <None Include="light.frag" />
     <None Include="light.vert" />
     <None Include="particle.geom" />
-    <None Include="PBR.frag" />
+    <None Include="PBR_forward.frag" />
     <None Include="blinn-phong.frag" />
     <None Include="particle.frag" />
     <None Include="particle.vert" />
-    <None Include="PBR.geom" />
-    <None Include="PBR.vert" />
+    <None Include="PBR_forward.geom" />
+    <None Include="PBR_forward.vert" />
     <None Include="blinn-phong.geom" />
     <None Include="blinn-phong.vert" />
     <None Include="selection.frag" />

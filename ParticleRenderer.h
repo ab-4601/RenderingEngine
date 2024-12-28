@@ -58,7 +58,7 @@ public:
 		this->texture.loadTexture();
 	}
 
-	inline void drawParticleSprites(size_t primitiveCount) const {
+	void drawParticleSprites(size_t primitiveCount) const {
 		glBindVertexArray(this->VAO);
 
 		glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, this->indices, static_cast<GLsizei>(primitiveCount));

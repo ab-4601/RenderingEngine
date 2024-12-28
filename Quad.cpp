@@ -1,12 +1,12 @@
 #include "Quad.h"
 
 void Quad::createQuad() {
-	glGenVertexArrays(1, &this->VAO);
-	glBindVertexArray(this->VAO);
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
 
-	glGenBuffers(1, &this->VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(this->vertices), &this->vertices, GL_STATIC_DRAW);
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)0);
@@ -19,8 +19,8 @@ void Quad::createQuad() {
 }
 
 void Quad::renderQuad() const {
-	glBindVertexArray(this->VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 

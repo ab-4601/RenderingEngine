@@ -1,13 +1,13 @@
 #include "BloomFBO.h"
 
 bool BloomFBO::_init(int windowWidth, int windowHeight, uint iterations) {
-	if (this->isInit)
+	if (isInit)
 		return true;
 
-	this->mMipChain.clear();
+	mMipChain.clear();
 
-	glGenFramebuffers(1, &this->FBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+	glGenFramebuffers(1, &FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
 	glm::vec2 mipSize{ (float)windowWidth, (float)windowHeight };
 	glm::ivec2 mipIntSize{ windowWidth, windowHeight };
@@ -30,10 +30,10 @@ bool BloomFBO::_init(int windowWidth, int windowHeight, uint iterations) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-		this->mMipChain.emplace_back(mip);
+		mMipChain.emplace_back(mip);
 	}
 	
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->mMipChain[0].texture, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mMipChain[0].texture, 0);
 
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
@@ -47,16 +47,16 @@ bool BloomFBO::_init(int windowWidth, int windowHeight, uint iterations) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	this->isInit = true;
+	isInit = true;
 	return true;
 }
 
 BloomFBO::~BloomFBO() {
-	if (this->FBO != 0)
-		glDeleteFramebuffers(1, &this->FBO);
+	if (FBO != 0)
+		glDeleteFramebuffers(1, &FBO);
 
-	if (this->mMipChain.size() != 0) {
-		for (size_t i = 0; i < this->mMipChain.size(); i++)
-			glDeleteTextures(1, &this->mMipChain.at(i).texture);
+	if (mMipChain.size() != 0) {
+		for (size_t i = 0; i < mMipChain.size(); i++)
+			glDeleteTextures(1, &mMipChain.at(i).texture);
 	}
 }

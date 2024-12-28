@@ -14,7 +14,7 @@ public:
 
 	void init(unsigned int windowWidth, unsigned int windowHeight);
 
-	void enableWriting() const { glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->FBO); }
+	void enableWriting() const { glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBO); }
 	void disableWriting(GLuint framebuffer = 0) const { glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer); }
 
 	struct PixelInfo {

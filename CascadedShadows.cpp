@@ -4,12 +4,12 @@ CascadedShadows::CascadedShadows(int windowWidth, int windowHeight, float lambda
 	: aspect{ (float)windowWidth / windowHeight } 
 {
 	for (int i = 0; i < ::MAX_CASCADES; i++)
-		this->cascadeSplits[i] = 0;
+		cascadeSplits[i] = 0;
 
-	this->genRandomOffsetData(size, samplesU, samplesV);
-	this->calcSplitDepths(lambda);
-	this->setComputeUniforms();
-	this->_init();
+	genRandomOffsetData(size, samplesU, samplesV);
+	calcSplitDepths(lambda);
+	setComputeUniforms();
+	_init();
 }
 
 bool CascadedShadows::checkFramebufferStatus() {
@@ -57,10 +57,10 @@ void CascadedShadows::genRandomOffsetData(int size, int samplesU, int samplesV) 
 		}
 	}
 
-	this->noiseTextureSize = glm::vec3(size, size, samples / 2);
+	noiseTextureSize = glm::vec3(size, size, samples / 2);
 
-	glGenTextures(1, &this->randomOffset);
-	glBindTexture(GL_TEXTURE_3D, this->randomOffset);
+	glGenTextures(1, &randomOffset);
+	glBindTexture(GL_TEXTURE_3D, randomOffset);
 
 	glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA32F, size, size, samples / 2);
 	glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, size, size, samples / 2, GL_RGBA, GL_FLOAT, offsetData);
@@ -72,15 +72,15 @@ void CascadedShadows::genRandomOffsetData(int size, int samplesU, int samplesV) 
 }
 
 void CascadedShadows::_init() {
-	glGenFramebuffers(1, &this->FBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+	glGenFramebuffers(1, &FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-	glGenTextures(1, &this->shadowMaps);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, this->shadowMaps);
+	glGenTextures(1, &shadowMaps);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMaps);
 
 	glTexImage3D(
-		GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, this->mapResolution, this->mapResolution,
-		this->numCascades + 1, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL
+		GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, mapResolution, mapResolution,
+		numCascades + 1, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL
 	);
 
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -91,22 +91,22 @@ void CascadedShadows::_init() {
 	constexpr float borderColor[] = { 1.f, 1.f, 1.f, 1.f };
 	glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, this->shadowMaps, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowMaps, 0);
 
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 
-	if (!this->checkFramebufferStatus()) {
+	if (!checkFramebufferStatus()) {
 		std::cerr << "Error initializing CSM framebuffer" << std::endl;
 		exit(-1);
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	glGenBuffers(1, &this->SSBO);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->SSBO);
+	glGenBuffers(1, &SSBO);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::mat4x4) * 16, NULL, GL_DYNAMIC_DRAW);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->SSBO);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, SSBO);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
@@ -114,68 +114,68 @@ void CascadedShadows::calcSplitDepths(float lambda) {
 	float range = ::far_plane - ::near_plane;
 	float logFactor = std::log(::far_plane / ::near_plane);
 
-	for (int i = 0; i < this->numCascades; i++) {
-		float p = (float)(i + 1) / this->numCascades;
+	for (int i = 0; i < numCascades; i++) {
+		float p = (float)(i + 1) / numCascades;
 
 		float linearSplit = ::near_plane + range * p;
 
 		float logSplit = ::near_plane * std::pow(logFactor, p);
 
-		this->cascadeSplits[i] = (lambda * linearSplit + (1 - lambda) * logSplit);
+		cascadeSplits[i] = (lambda * linearSplit + (1 - lambda) * logSplit);
 	}
 }
 
 void CascadedShadows::setComputeUniforms() {
-	this->computeShader.useShader();
+	computeShader.useShader();
 
 	char buffer[50]{ '\0' };
 
 	for (int i = 0; i < ::MAX_CASCADES; i++) {
 		snprintf(buffer, sizeof(buffer), "cascadeSplits[%i]", i);
-		this->computeShader.setFloat(buffer, this->cascadeSplits[i]);
+		this->computeShader.setFloat(buffer, cascadeSplits[i]);
 	}
 
-	this->computeShader.setFloat("nearPlane", ::near_plane);
-	this->computeShader.setFloat("farPlane", ::far_plane);
-	this->computeShader.setFloat("aspect", this->aspect);
-	this->computeShader.setInt("numCascades", this->numCascades);
+	computeShader.setFloat("nearPlane", ::near_plane);
+	computeShader.setFloat("farPlane", ::far_plane);
+	computeShader.setFloat("aspect", aspect);
+	computeShader.setInt("numCascades", numCascades);
 
-	this->computeShader.endShader();
+	computeShader.endShader();
 }
 
 void CascadedShadows::calculateShadows(int windowWidth, int windowHeight, const std::vector<Mesh*>& meshes,
 	const std::vector<Model*>& models, glm::vec3 lightPosition, GLuint currFramebuffer)
 {
-	this->computeShader.useShader();
-	this->computeShader.setVec3("lightDirection", lightPosition);
+	computeShader.useShader();
+	computeShader.setVec3("lightDirection", lightPosition);
 	
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->SSBO);
-	this->computeShader.dispatchComputeShader(1, 1, 1, GL_SHADER_STORAGE_BARRIER_BIT);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
+	computeShader.dispatchComputeShader(1, 1, 1, GL_SHADER_STORAGE_BARRIER_BIT);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-	this->computeShader.endShader();
+	computeShader.endShader();
 
-	this->shader.useShader();
+	shader.useShader();
 
-	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	glViewport(0, 0, this->mapResolution, this->mapResolution);
+	glViewport(0, 0, mapResolution, mapResolution);
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
-	glPolygonOffset(2.f, 2.f);
+	glPolygonOffset(3.f, 3.f);
 
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_CLAMP);
 	glCullFace(GL_FRONT);
 
 	for (size_t i = 0; i < meshes.size(); i++) {
-		this->shader.setMat4("model", meshes[i]->getModelMatrix());
+		shader.setMat4("model", meshes[i]->getModelMatrix());
 		meshes[i]->drawMesh(GL_TRIANGLES);
 	}
 
 	for (size_t i = 0; i < models.size(); i++) {
-		this->shader.setMat4("model", models[i]->getModelMatrix());
-		models[i]->drawModel(GL_TRIANGLES);
+		shader.setMat4("model", models[i]->getModelMatrix());
+		models[i]->drawDepth(shader, GL_TRIANGLES);
 	}
 
 	glCullFace(GL_BACK);
@@ -191,12 +191,12 @@ void CascadedShadows::calculateShadows(int windowWidth, int windowHeight, const 
 }
 
 CascadedShadows::~CascadedShadows() {
-	if (this->FBO != 0)
-		glDeleteFramebuffers(1, &this->FBO);
+	if (FBO != 0)
+		glDeleteFramebuffers(1, &FBO);
 
-	if (this->SSBO != 0)
-		glDeleteBuffers(1, &this->SSBO);
+	if (SSBO != 0)
+		glDeleteBuffers(1, &SSBO);
 
-	if (this->shadowMaps != 0)
-		glDeleteTextures(1, &this->shadowMaps);
+	if (shadowMaps != 0)
+		glDeleteTextures(1, &shadowMaps);
 }

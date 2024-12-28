@@ -28,14 +28,14 @@ private:
 public:
 	BloomRenderer(int windowWidth, int windowHeight);
 
-	inline void setKnee(float knee) { this->knee = knee < 0.f ? 0.f : knee; }
+	inline void setKnee(float knee) { this->knee = (knee < 0.f) ? 0.f : knee; }
 
 	bool _init(int windowWidth, int windowHeight);
 	void renderBloomTexture(GLuint srcTexture, float filterRadius, GLuint currFramebuffer = 0);
 	void renderBloomTextureMSAA(float filterRadius, GLuint currFramebuffer = 0);
 
 	GLuint bloomTexture() {
-		return this->mFBO.mipChain()[0].texture;
+		return mFBO.mipChain()[0].texture;
 	}
 
 	~BloomRenderer() = default;

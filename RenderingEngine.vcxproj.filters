@@ -187,6 +187,12 @@
     <Filter Include="Source Files\CoreDependencies\Engine Core\Model\Geometry">
       <UniqueIdentifier>{f89244ad-33db-4834-8f76-913220fda893}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\CoreDependencies\Engine Core\Application">
+      <UniqueIdentifier>{99ad4faa-571c-4c10-b472-0c4c5864a103}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\CoreDependencies\Engine Core\Application">
+      <UniqueIdentifier>{074b0b8e-d498-4f70-aaff-822ce89c8729}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -345,6 +351,9 @@
     <ClCompile Include="Renderer.cpp">
       <Filter>Source Files\CoreDependencies\Engine Core\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Application.cpp">
+      <Filter>Source Files\CoreDependencies\Engine Core\Application</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Particle.h">
@@ -394,9 +403,6 @@
     </ClInclude>
     <ClInclude Include="Water.h">
       <Filter>Header Files\Water</Filter>
-    </ClInclude>
-    <ClInclude Include="Core.h">
-      <Filter>Header Files\CoreDependencies\Engine Core</Filter>
     </ClInclude>
     <ClInclude Include="imGUI\imgui_impl_opengl3_loader.h">
       <Filter>Header Files\imGUI</Filter>
@@ -514,6 +520,12 @@
     </ClInclude>
     <ClInclude Include="Renderer.h">
       <Filter>Header Files\CoreDependencies\Engine Core\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Application.h">
+      <Filter>Header Files\CoreDependencies\Engine Core\Application</Filter>
+    </ClInclude>
+    <ClInclude Include="Core.h">
+      <Filter>Header Files\CoreDependencies\Engine Core\Application</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -670,17 +682,26 @@
     <None Include="smaa_blend.frag">
       <Filter>Shaders\SMAA</Filter>
     </None>
-    <None Include="PBR.frag">
+    <None Include="PBR_forward.frag">
       <Filter>Shaders\Lighting\PBR\Forward</Filter>
     </None>
-    <None Include="PBR.vert">
+    <None Include="PBR_forward.vert">
       <Filter>Shaders\Lighting\PBR\Forward</Filter>
     </None>
-    <None Include="PBR.geom">
+    <None Include="PBR_forward.geom">
       <Filter>Shaders\Lighting\PBR\Forward</Filter>
     </None>
     <None Include="CSM.comp">
       <Filter>Shaders\Shadow\Cascaded Shadows</Filter>
+    </None>
+    <None Include="gbuffer.geom">
+      <Filter>Shaders\GBuffer</Filter>
+    </None>
+    <None Include="PBR_deferred.frag">
+      <Filter>Shaders\Lighting\PBR\Deferred</Filter>
+    </None>
+    <None Include="PBR_deferred.vert">
+      <Filter>Shaders\Lighting\PBR\Deferred</Filter>
     </None>
   </ItemGroup>
 </Project>

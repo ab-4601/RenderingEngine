@@ -39,7 +39,7 @@ Texture& Texture::operator=(Texture&& rhs) noexcept {
 bool Texture::loadDDSTexture() {
 	if (!glewIsSupported("GL_EXT_texture_compression_s3tc")) return false;
 
-	std::ifstream file(this->fileLocation, std::ios::binary);
+	std::ifstream file(fileLocation, std::ios::binary);
 	if (!file.is_open()) {
 		std::cerr << "Invalid file location. Error opening file" << std::endl;
 		return false;
@@ -60,7 +60,7 @@ bool Texture::loadDDSTexture() {
 	uint32_t fourCC = header.pixelFormat.fourCC;
 
 	GLenum format;
-	this->isCompressed = true;
+	isCompressed = true;
 
 	switch (fourCC) {
 		case FOURCC_DXT1:
@@ -92,7 +92,7 @@ bool Texture::loadDDSTexture() {
 			break;
 
 		default:
-			std::cerr << "Unsupported DDS format (invalid fourCC): " << this->fileLocation << std::endl;
+			std::cerr << "Unsupported DDS format (invalid fourCC): " << fileLocation << std::endl;
 			file.close();
 			return false;
 	}
@@ -106,8 +106,8 @@ bool Texture::loadDDSTexture() {
 	file.read(buffer.data(), dataSize);
 	file.close();
 
-	glGenTextures(1, &this->textureID);
-	glBindTexture(GL_TEXTURE_2D, this->textureID);
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
 
 	uint32_t blockSize = (format == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT || format == GL_COMPRESSED_RED_RGTC1) ? 8 : 16;
 	uint32_t offset = 0;
@@ -136,7 +136,7 @@ bool Texture::loadDDSTexture() {
 }
 
 bool Texture::loadTexture() {
-	unsigned char* texData = stbi_load(this->fileLocation.data(), &this->width, &this->height, &this->bitDepth, 0);
+	unsigned char* texData = stbi_load(fileLocation.data(), &width, &height, &bitDepth, 0);
 
 	if (!texData) {
 		std::cerr << "Invalid file location. Error loading file" << std::endl;
@@ -159,10 +159,10 @@ bool Texture::loadTexture() {
 			return false;
 	}
 
-	glGenTextures(1, &this->textureID);
-	glBindTexture(GL_TEXTURE_2D, this->textureID);
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, format, this->width, this->height, 0, format, GL_UNSIGNED_BYTE, texData);
+	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, texData);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -186,27 +186,27 @@ bool Texture::makeBindless() {
 		return false;
 	}
 
-	this->textureHandle = glGetTextureHandleARB(this->textureID);
-	glMakeTextureHandleResidentARB(this->textureHandle);
+	textureHandle = glGetTextureHandleARB(textureID);
+	glMakeTextureHandleResidentARB(textureHandle);
 
 	return true;
 }
 
 void Texture::clearTexture() {
-	if (this->textureHandle != 0) {
-		glMakeTextureHandleNonResidentARB(this->textureHandle);
-		this->textureHandle = 0;
+	if (textureHandle != 0) {
+		glMakeTextureHandleNonResidentARB(textureHandle);
+		textureHandle = 0;
 	}
 
-	glDeleteTextures(1, &this->textureID);
+	glDeleteTextures(1, &textureID);
 
-	this->textureID = 0;
-	this->width = 0;
-	this->height = 0;
-	this->bitDepth = 0;
-	this->fileLocation = "";
+	textureID = 0;
+	width = 0;
+	height = 0;
+	bitDepth = 0;
+	fileLocation = "";
 }
 
 Texture::~Texture() {
-	this->clearTexture();
+	clearTexture();
 }

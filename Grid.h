@@ -23,7 +23,7 @@ private:
 public:
 	Grid();
 
-	void renderGrid(glm::vec3 cameraPosition);
+	void renderGrid();
 
 	~Grid();
 };

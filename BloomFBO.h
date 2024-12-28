@@ -20,11 +20,11 @@ public:
 	bool _init(int windowWidth, int windowHeight, uint iterations = 6);
 
 	const std::vector<BloomMip>& mipChain() const {
-		return this->mMipChain;
+		return mMipChain;
 	}
 
 	void enableWriting() const {
-		glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	}
 
 	~BloomFBO();

@@ -21,9 +21,9 @@ public:
 
 	~Quad() {
 		if (this->VAO != 0)
-			glDeleteVertexArrays(1, &this->VAO);
+			glDeleteVertexArrays(1, &VAO);
 
 		if (this->VBO != 0)
-			glDeleteBuffers(1, &this->VBO);
+			glDeleteBuffers(1, &VBO);
 	}
 };

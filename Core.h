@@ -10,8 +10,9 @@ const uint MAX_SPOT_LIGHTS = 3;
 const uint MAX_CASCADES = 16;
 const uint samples = 4;
 
-const double PI = 3.14159265;
+const float PI = 3.14159265f;
 const float GRAVITY = -10.f;
+const float toRadians = (float)PI / 180;
 
 const float near_plane = 3.f;
 const float far_plane = 7000.f;

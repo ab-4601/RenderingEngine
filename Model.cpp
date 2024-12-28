@@ -5,42 +5,42 @@ Model::Model(std::string fileName, std::string texFolderPath, aiTextureType diff
 	bool isStrippedNormal, bool hasEmissiveMaterial)
 	: Mesh(), texFolderPath{ texFolderPath }
 {
-	this->diffuseTextures.clear();
-	this->normalTextures.clear();
-	this->heightTextures.clear();
-	this->metalnessTextures.clear();
-	this->emissiveTextures.clear();
+	diffuseTextures.clear();
+	normalTextures.clear();
+	heightTextures.clear();
+	metalnessTextures.clear();
+	emissiveTextures.clear();
 
-	this->useEmissiveMap = hasEmissiveMaterial;
+	useEmissiveMap = hasEmissiveMaterial;
 
-	this->loadModel(fileName, diffuseMap, normalMap, metallicMap, emissiveMap);
-	this->loadMesh(true, true, true, true, hasEmissiveMaterial, isStrippedNormal);
+	loadModel(fileName, diffuseMap, normalMap, metallicMap, emissiveMap);
+	loadMesh(true, true, true, true, hasEmissiveMaterial, isStrippedNormal);
 
 	Mesh::meshList.pop_back();
 }
 
 void Model::_updateRenderData(const aiScene* scene) {
-	this->renderData.resize(scene->mNumMeshes);
+	renderData.resize(scene->mNumMeshes);
 
-	for (size_t i = 0; i < this->renderData.size(); i++) {
-		this->renderData[i].materialIndex = scene->mMeshes[i]->mMaterialIndex;
-		this->renderData[i].numIndices = scene->mMeshes[i]->mNumFaces * 3;
-		this->renderData[i].baseVertex = this->vertexOffset;
-		this->renderData[i].baseIndex = this->indexOffset;
+	for (size_t i = 0; i < renderData.size(); i++) {
+		renderData[i].materialIndex = scene->mMeshes[i]->mMaterialIndex;
+		renderData[i].numIndices = scene->mMeshes[i]->mNumFaces * 3;
+		renderData[i].baseVertex = vertexOffset;
+		renderData[i].baseIndex = indexOffset;
 
-		this->vertexOffset += scene->mMeshes[i]->mNumVertices;
-		this->indexOffset += this->renderData[i].numIndices;
+		vertexOffset += scene->mMeshes[i]->mNumVertices;
+		indexOffset += renderData[i].numIndices;
 	}
 
-	this->vertexOffset = 0;
+	vertexOffset = 0;
 }
 
 void Model::_loadNode(aiNode* node, const aiScene* const scene) {
 	for (size_t i = 0; i < node->mNumMeshes; i++)
-		this->_loadMesh(scene->mMeshes[node->mMeshes[i]], scene);
+		_loadMesh(scene->mMeshes[node->mMeshes[i]], scene);
 
 	for (size_t i = 0; i < node->mNumChildren; i++)
-		this->_loadNode(node->mChildren[i], scene);
+		_loadNode(node->mChildren[i], scene);
 }
 
 void Model::_loadMesh(aiMesh* mesh, const aiScene* const scene) {
@@ -53,13 +53,13 @@ void Model::_loadMesh(aiMesh* mesh, const aiScene* const scene) {
 		vertex.normal = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
 		vertex.tangent = glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
 
-		this->vertices.push_back(vertex);
+		vertices.push_back(vertex);
 	}
 
 	for (size_t i = 0; i < mesh->mNumFaces; i++) {
 		aiFace face = mesh->mFaces[i];
 		for (size_t j = 0; j < face.mNumIndices; j++) {
-			this->indices.push_back(face.mIndices[j]);
+			indices.push_back(face.mIndices[j]);
 		}
 	}
 }
@@ -81,7 +81,7 @@ void Model::_loadMaterialMap(const aiScene* const scene, std::vector<Texture*>& 
 				size_t extIdx = filename.rfind(".");
 				std::string extension = filename.substr(extIdx + 1);
 
-				std::string texPath = this->texFolderPath + filename;
+				std::string texPath = texFolderPath + filename;
 
 				maps[i] = new Texture(texPath);
 
@@ -136,22 +136,39 @@ void Model::loadModel(std::string fileName, aiTextureType diffuseMap,
 		return;
 	}
 
-	this->_updateRenderData(scene);
-	this->_loadNode(scene->mRootNode, scene);
-	this->_loadMaterialMap(scene, this->diffuseTextures, diffuseMap);
-	this->_loadMaterialMap(scene, this->normalTextures, normalMap);
-	this->_loadMaterialMap(scene, this->metalnessTextures, metallicMap);
-	this->_loadMaterialMap(scene, this->heightTextures, aiTextureType_DIFFUSE_ROUGHNESS);
+	_updateRenderData(scene);
+	_loadNode(scene->mRootNode, scene);
+	_loadMaterialMap(scene, diffuseTextures, diffuseMap);
+	_loadMaterialMap(scene, normalTextures, normalMap);
+	_loadMaterialMap(scene, metalnessTextures, metallicMap);
+	_loadMaterialMap(scene, heightTextures, aiTextureType_DIFFUSE_ROUGHNESS);
 
-	if(this->useEmissiveMap)
-		this->_loadMaterialMap(scene, this->emissiveTextures, emissiveMap);
+	if(useEmissiveMap)
+		_loadMaterialMap(scene, emissiveTextures, emissiveMap);
 }
 
 void Model::drawModel(GLenum renderMode) {
-	glBindVertexArray(this->VAO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->IBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-	for (const auto& mesh : this->renderData) {
+	for (const auto& mesh : renderData) {
+		glDrawElementsBaseVertex(
+			renderMode, mesh.numIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * mesh.baseIndex), mesh.baseVertex
+		);
+	}
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+void Model::drawDepth(Shader& shader, GLenum renderMode) {
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+
+	for (const auto& mesh : renderData) {
+		if (mesh.materialIndex < diffuseTextures.size() && diffuseTextures[mesh.materialIndex])
+			shader.setTexture("diffuseMap", diffuseTextures[mesh.materialIndex]->getTextureHandle());
+
 		glDrawElementsBaseVertex(
 			renderMode, mesh.numIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * mesh.baseIndex), mesh.baseVertex
 		);
@@ -162,32 +179,32 @@ void Model::drawModel(GLenum renderMode) {
 }
 
 void Model::renderModel(Shader& shader, GLenum renderMode) {
-	shader.setMat4("model", this->model);
+	shader.setMat4("model", model);
 
-	shader.setUint("useDiffuseMap", this->useDiffuseMap);
-	shader.setUint("useNormalMap", this->useNormalMap);
-	shader.setUint("strippedNormalMap", this->strippedNormalMap);
-	shader.setUint("useMaterialMap", this->useMaterialMap);
-	shader.setUint("useEmissiveMap", this->useEmissiveMap);
+	shader.setUint("useDiffuseMap", useDiffuseMap);
+	shader.setUint("useNormalMap", useNormalMap);
+	shader.setUint("strippedNormalMap", strippedNormalMap);
+	shader.setUint("useMaterialMap", useMaterialMap);
+	shader.setUint("useEmissiveMap", useEmissiveMap);
 
-	glBindVertexArray(this->VAO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->IBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-	for (const auto& mesh: this->renderData) {
-		if (mesh.materialIndex < this->diffuseTextures.size() && diffuseTextures[mesh.materialIndex])
-			shader.setTexture("diffuseMap", this->diffuseTextures[mesh.materialIndex]->getTextureHandle());
+	for (const auto& mesh: renderData) {
+		if (mesh.materialIndex < diffuseTextures.size() && diffuseTextures[mesh.materialIndex])
+			shader.setTexture("diffuseMap", diffuseTextures[mesh.materialIndex]->getTextureHandle());
 
-		if (mesh.materialIndex < this->normalTextures.size() && this->normalTextures[mesh.materialIndex])
-			shader.setTexture("normalMap", this->normalTextures[mesh.materialIndex]->getTextureHandle());
+		if (mesh.materialIndex < normalTextures.size() && normalTextures[mesh.materialIndex])
+			shader.setTexture("normalMap", normalTextures[mesh.materialIndex]->getTextureHandle());
 
-		if (mesh.materialIndex < this->heightTextures.size() && this->heightTextures[mesh.materialIndex])
-			shader.setTexture("depthMap", this->heightTextures[mesh.materialIndex]->getTextureHandle());
+		if (mesh.materialIndex < heightTextures.size() && heightTextures[mesh.materialIndex])
+			shader.setTexture("depthMap", heightTextures[mesh.materialIndex]->getTextureHandle());
 
-		if (mesh.materialIndex < this->metalnessTextures.size() && this->metalnessTextures[mesh.materialIndex])
-			shader.setTexture("metallicMap", this->metalnessTextures[mesh.materialIndex]->getTextureHandle());
+		if (mesh.materialIndex < metalnessTextures.size() && metalnessTextures[mesh.materialIndex])
+			shader.setTexture("metallicMap", metalnessTextures[mesh.materialIndex]->getTextureHandle());
 
-		if (mesh.materialIndex < this->emissiveTextures.size() && this->emissiveTextures[mesh.materialIndex])
-			shader.setTexture("emissiveMap", this->emissiveTextures[mesh.materialIndex]->getTextureHandle());
+		if (mesh.materialIndex < emissiveTextures.size() && emissiveTextures[mesh.materialIndex])
+			shader.setTexture("emissiveMap", emissiveTextures[mesh.materialIndex]->getTextureHandle());
 
 		glDrawElementsBaseVertex(
 			renderMode, mesh.numIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * mesh.baseIndex), mesh.baseVertex
@@ -199,31 +216,31 @@ void Model::renderModel(Shader& shader, GLenum renderMode) {
 }
 
 void Model::clearModel() {
-	for (size_t i = 0; i < this->diffuseTextures.size(); i++) {
-		if (this->diffuseTextures[i]) {
-			delete this->diffuseTextures[i];
-			this->diffuseTextures[i] = nullptr;
+	for (size_t i = 0; i < diffuseTextures.size(); i++) {
+		if (diffuseTextures[i]) {
+			delete diffuseTextures[i];
+			diffuseTextures[i] = nullptr;
 		}
 	}
 
-	for (size_t i = 0; i < this->normalTextures.size(); i++) {
-		if (this->normalTextures[i]) {
-			delete this->normalTextures[i];
-			this->normalTextures[i] = nullptr;
+	for (size_t i = 0; i < normalTextures.size(); i++) {
+		if (normalTextures[i]) {
+			delete normalTextures[i];
+			normalTextures[i] = nullptr;
 		}
 	}
 
-	for (size_t i = 0; i < this->heightTextures.size(); i++) {
-		if (this->heightTextures[i]) {
-			delete this->heightTextures[i];
-			this->heightTextures[i] = nullptr;
+	for (size_t i = 0; i < heightTextures.size(); i++) {
+		if (heightTextures[i]) {
+			delete heightTextures[i];
+			heightTextures[i] = nullptr;
 		}
 	}
 
-	for (size_t i = 0; i < this->metalnessTextures.size(); i++) {
-		if (this->metalnessTextures[i]) {
-			delete this->metalnessTextures[i];
-			this->metalnessTextures[i] = nullptr;
+	for (size_t i = 0; i < metalnessTextures.size(); i++) {
+		if (metalnessTextures[i]) {
+			delete metalnessTextures[i];
+			metalnessTextures[i] = nullptr;
 		}
 	}
 }

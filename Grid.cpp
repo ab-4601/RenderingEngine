@@ -17,10 +17,8 @@ Grid::Grid()
 	glBindVertexArray(0);
 }
 
-void Grid::renderGrid(glm::vec3 cameraPosition) {
+void Grid::renderGrid() {
 	this->shader.useShader();
-
-	this->shader.setVec3("cameraPosition", cameraPosition);
 
 	glDepthMask(GL_FALSE);
 	glEnable(GL_BLEND);

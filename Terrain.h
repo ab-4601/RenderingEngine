@@ -5,7 +5,7 @@
 
 class Terrain : public Mesh {
 private:
-	GLuint rows, cols;
+	int rows, cols;
 	float scale;
 
 	PerlinNoise noise;
@@ -22,7 +22,7 @@ private:
 	void generateTexCoords();
 
 public:
-	Terrain(GLuint rows = 0, GLuint cols = 0, int maxAmplitude = 50, int maxPersistence = 10,
+	Terrain(int rows = 0, int cols = 0, int maxAmplitude = 50, int maxPersistence = 10,
 		int maxFrequency = 10, int frequencyDivisor = 100, int persistenceDivisor = 100, 
 		int maxRandomSeed = 10, int maxOctaves = 10);
 

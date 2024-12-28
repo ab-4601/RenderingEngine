@@ -1,42 +1,43 @@
 #include "SSAO.h"
 
 SSAO::SSAO(int windowWidth, int windowHeight) {
-	this->kernel.clear();
-	this->noise.clear();
+	kernel.clear();
+	noise.clear();
 
-	this->quad.createQuad();
-	this->scrResolution = glm::vec2(windowWidth, windowHeight);
+	quad.createQuad();
+	scrResolution = glm::vec2(windowWidth, windowHeight);
 
 	// sample kernel generation
 	for (uint i = 0; i < 64; i++) {
 		glm::vec3 sample(
-			this->jitter(0.f, 1.f) * 2.f - 1.f,
-			this->jitter(0.f, 1.f) * 2.f - 1.f,
-			this->jitter(0.f, 1.f)
+			jitter(0.f, 1.f) * 2.f - 1.f,
+			jitter(0.f, 1.f) * 2.f - 1.f,
+			jitter(0.f, 1.f)
 		);
 
 		if (i < 16) {
 			glm::vec3 noise{
-				this->jitter(0.f, 1.f) * 2.f - 1.f,
-				this->jitter(0.f, 1.f) * 2.f - 1.f,
+				jitter(0.f, 1.f) * 2.f - 1.f,
+				jitter(0.f, 1.f) * 2.f - 1.f,
 				0.f
 			};
 
+			noise = glm::normalize(noise);
 			this->noise.push_back(noise);
 		}
 
 		sample = glm::normalize(sample);
-		sample *= this->jitter(0.f, 1.f);
+		sample *= jitter(0.f, 1.f);
 		float scale = (float)i / 64.f;
 
-		scale = this->lerp(0.1f, 1.f, scale * scale);
+		scale = lerp(0.1f, 1.f, scale * scale);
 		sample *= scale;
 
-		this->kernel.push_back(sample);
+		kernel.push_back(sample);
 	}
 
-	this->_init(windowWidth, windowHeight);
-	this->genNoiseTexture(windowWidth, windowHeight);
+	_init(windowWidth, windowHeight);
+	genNoiseTexture(windowWidth, windowHeight);
 }
 
 void SSAO::genTexture(GLuint& texID, GLenum colorAttachment, GLint internalFormat, GLenum format,
@@ -55,9 +56,9 @@ void SSAO::genTexture(GLuint& texID, GLenum colorAttachment, GLint internalForma
 }
 
 void SSAO::genNoiseTexture(int windowWidth, int windowHeight) {
-	glGenTextures(1, &this->noiseTexture);
-	glBindTexture(GL_TEXTURE_2D, this->noiseTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 4, 4, 0, GL_RGBA, GL_FLOAT, this->noise.data());
+	glGenTextures(1, &noiseTexture);
+	glBindTexture(GL_TEXTURE_2D, noiseTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 4, 4, 0, GL_RGBA, GL_FLOAT, noise.data());
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -67,46 +68,42 @@ void SSAO::genNoiseTexture(int windowWidth, int windowHeight) {
 }
 
 void SSAO::_init(int windowWidth, int windowHeight) {
-	glGenFramebuffers(1, &this->FBO);
-	glGenFramebuffers(1, &this->blurFBO);
+	glGenFramebuffers(1, &FBO);
+	glGenFramebuffers(1, &blurFBO);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
-	this->genTexture(this->colorBuffer, GL_COLOR_ATTACHMENT0, GL_RED, GL_RED, windowWidth, windowHeight);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	genTexture(colorBuffer, GL_COLOR_ATTACHMENT0, GL_RED, GL_RED, windowWidth, windowHeight);
 	
-	if (!this->checkFBOStatus()) {
+	if (!checkFBOStatus()) {
 		std::cerr << "Error initializing SSAO FBO" << std::endl;
 		exit(-1);
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, this->blurFBO);
-	this->genTexture(this->colorBufferBlur, GL_COLOR_ATTACHMENT0, GL_RED, GL_RED, windowWidth, windowHeight);
+	glBindFramebuffer(GL_FRAMEBUFFER, blurFBO);
+	genTexture(colorBufferBlur, GL_COLOR_ATTACHMENT0, GL_RED, GL_RED, windowWidth, windowHeight);
 
-	if (!this->checkFBOStatus()) {
+	if (!checkFBOStatus()) {
 		std::cerr << "Error initializing SSAO blur FBO" << std::endl;
 		exit(-1);
 	}
 }
 
 void SSAO::calcSSAO(GLuint gPosition, GLuint gNormal, GLuint currFramebuffer) {
-	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	this->shader.useShader();
+	shader.useShader();
 
-	this->shader.setInt("gPosition", 0);
-	this->shader.setInt("gNormal", 1);
-	this->shader.setInt("noise", 2);
+	shader.setVec2("screenRes", scrResolution);
+	shader.setInt("kernelSize", 64);
+	shader.setFloat("radius", radius);
+	shader.setFloat("bias", bias);
+	shader.setFloat("occlusionPower", occlusionPower);
 
-	this->shader.setVec2("screenRes", this->scrResolution);
-	this->shader.setInt("kernelSize", 64);
-	this->shader.setFloat("radius", 0.5f);
-	this->shader.setFloat("bias", 0.035f);
-	this->shader.setFloat("occlusionPower", 1000.f);
-
-	std::string buffer{};
+	char buffer[30]{ '\0' };
 	for (uint i = 0; i < 64; i++) {
-		buffer = "samples[" + std::to_string(i) + "]";
-		this->shader.setVec3(buffer.data(), this->kernel[i]);
+		snprintf(buffer, sizeof(buffer), "samples[%i]", i);
+		shader.setVec3(buffer, kernel[i]);
 	}
 
 	glActiveTexture(GL_TEXTURE0);
@@ -116,28 +113,30 @@ void SSAO::calcSSAO(GLuint gPosition, GLuint gNormal, GLuint currFramebuffer) {
 	glBindTexture(GL_TEXTURE_2D, gNormal);
 
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, this->noiseTexture);
+	glBindTexture(GL_TEXTURE_2D, noiseTexture);
 
-	this->quad.renderQuad();
+	quad.renderQuad();
 
-	this->shader.endShader();
+	shader.endShader();
 
-	this->ssaoBlur();
+	glActiveTexture(GL_TEXTURE0);
+
+	ssaoBlur();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, currFramebuffer);
 }
 
 void SSAO::ssaoBlur() {
-	glBindFramebuffer(GL_FRAMEBUFFER, this->blurFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, blurFBO);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	this->blurShader.useShader();
-	this->blurShader.setInt("ssao", 0);
+	blurShader.useShader();
+	blurShader.setInt("ssao", 0);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, this->colorBuffer);
+	glBindTexture(GL_TEXTURE_2D, colorBuffer);
 
-	this->quad.renderQuad();
+	quad.renderQuad();
 
-	this->blurShader.endShader();
+	blurShader.endShader();
 }

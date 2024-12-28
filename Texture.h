@@ -61,17 +61,17 @@ public:
 
 	void useTexture(GLenum textureLocation = GL_TEXTURE0) const {
 		glActiveTexture(textureLocation);
-		glBindTexture(GL_TEXTURE_2D, this->textureID);
+		glBindTexture(GL_TEXTURE_2D, textureID);
 	}
 
 	void clearTexture();
 
-	GLuint getTextureID() const { return this->textureID; }
-	GLuint64 getTextureHandle() const { return this->textureHandle; }
+	GLuint getTextureID() const { return textureID; }
+	GLuint64 getTextureHandle() const { return textureHandle; }
 
-	int getWidth() const { return this->width; }
-	int getHeight() const { return this->height; }
-	int getBitDepth() const { return this->bitDepth; }
+	int getWidth() const { return width; }
+	int getHeight() const { return height; }
+	int getBitDepth() const { return bitDepth; }
 
 	~Texture();
 };

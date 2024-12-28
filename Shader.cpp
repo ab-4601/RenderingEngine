@@ -2,45 +2,53 @@
 
 Shader::Shader(std::string vertFileName, std::string fragFileName, std::string geomFileName)
 	: vertexShaderSource{ nullptr }, fragmentShaderSource{ nullptr }, geometryShaderSource{ nullptr },
-	vertFileName{ vertFileName }, fragFileName{ fragFileName }, geomFileName{ geomFileName }, compFileName{ "" },
 	vertexShaderID{ 0 }, fragmentShaderID{ 0 }, geometryShaderID{ 0 }, computeShaderID{ 0 }, programID { 0 }
 {
-	this->readFile(this->vertFileName, this->vertexShaderSource);
-	this->readFile(this->fragFileName, this->fragmentShaderSource);
+	std::vector<std::string> files{};
+	files.push_back(vertFileName);
+	files.push_back(fragFileName);
 
-	this->compileShader(this->vertexShaderID, this->vertexShaderSource, GL_VERTEX_SHADER);
-	this->compileShader(this->fragmentShaderID, this->fragmentShaderSource, GL_FRAGMENT_SHADER);
+	readFile(vertFileName, vertexShaderSource);
+	readFile(fragFileName, fragmentShaderSource);
 
-	if (this->geomFileName != "") {
-		this->readFile(this->geomFileName, this->geometryShaderSource);
-		this->compileShader(this->geometryShaderID, this->geometryShaderSource, GL_GEOMETRY_SHADER);
-		this->attachShader({ vertexShaderID, fragmentShaderID, geometryShaderID });
-		glDeleteShader(this->geometryShaderID);
+	compileShader(vertFileName, vertexShaderID, vertexShaderSource, GL_VERTEX_SHADER);
+	compileShader(fragFileName, fragmentShaderID, fragmentShaderSource, GL_FRAGMENT_SHADER);
+
+	if (geomFileName != "") {
+		files.push_back(geomFileName);
+		readFile(geomFileName, geometryShaderSource);
+		compileShader(geomFileName, geometryShaderID, geometryShaderSource, GL_GEOMETRY_SHADER);
+		attachShader(files, { vertexShaderID, fragmentShaderID, geometryShaderID });
+		glDeleteShader(geometryShaderID);
 	}
 	else {
-		this->attachShader({ vertexShaderID, fragmentShaderID });
+		attachShader(files, { vertexShaderID, fragmentShaderID });
 	}
 
-	glDeleteShader(this->vertexShaderID);
-	glDeleteShader(this->fragmentShaderID);
+	glDeleteShader(vertexShaderID);
+	glDeleteShader(fragmentShaderID);
 
-	delete[] this->vertexShaderSource;
-	delete[] this->fragmentShaderSource;
-	delete[] this->geometryShaderSource;
+	files.clear();
+
+	delete[] vertexShaderSource;
+	delete[] fragmentShaderSource;
+	delete[] geometryShaderSource;
 }
 
 Shader::Shader(std::string compFileName)
 	: vertexShaderSource{ nullptr }, fragmentShaderSource{ nullptr }, geometryShaderSource{ nullptr },
-	vertFileName{ "" }, fragFileName{ "" }, geomFileName{ "" }, compFileName{ compFileName },
 	vertexShaderID{ 0 }, fragmentShaderID{ 0 }, geometryShaderID{ 0 }, computeShaderID{ 0 }, programID{ 0 }
 {
-	this->readFile(this->compFileName, this->computeShaderSource);
-	this->compileShader(this->computeShaderID, this->computeShaderSource, GL_COMPUTE_SHADER);
-	this->attachShader({ this->computeShaderID });
+	std::vector<std::string> files{};
+	files.push_back(compFileName);
 
-	glDeleteShader(this->computeShaderID);
+	readFile(compFileName, computeShaderSource);
+	compileShader(compFileName, computeShaderID, computeShaderSource, GL_COMPUTE_SHADER);
+	attachShader(files, { computeShaderID });
 
-	delete[] this->computeShaderSource;
+	glDeleteShader(computeShaderID);
+
+	delete[] computeShaderSource;
 }
 
 void Shader::readFile(std::string fileName, char*& shader) {
@@ -70,7 +78,7 @@ void Shader::readFile(std::string fileName, char*& shader) {
 	shader[shaderSource.length()] = NULL;
 }
 
-void Shader::compileShader(GLuint& shaderID, const char* shader, GLenum shaderType) const {
+void Shader::compileShader(std::string fileName, GLuint& shaderID, const char* shader, GLenum shaderType) const {
 	shaderID = glCreateShader(shaderType);
 	glShaderSource(shaderID, 1, &shader, NULL);
 	glCompileShader(shaderID);
@@ -81,51 +89,46 @@ void Shader::compileShader(GLuint& shaderID, const char* shader, GLenum shaderTy
 
 	// Display shader compile status if errors
 	if (!success) {
-		std::string buffer{};
-		if (shaderType == GL_VERTEX_SHADER) buffer = this->vertFileName;
-		else if (shaderType == GL_FRAGMENT_SHADER) buffer = this->fragFileName;
-		else if (shaderType == GL_GEOMETRY_SHADER) buffer = this->geomFileName;
-		else buffer = this->compFileName;
-
 		glGetShaderInfoLog(shaderID, 512, NULL, infoLog);
-		std::cerr << "Error. Shader compilation failed: " + buffer + "\n" << infoLog << std::endl;
+		std::cerr << "Error. Shader compilation failed: " + fileName + "\n" << infoLog << std::endl;
 	}
 }
 
-void Shader::attachShader(std::vector<GLuint> shaderIDs) {
-	this->programID = glCreateProgram();
+void Shader::attachShader(std::vector<std::string> files, std::vector<GLuint> shaderIDs) {
+	programID = glCreateProgram();
 
 	for (GLuint& id : shaderIDs)
-		glAttachShader(this->programID, id);
+		glAttachShader(programID, id);
 
-	glLinkProgram(this->programID);
+	glLinkProgram(programID);
 
 	// Get link status
 	int success{};
 	char infoLog[512];
 
-	std::string buffer{};
-	if (this->vertFileName == "") buffer = this->compFileName;
-	else if (this->geomFileName == "") buffer = this->vertFileName + ", " + this->fragFileName;
-	else buffer = this->vertFileName + ", " + this->fragFileName + ", " + this->geomFileName;
+	std::string buffer{"( "};
+	for (const auto& elem : files) {
+		buffer += (elem + " ");
+	}
+	buffer += ")";
 
-	glGetProgramiv(this->programID, GL_LINK_STATUS, &success);
+	glGetProgramiv(programID, GL_LINK_STATUS, &success);
 
 	if (!success) {
-		glGetProgramInfoLog(this->programID, 512, NULL, infoLog);
+		glGetProgramInfoLog(programID, 512, NULL, infoLog);
 		std::cerr << "Error. Program linking failed: " + buffer + "\n" << infoLog << std::endl;
 	}
 
-	glValidateProgram(this->programID);
+	glValidateProgram(programID);
 
-	glGetProgramiv(this->programID, GL_VALIDATE_STATUS, &success);
+	glGetProgramiv(programID, GL_VALIDATE_STATUS, &success);
 
 	if (!success) {
-		glGetProgramInfoLog(this->programID, 512, NULL, infoLog);
+		glGetProgramInfoLog(programID, 512, NULL, infoLog);
 		std::cerr << "Error. Program validation failed: " + buffer + "\n" << infoLog << std::endl;
 	}
 }
 
 Shader::~Shader() {
-	glDeleteProgram(this->programID);
+	glDeleteProgram(programID);
 }

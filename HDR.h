@@ -18,7 +18,7 @@ private:
 
 	Texture areaTexture{ "Textures/SMAA/AreaTexDX10.dds" }, searchTexture{ "Textures/SMAA/SearchTex.dds" };
 
-	glm::vec2 screenResolution;
+	glm::ivec2 screenResolution;
 
 	Shader shader{ "hdr.vert", "hdr.frag" };
 	Shader edgeShader{ "smaa.vert", "smaa_edge.frag" };
@@ -39,10 +39,10 @@ public:
 	void _init();
 	void _initMSAA();
 
-	GLuint getFramebufferID() const { return this->FBO; }
-	GLuint getColorbufferID() const { return this->colorBuffer; }
+	GLuint getFramebufferID() const { return FBO; }
+	GLuint getColorbufferID() const { return colorBuffer; }
 
-	void enableHDRWriting() const { glBindFramebuffer(GL_FRAMEBUFFER, this->FBO); }
+	void enableHDRWriting() const { glBindFramebuffer(GL_FRAMEBUFFER, FBO); }
 
 	void renderToDefaultBuffer(float exposure = 1.f, GLuint bloomBuffer = 0, bool enableBloom = false);
 	void renderToDefaultBufferMSAA(

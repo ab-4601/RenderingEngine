@@ -6,7 +6,10 @@ class GBuffer {
 private:
 	GLuint FBO{ 0 }, RBO{ 0 }, gPosition{ 0 }, gNormal{ 0 }, gAlbedo{ 0 }, gMetallic{ 0 };
 
-	Shader shader{ "gbuffer.vert", "gbuffer.frag" };
+	bool drawWireframe{ false };
+	glm::mat4 viewportMatrix{ 1.f };
+
+	Shader shader{ "gbuffer.vert", "gbuffer.frag", "gbuffer.geom" };
 
 	GLenum colorAttachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
 
@@ -16,20 +19,21 @@ private:
 public:
 	GBuffer(int windowWidth, int windowHeight);
 
-	inline GLuint getFramebufferID() const { return this->FBO; }
-	inline GLuint getPositionBuffer() const { return this->gPosition; }
-	inline GLuint getNormalBuffer() const { return this->gNormal; }
-	inline GLuint getAlbedoBuffer() const { return this->gAlbedo; }
-	inline GLuint getMetallicBuffer() const { return this->gMetallic; }
+	GLuint framebufferID() const { return FBO; }
+	GLuint positionBuffer() const { return gPosition; }
+	GLuint normalBuffer() const { return gNormal; }
+	GLuint albedoBuffer() const { return gAlbedo; }
+	GLuint metallicBuffer() const { return gMetallic; }
 
-	void updateGbuffer(Shader& shader, const std::vector<Mesh*>& meshes, const std::vector<Model*>& models, 
-		GLuint currFramebuffer = 0);
+	void updateWireframeBool(bool drawWireframe) { this->drawWireframe = drawWireframe; }
+	void updateBuffer(Shader& outlineShader, int meshID, const std::vector<Mesh*>& meshes,
+		const std::vector<Model*>& models, GLuint currFramebuffer = 0);
 
 	~GBuffer() {
-		if (this->FBO != 0)
-			glDeleteFramebuffers(1, &this->FBO);
+		if (FBO != 0)
+			glDeleteFramebuffers(1, &FBO);
 
-		if (this->gPosition != 0) {
+		if (gPosition != 0) {
 			GLuint textures[] = { gPosition, gNormal, gAlbedo, gMetallic };
 			glDeleteTextures(4, textures);
 		}

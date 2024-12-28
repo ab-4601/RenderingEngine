@@ -5,12 +5,13 @@ layout (location = 1) in vec2 aTexel;
 layout (location = 2) in vec3 aNormal;
 layout (location = 3) in vec3 aTangent;
 
-out vec3 fragPos;
-out vec2 texel;
-out vec3 normal;
-out vec3 tangent;
-out vec3 color;
-out mat3 normalMat;
+out VERT_DATA {
+	vec4 fragPos;
+	vec2 texel;
+	vec3 normal;
+	vec3 tangent;
+	vec3 color;
+} data_out;
 
 layout (std140, binding = 0) uniform cameraSpaceVariables {
 	mat4 projection;
@@ -19,18 +20,18 @@ layout (std140, binding = 0) uniform cameraSpaceVariables {
 };
 
 uniform mat4 model;
-uniform vec3 vColor;
+uniform vec3 color;
 
 void main() {
-	vec4 viewPos = view * model * vec4(aPos, 1.f);
-	fragPos = viewPos.xyz;
-	texel = aTexel;
+	vec4 worldPos = model * vec4(aPos, 1.f);
+	data_out.fragPos = worldPos;
+	data_out.texel = aTexel;
 
-	normalMat = transpose(inverse(mat3(view * model)));
-	normal = normalMat * aNormal;
-	tangent = normalMat * aTangent;
+	mat3 normalMat = transpose(inverse(mat3(model)));
+	data_out.normal = normalMat * aNormal;
+	data_out.tangent = normalMat * aTangent;
 
-	color = vColor;
+	data_out.color = color;
 
-	gl_Position = projection * viewPos;
+	gl_Position = projection * view * worldPos;
 }
