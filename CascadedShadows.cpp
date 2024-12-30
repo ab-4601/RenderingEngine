@@ -149,9 +149,7 @@ void CascadedShadows::calculateShadows(int windowWidth, int windowHeight, const 
 	computeShader.useShader();
 	computeShader.setVec3("lightDirection", lightPosition);
 	
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
 	computeShader.dispatchComputeShader(1, 1, 1, GL_SHADER_STORAGE_BARRIER_BIT);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 	computeShader.endShader();
 
@@ -170,12 +168,14 @@ void CascadedShadows::calculateShadows(int windowWidth, int windowHeight, const 
 
 	for (size_t i = 0; i < meshes.size(); i++) {
 		shader.setMat4("model", meshes[i]->getModelMatrix());
+		shader.setUint("useDiffuseMap", meshes[i]->getDiffuseMapBool());
 		meshes[i]->drawMesh(GL_TRIANGLES);
 	}
 
 	for (size_t i = 0; i < models.size(); i++) {
 		shader.setMat4("model", models[i]->getModelMatrix());
-		models[i]->drawDepth(shader, GL_TRIANGLES);
+		shader.setUint("useDiffuseMap", models[i]->getDiffuseMapBool());
+		models[i]->drawModel(GL_TRIANGLES);
 	}
 
 	glCullFace(GL_BACK);

@@ -17,13 +17,39 @@ struct Vertex {
 };
 
 struct MeshMetaData {
-	uint baseVertex;
-	uint baseIndex;
-	uint numIndices;
-	uint materialIndex;
+	uint32_t baseVertex;
+	uint32_t baseIndex;
+	uint32_t numIndices;
+	uint32_t materialIndex;
 
-	MeshMetaData(uint baseVertex = 0, uint baseIndex = 0, uint numIndices = 0, uint materialIndex = 0)
+	MeshMetaData(uint32_t baseVertex = 0, uint32_t baseIndex = 0, uint32_t numIndices = 0, uint32_t materialIndex = 0)
 		: baseVertex{ baseVertex }, baseIndex{ baseIndex }, numIndices{ numIndices }, materialIndex{ materialIndex } { }
+};
+
+struct DrawCommand {
+	uint32_t indexCount;
+	uint32_t instancedCount;
+	uint32_t baseIndex;
+	uint32_t baseVertex;
+	uint32_t baseInstance;
+
+	DrawCommand(uint32_t indexCount = 0, uint32_t instancedCount = 0, uint32_t baseIndex = 0,
+		uint32_t baseVertex = 0, uint32_t baseInstance = 0)
+		: indexCount{ indexCount }, instancedCount{ instancedCount }, baseIndex{ baseIndex },
+		baseVertex{ baseVertex }, baseInstance{ baseInstance } { }
+};
+
+struct RenderData3D {
+	int meshIndex;
+	uint64_t diffuseMap;
+	uint64_t normalMap;
+	uint64_t metallicMap;
+	uint64_t emissiveMap;
+
+	RenderData3D(int meshIndex = 0, uint64_t diffuseMap = 0, uint64_t normalMap = 0,
+		uint64_t metallicMap = 0, uint64_t emissiveMap = 0)
+		: meshIndex{ meshIndex }, diffuseMap{ diffuseMap }, normalMap{ normalMap }, metallicMap{ metallicMap },
+		emissiveMap{ emissiveMap } { }
 };
 
 class Mesh {
@@ -36,14 +62,17 @@ protected:
 	glm::mat4 outlineModel{ 1.f };
 
 	std::vector<Vertex> vertices;
-	std::vector<uint> indices;
-	std::vector<MeshMetaData> renderData;
+	std::vector<uint32_t> indices;
+	std::vector<MeshMetaData> meshData;
+	std::vector<DrawCommand> drawCommands;
+	std::vector<RenderData3D> renderData;
 
 	uint indexOffset{ 0 }, vertexOffset{ 0 };
 	GLfloat metallic{ 0.f }, roughness{ 0.f }, ao{ 0.f };
 
 	GLuint VAO{ 0 };
 	GLuint VBO{ 0 };
+	GLuint EBO{ 0 };
 	GLuint IBO{ 0 };
 
 	Texture* diffuseMap = nullptr;

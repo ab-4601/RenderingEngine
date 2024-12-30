@@ -6,6 +6,8 @@ Mesh::Mesh() {
 
 	vertices.clear();
 	indices.clear();
+	meshData.clear();
+	drawCommands.clear();
 	renderData.clear();
 }
 
@@ -39,9 +41,9 @@ void Mesh::loadMesh(bool useDiffuseMap, bool drawIndexed, bool useNormalMap, boo
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
 
 	if (drawIndexed == true) {
-		glGenBuffers(1, &IBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint), &indices[0], GL_STATIC_DRAW);
+		glGenBuffers(1, &EBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -59,7 +61,7 @@ void Mesh::drawMesh(GLenum renderMode) {
 	glBindVertexArray(VAO);
 
 	if (drawIndexed) {
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glDrawElements(renderMode, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
@@ -131,14 +133,19 @@ void Mesh::clearMesh() {
 	delete roughnessMap;
 	delete metallicMap;
 
-	if (IBO != 0) {
-		glDeleteBuffers(1, &IBO);
-		IBO = 0;
+	if (EBO != 0) {
+		glDeleteBuffers(1, &EBO);
+		EBO = 0;
 	}
 
 	if (VBO != 0) {
 		glDeleteBuffers(1, &VBO);
 		VBO = 0;
+	}
+
+	if (IBO != 0) {
+		glDeleteBuffers(1, &IBO);
+		IBO = 0;
 	}
 
 	if (VAO != 0) {

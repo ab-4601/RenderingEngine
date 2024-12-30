@@ -90,8 +90,8 @@ private:
     void setLightingUniforms(Shader& shader);
     void setGlobalPBRUniforms(Shader& shader);
 
-    void mainLoopForward(ParticleSystem& pSystem, glm::mat4& model, glm::vec3& lightDirection);
-    void mainLoopDeferred(ParticleSystem& pSystem, glm::mat4& model, glm::vec3& lightDirection);
+    void mainLoopForward(ParticleSystem& pSystem, glm::mat4& model, glm::vec3& particlePosition, glm::vec3& lightDirection);
+    void mainLoopDeferred(ParticleSystem& pSystem, glm::mat4& model, glm::vec3& particlePosition, glm::vec3& lightDirection);
 
 public:
 	Application();

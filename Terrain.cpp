@@ -7,7 +7,6 @@ Terrain::Terrain(int rows, int cols, int maxAmplitude, int maxPersistence,
 	maxFrequency{ maxFrequency }, frequencyDivisor{ frequencyDivisor }, persistenceDivisor{ persistenceDivisor },
 	maxRandomSeed{ maxRandomSeed }, maxOctaves{ maxOctaves } 
 {
-	vertexCoords.clear();
 	noise.setOctaves(5);
 }
 
@@ -20,28 +19,30 @@ void Terrain::generateIndices() {
 			continue;
 
 		if (i + cols >= num_of_points) {
-			indices.push_back(static_cast<uint>(i));
-			indices.push_back(static_cast<uint>(i - cols));
-			indices.push_back(static_cast<uint>(i + 1));
+			indices.push_back(static_cast<uint32_t>(i));
+			indices.push_back(static_cast<uint32_t>(i - cols));
+			indices.push_back(static_cast<uint32_t>(i + 1));
 		}
 		else if (i - cols < 0) {
-			indices.push_back(static_cast<uint>(i));
-			indices.push_back(static_cast<uint>(i + 1));
-			indices.push_back(static_cast<uint>(i + 1 + cols));
+			indices.push_back(static_cast<uint32_t>(i));
+			indices.push_back(static_cast<uint32_t>(i + 1));
+			indices.push_back(static_cast<uint32_t>(i + 1 + cols));
 		}
 		else {
-			indices.push_back(static_cast<uint>(i));
-			indices.push_back(static_cast<uint>(i + 1));
-			indices.push_back(static_cast<uint>(i + 1 + cols));
+			indices.push_back(static_cast<uint32_t>(i));
+			indices.push_back(static_cast<uint32_t>(i + 1));
+			indices.push_back(static_cast<uint32_t>(i + 1 + cols));
 
-			indices.push_back(static_cast<uint>(i));
-			indices.push_back(static_cast<uint>(i - cols));
-			indices.push_back(static_cast<uint>(i + 1));
+			indices.push_back(static_cast<uint32_t>(i));
+			indices.push_back(static_cast<uint32_t>(i - cols));
+			indices.push_back(static_cast<uint32_t>(i + 1));
 		}
 	}
 }
 
 void Terrain::generateTexCoords() {
+	std::vector<float> texCoords{};
+
 	for (float i = 0.f; i < (float)rows; i++) {
 		for (float j = 0.f; j < (float)cols; j++) {
 			texCoords.push_back(j / 10);
@@ -55,6 +56,8 @@ void Terrain::generateTexCoords() {
 		vertex.texel = glm::vec2(texCoords[index], texCoords[index + 1]);
 		index += 2;
 	}
+
+	texCoords.clear();
 }
 
 void Terrain::generateVertexNormals() {

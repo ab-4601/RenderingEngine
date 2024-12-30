@@ -113,159 +113,89 @@ void Application::setGlobalPBRUniforms(Shader& shader) {
     shader.endShader();
 }
 
-void Application::mainLoopForward(ParticleSystem& pSystem, glm::mat4& model, glm::vec3& lightDirection) {
-    // Calculate delta time
-    currTime = (GLfloat)glfwGetTime();
-    deltaTime = currTime - lastTime;
-    elapsedTime += deltaTime;
-    lastTime = currTime;
+void Application::start() {
+    glm::vec3 lightDirection(3000.f, 3000.f, 0.f);
+    glm::vec3 pointLightPosition1(20.0, 20.f, 20.f);
+    glm::vec3 pointLightPosition2(100.f, 30.f, 100.f);
+    glm::vec3 spotLightPosition(300.0, 80.f, 300.f);
 
-    /*if (rotationAngle >= 360.f)
-        rotationAngle = 0.f;
-    else
-        rotationAngle += 0.0001;*/
+    glm::mat4 model{ 1.f };
 
-    glfwPollEvents();
+    Icosphere sphere;
+    sphere.smoothSphere(5);
+    sphere.setColor({ 0.07f, 1.f, 1.f });
+    sphere.setMeshMaterial(0.f, 0.f, 1.f);
+    sphere.loadMesh();
 
-    camera.keyFunctionality(window.getCurrWindow(), deltaTime);
-    camera.mouseFunctionality(window.getXChange(), window.getYChange(), window.getScrollChange());
+    model = glm::mat4(1.f);
+    model = glm::translate(model, glm::vec3(400.f, 100.f, 0.f));
+    model = glm::scale(model, glm::vec3(100.f, 100.f, 100.f));
 
-    pSystem.updateParticles(deltaTime, camera.getCameraPosition());
-    //fireSystem.updateParticles(deltaTime, this->camera.getCameraPosition());
+    sphere.setModelMatrix(model);
 
-    if (elapsedTime >= 0.012f) 
-    {
-        currFramebuffer = 0;
-        elapsedTime = 0.f;
+    model = glm::mat4(1.f);
+    model = glm::translate(model, glm::vec3(0.f, 100.f, 0.f));
+    model = glm::scale(model, glm::vec3(100.f, 100.f, 100.f));
 
-        gui._newFrame();
+    Cube cube;
+    cube.setColor({ 1.f, 0.07f, 0.07f });
+    cube.setModelMatrix(model);
+    cube.setMeshMaterial(0.f, 0.f, 1.f);;
+    cube.loadMesh(false, false);
 
-        currFramebuffer = 0;
+    model = glm::mat4(1.f);
+    model = glm::scale(model, glm::vec3(5.f, 5.f, 5.f));
 
-        skylight.updateLightLocation(lightDirection);
+    /*Terrain terrain(500, 500);
+    terrain.generateHeightMaps(3);
+    terrain.setMeshMaterial(0.f, 1.f, 1.f);
+    terrain.generateTerrain();
+    terrain.loadMesh();
+    terrain.setModelMatrix(model);
+    terrain.setColor(glm::vec3(0.2f, 0.2f, 0.2f));*/
 
-        if (enableHDR) {
-            hdrBuffer.enableHDRWriting();
-            currFramebuffer = hdrBuffer.getFramebufferID();
-        }
+    meshes = Mesh::meshList;
 
-        // Clear window
-        glClearColor(0.f, 0.f, 0.f, 1.f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    /*Model suntemple(
+        "Models/SunTemple/SunTemple.fbx",
+        "Models/SunTemple/Textures/",
+        aiTextureType_DIFFUSE,
+        aiTextureType_NORMALS,
+        aiTextureType_SPECULAR,
+        aiTextureType_EMISSIVE,
+        true, true
+    );*/
 
-        if (drawSkybox)
-            skybox.renderSkybox();
+    Model sponza(
+        "Models/Sponza/Sponza.gltf",
+        "Models/Sponza/"
+    );
 
-// ----------------------------------------------------------------------------------------------------------------
+    models.push_back(&sponza);
+    //models.push_back(&suntemple);
 
-        lightSources.renderLightSources(
-            skylight, pointLights, spotLights, pointLightCount, spotLightCount
-        );
+    coordSystem.createCoordinateSystem();
 
-// ----------------------------------------------------------------------------------------------------------------
+    ParticleTexture partTex("Textures/particleAtlas.png", 4.f);
+    glm::vec3 particlePosition{ 20.f, 20.f, 20.f }, velocity{ 10.f, 50.f, 10.f }, particleColor{ 1.f, 0.5f, 0.05f };
+    ParticleSystem pSystem(particleColor, 10, 15.f, 1.f, 6.f, partTex);
 
-        if (enableShadows) {
-            csm.calculateShadows(
-                window.getBufferWidth(), window.getBufferHeight(), meshes, 
-                models, lightDirection, currFramebuffer
-            );
-        }
+    /*ParticleTexture fire("Textures/fire.png", 8.f);
+    glm::vec3 fireParticlePosition{ 1125.f, 120.f, 400.f };
+    ParticleSystem fireSystem(particleColor, 30.f, -30.f, 1.f, 30.f, fire);*/
 
-        selection.pickingPhase(meshes, currFramebuffer);
+    hdrBuffer._initMSAA();
 
-        mouseClickCoords = window.getViewportCoord();
+    setGlobalPBRUniforms(forwardShader);
+    //this->setGlobalPBRUniforms(this->deferredShading);
 
-        if (window.getKeyPress(GLFW_KEY_TAB)) {
-            index = -1;
-            prevIndex = -1;
-        }
-
-        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-            index = selection.mouseSelectionResult(
-                window.getWindowHeight(), (int)mouseClickCoords.x, (int)mouseClickCoords.y
-            );
-
-            if (prevIndex != index)
-                if (index != -1)
-                    prevIndex = index;
-                else
-                    index = prevIndex;
-        }
-
-        forwardShader.useShader();
-
-        setLightingUniforms(forwardShader);
-
-        forwardShader.setUint("calcShadows", enableShadows);
-        forwardShader.setUint("enableSSAO", enableSSAO);
-        forwardShader.setUint("drawWireframe", drawWireframe);
-        forwardShader.setFloat("radius", shadowRadius);
-
-        for (size_t i = 0; i < models.size(); i++) {
-            models[i]->renderModel(forwardShader);
-        }
-
-        if (index < (int)meshes.size() && index != -1) {
-            gui._updateTransformOperation(window);
-
-            gui.manipulate(window.getWindowWidth(), window.getWindowHeight(), camera, meshes[index]);
-            meshes[index]->renderMeshWithOutline(forwardShader, outlineShader, GL_TRIANGLES);
-        }
-
-        for (size_t i = 0; i < meshes.size(); i++) {
-            if ((int)i != index && meshes[i]->getObjectID() != -1)
-                meshes[i]->renderMesh(forwardShader, GL_TRIANGLES);
-        }
-
-// ----------------------------------------------------------------------------------------------------------------
-
-        if (displayGrid)
-            grid.renderGrid();
-
-// ----------------------------------------------------------------------------------------------------------------
-
-        if (displayCoordinateSystem)
-            coordSystem.drawCoordinateSystem(window.getWindowHeight(), window.getWindowWidth(),
-                window.getBufferWidth(), window.getBufferHeight(), camera);
-
-// ----------------------------------------------------------------------------------------------------------------
-
-        glm::vec3 particlePosition = camera.getCameraPosition() + camera.getCameraLookDirection() * 200.f;
-        //fireSystem.generateParticles(fireParticlePosition, 0.f);
-
-        if (window.getKeyPress(GLFW_KEY_R)) {
-            pSystem.generateParticles(particlePosition, 0.f);
-        }
-
-        pSystem.renderParticles(&window, camera, model);
-        //fireSystem.renderParticles(&this->window, this->camera, model);
-
-        if (enableHDR && enableBloom) {
-            bloom.setKnee(bloomThreshold);
-            bloom.renderBloomTextureMSAA(filterRadius, currFramebuffer);
-        }
-
-// ----------------------------------------------------------------------------------------------------------------
-
-        if (enableHDR) {
-            //hdrBuffer.renderToDefaultBuffer(exposure, bloom.bloomTexture(), enableBloom);
-            hdrBuffer.renderToDefaultBufferMSAA(exposure, bloom.bloomTexture(), enableBloom);
-        }
-
-        if (index != -1)
-            gui.render(io, exposure, shadowRadius, filterRadius, bloomThreshold, ssaoRadius,
-                ssaoBias, ssaoOcclusionPower, drawSkybox, displayGrid, displayCoordinateSystem,
-                enableBloom, drawWireframe, enableShadows, enableHDR, enableSSAO, lightDirection, meshes[index]);
-        else
-            gui.render(io, exposure, shadowRadius, filterRadius, bloomThreshold, ssaoRadius,
-                ssaoBias, ssaoOcclusionPower, drawSkybox, displayGrid, displayCoordinateSystem,
-                enableBloom, drawWireframe, enableShadows, enableHDR, enableSSAO, lightDirection);
-
-        glfwSwapBuffers(window.getMainWindow());
+    while (!glfwWindowShouldClose(window.getGlfwWindow())) {
+        mainLoopForward(pSystem, model, particlePosition, lightDirection);
     }
 }
 
-void Application::mainLoopDeferred(ParticleSystem& pSystem, glm::mat4& model, glm::vec3& lightDirection) {
+void Application::mainLoopForward(ParticleSystem& pSystem, glm::mat4& model, glm::vec3& particlePosition, glm::vec3& lightDirection) {
+    // Calculate delta time
     currTime = (GLfloat)glfwGetTime();
     deltaTime = currTime - lastTime;
     elapsedTime += deltaTime;
@@ -315,7 +245,157 @@ void Application::mainLoopDeferred(ParticleSystem& pSystem, glm::mat4& model, gl
 
 // ----------------------------------------------------------------------------------------------------------------
 
-        if(enableShadows) {
+        if (enableShadows) {
+            csm.calculateShadows(
+                window.getBufferWidth(), window.getBufferHeight(), meshes,
+                models, lightDirection, currFramebuffer
+            );
+        }
+
+        selection.pickingPhase(meshes, currFramebuffer);
+
+        mouseClickCoords = window.getViewportCoord();
+
+        if (window.getKeyPress(GLFW_KEY_TAB)) {
+            index = -1;
+            prevIndex = -1;
+        }
+
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            index = selection.mouseSelectionResult(
+                window.getWindowHeight(), (int)mouseClickCoords.x, (int)mouseClickCoords.y
+            );
+
+            if (prevIndex != index)
+                if (index != -1)
+                    prevIndex = index;
+                else
+                    index = prevIndex;
+        }
+
+        forwardShader.useShader();
+
+        setLightingUniforms(forwardShader);
+
+        forwardShader.setUint("calcShadows", enableShadows);
+        forwardShader.setUint("enableSSAO", enableSSAO);
+        forwardShader.setUint("drawWireframe", drawWireframe);
+        forwardShader.setFloat("radius", shadowRadius);
+
+        for (size_t i = 0; i < models.size(); i++) {
+            models[i]->renderModel(forwardShader, GL_TRIANGLES);
+        }
+
+        if (index < (int)meshes.size() && index != -1) {
+            gui._updateTransformOperation(window);
+            gui.manipulate(window.getWindowWidth(), window.getWindowHeight(), camera, meshes[index]);
+            meshes[index]->renderMeshWithOutline(forwardShader, outlineShader, GL_TRIANGLES);
+        }
+
+        for (size_t i = 0; i < meshes.size(); i++) {
+            if ((int)i != index && meshes[i]->getObjectID() != -1)
+                meshes[i]->renderMesh(forwardShader, GL_TRIANGLES);
+        }
+
+// ----------------------------------------------------------------------------------------------------------------
+
+        if (displayGrid)
+            grid.renderGrid();
+
+// ----------------------------------------------------------------------------------------------------------------
+
+        if (displayCoordinateSystem)
+            coordSystem.drawCoordinateSystem(window.getWindowHeight(), window.getWindowWidth(),
+                window.getBufferWidth(), window.getBufferHeight(), camera);
+
+// ----------------------------------------------------------------------------------------------------------------
+
+        particlePosition = camera.getCameraPosition() + camera.getCameraLookDirection() * 200.f;
+        //fireSystem.generateParticles(fireParticlePosition, 0.f);
+
+        if (window.getKeyPress(GLFW_KEY_R)) {
+            pSystem.generateParticles(particlePosition, 0.f);
+        }
+
+        pSystem.renderParticles(&window, camera, model);
+        //fireSystem.renderParticles(&this->window, this->camera, model);
+
+        if (enableHDR && enableBloom) {
+            bloom.setKnee(bloomThreshold);
+            bloom.renderBloomTextureMSAA(filterRadius, currFramebuffer);
+        }
+
+// ----------------------------------------------------------------------------------------------------------------
+
+        if (enableHDR) {
+            //hdrBuffer.renderToDefaultBuffer(exposure, bloom.bloomTexture(), enableBloom);
+            hdrBuffer.renderToDefaultBufferMSAA(exposure, bloom.bloomTexture(), enableBloom);
+        }
+
+        if (index != -1)
+            gui.render(io, exposure, shadowRadius, filterRadius, bloomThreshold, ssaoRadius,
+                ssaoBias, ssaoOcclusionPower, drawSkybox, displayGrid, displayCoordinateSystem,
+                enableBloom, drawWireframe, enableShadows, enableHDR, enableSSAO, lightDirection, meshes[index]);
+        else
+            gui.render(io, exposure, shadowRadius, filterRadius, bloomThreshold, ssaoRadius,
+                ssaoBias, ssaoOcclusionPower, drawSkybox, displayGrid, displayCoordinateSystem,
+                enableBloom, drawWireframe, enableShadows, enableHDR, enableSSAO, lightDirection);
+
+        glfwSwapBuffers(window.getMainWindow());
+    }
+}
+
+void Application::mainLoopDeferred(ParticleSystem& pSystem, glm::mat4& model, glm::vec3& particlePosition, glm::vec3& lightDirection) {
+    currTime = (GLfloat)glfwGetTime();
+    deltaTime = currTime - lastTime;
+    elapsedTime += deltaTime;
+    lastTime = currTime;
+
+    /*if (rotationAngle >= 360.f)
+        rotationAngle = 0.f;
+    else
+        rotationAngle += 0.0001;*/
+
+    glfwPollEvents();
+
+    camera.keyFunctionality(window.getCurrWindow(), deltaTime);
+    camera.mouseFunctionality(window.getXChange(), window.getYChange(), window.getScrollChange());
+
+    pSystem.updateParticles(deltaTime, camera.getCameraPosition());
+    //fireSystem.updateParticles(deltaTime, this->camera.getCameraPosition());
+
+    if (elapsedTime >= 0.012f)
+    {
+        currFramebuffer = 0;
+        elapsedTime = 0.f;
+
+        gui._newFrame();
+
+        currFramebuffer = 0;
+
+        skylight.updateLightLocation(lightDirection);
+
+        if (enableHDR) {
+            hdrBuffer.enableHDRWriting();
+            currFramebuffer = hdrBuffer.getFramebufferID();
+        }
+
+        // Clear window
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        if (drawSkybox)
+            skybox.renderSkybox();
+
+// ----------------------------------------------------------------------------------------------------------------
+
+        lightSources.renderLightSources(
+            skylight, pointLights, spotLights, pointLightCount, spotLightCount
+        );
+
+// ----------------------------------------------------------------------------------------------------------------
+
+        if (enableShadows) {
             csm.calculateShadows(
                 window.getBufferWidth(), window.getBufferHeight(), meshes,
                 models, lightDirection, currFramebuffer
@@ -375,10 +455,7 @@ void Application::mainLoopDeferred(ParticleSystem& pSystem, glm::mat4& model, gl
 
         if (index < (int)meshes.size() && index != -1) {
             gui._updateTransformOperation(window);
-
-            gui.manipulate(
-                window.getWindowWidth(), window.getWindowHeight(), camera, meshes[index]
-            );
+            gui.manipulate(window.getWindowWidth(), window.getWindowHeight(), camera, meshes[index]);
         }
 
         quad.renderQuad();
@@ -396,7 +473,7 @@ void Application::mainLoopDeferred(ParticleSystem& pSystem, glm::mat4& model, gl
 
 // ----------------------------------------------------------------------------------------------------------------
 
-        glm::vec3 particlePosition = camera.getCameraPosition() + camera.getCameraLookDirection() * 200.f;
+        particlePosition = camera.getCameraPosition() + camera.getCameraLookDirection() * 200.f;
         //fireSystem.generateParticles(fireParticlePosition, 0.f);
 
         if (window.getKeyPress(GLFW_KEY_R)) {
@@ -428,86 +505,5 @@ void Application::mainLoopDeferred(ParticleSystem& pSystem, glm::mat4& model, gl
                 enableBloom, drawWireframe, enableShadows, enableHDR, enableSSAO, lightDirection);
 
         glfwSwapBuffers(window.getMainWindow());
-    }
-}
-
-void Application::start() {
-    glm::vec3 lightDirection(3000.f, 3000.f, 0.f);
-    glm::vec3 pointLightPosition1(20.0, 20.f, 20.f);
-    glm::vec3 pointLightPosition2(100.f, 30.f, 100.f);
-    glm::vec3 spotLightPosition(300.0, 80.f, 300.f);
-
-    glm::mat4 model{ 1.f };
-
-    Icosphere sphere;
-    sphere.smoothSphere(5);
-    sphere.setColor({ 0.07f, 1.f, 1.f });
-    sphere.setMeshMaterial(0.f, 0.f, 1.f);
-    sphere.loadMesh();
-
-    model = glm::mat4(1.f);
-    model = glm::translate(model, glm::vec3(400.f, 100.f, 0.f));
-    model = glm::scale(model, glm::vec3(100.f, 100.f, 100.f));
-
-    sphere.setModelMatrix(model);
-
-    model = glm::mat4(1.f);
-    model = glm::translate(model, glm::vec3(0.f, 100.f, 0.f));
-    model = glm::scale(model, glm::vec3(100.f, 100.f, 100.f));
-
-    Cube cube;
-    cube.setColor({ 1.f, 0.07f, 0.07f });
-    cube.setModelMatrix(model);
-    cube.setMeshMaterial(0.f, 0.f, 1.f);;
-    cube.loadMesh(false, false);
-
-    model = glm::mat4(1.f);
-    model = glm::scale(model, glm::vec3(5.f, 5.f, 5.f));
-
-    /*Terrain terrain(gridSize, gridSize);
-    terrain.generateHeightMaps(3);
-    terrain.setMeshMaterial(0.f, 1.f, 1.f);
-    terrain.generateTerrain();
-    terrain.loadMesh();
-    terrain.setModelMatrix(model);
-    terrain.setColor(glm::vec3(0.2f, 0.2f, 0.2f));*/
-
-    meshes = Mesh::meshList;
-
-    /*Model suntemple(
-        "Models/SunTemple/SunTemple.fbx",
-        "Models/SunTemple/Textures/",
-        aiTextureType_DIFFUSE,
-        aiTextureType_NORMALS,
-        aiTextureType_SPECULAR,
-        aiTextureType_EMISSIVE,
-        true, true
-    );*/
-
-    Model sponza(
-        "Models/Sponza/Sponza.gltf",
-        "Models/Sponza/"
-    );
-
-    models.push_back(&sponza);
-    //models.push_back(&suntemple);
-
-    coordSystem.createCoordinateSystem();
-
-    ParticleTexture partTex("Textures/particleAtlas.png", 4.f);
-    glm::vec3 particlePosition{ 20.f, 20.f, 20.f }, velocity{ 10.f, 50.f, 10.f }, particleColor{ 1.f, 0.5f, 0.05f };
-    ParticleSystem pSystem(particleColor, 10, 15.f, 1.f, 6.f, partTex);
-
-    /*ParticleTexture fire("Textures/fire.png", 8.f);
-    glm::vec3 fireParticlePosition{ 1125.f, 120.f, 400.f };
-    ParticleSystem fireSystem(particleColor, 30.f, -30.f, 1.f, 30.f, fire);*/
-
-    hdrBuffer._initMSAA();
-
-    setGlobalPBRUniforms(forwardShader);
-    //this->setGlobalPBRUniforms(this->deferredShading);
-
-    while (!glfwWindowShouldClose(window.getGlfwWindow())) {
-        mainLoopForward(pSystem, model, lightDirection);
     }
 }

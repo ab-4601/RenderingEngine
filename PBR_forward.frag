@@ -1,4 +1,5 @@
 #version 450 core
+#extension GL_NV_gpu_shader5 : enable
 
 #define PI 3.1415926535897932384626433832795
 
@@ -19,7 +20,8 @@ in GEOM_DATA {
     vec3 normal;
 	vec3 tangent;
     vec4 fragPos;
-	noperspective in vec3 edgeDistance;
+	flat uint drawID;
+	noperspective vec3 edgeDistance;
 } data_in;
 
 struct Light {
@@ -60,12 +62,6 @@ uniform PointLight pointLights[MAX_POINT_LIGHTS];
 uniform SpotLight spotLights[MAX_SPOT_LIGHTS];
 uniform Material material;
 
-uniform sampler2D diffuseMap;
-uniform sampler2D normalMap;
-uniform sampler2D depthMap;
-uniform sampler2D metallicMap;
-uniform sampler2D roughnessMap;
-uniform sampler2D emissiveMap;
 layout (binding = 1) uniform samplerCube irradianceMap;
 layout (binding = 2) uniform samplerCube prefilterMap;
 layout (binding = 3) uniform sampler2D brdfLUT;
@@ -96,8 +92,20 @@ layout (std140, binding = 0) uniform cameraSpaceVariables {
 	vec3 cameraPosition;
 };
 
-layout (std140, binding = 1) buffer LightSpaceMatrices {
+layout (std430, binding = 1) buffer LightSpaceMatrices {
 	mat4 lightSpaceMatrices[16];
+};
+
+struct RenderData3D {
+    int meshIndex;
+    uint64_t diffuseMap;
+    uint64_t normalMap;
+    uint64_t metallicMap;
+    uint64_t emissiveMap;
+};
+
+layout (std430, binding = 2) readonly buffer renderItems {
+    RenderData3D renderData[];
 };
 
 vec3 N = normalize(data_in.normal);
@@ -305,7 +313,7 @@ vec4 calcSpotLights() {
 
 void main() {
 	if(useDiffuseMap) {
-		vec4 texColor = texture2D(diffuseMap, data_in.texel);
+		vec4 texColor = texture2D(sampler2D(renderData[data_in.drawID].diffuseMap), data_in.texel);
 		if(texColor.a < 0.1f)
 			discard;
 
@@ -314,7 +322,7 @@ void main() {
 
 	if(useNormalMap) {
 		//texel = parallaxMapping(data_in.texel, eyePosition - vec3(data_in.fragPos));
-		N = texture2D(normalMap, data_in.texel).rgb;
+		N = texture2D(sampler2D(renderData[data_in.drawID].normalMap), data_in.texel).rgb;
 		N = normalize(N * 2.f - 1.f);
 
 		if(strippedNormalMap)
@@ -331,12 +339,12 @@ void main() {
 
 	if(useMaterialMap) {
 		ao = 0.3f;
-		roughness = texture2D(metallicMap, data_in.texel).g;
-		metallic = texture2D(metallicMap, data_in.texel).b;
+		roughness = texture2D(sampler2D(renderData[data_in.drawID].metallicMap), data_in.texel).g;
+		metallic = texture2D(sampler2D(renderData[data_in.drawID].metallicMap), data_in.texel).b;
 	}
 
 	if(useEmissiveMap) {
-		emissive = texture2D(emissiveMap, data_in.texel).rgb;
+		emissive = texture2D(sampler2D(renderData[data_in.drawID].emissiveMap), data_in.texel).rgb;
 	}
 
 	F0 = mix(F0, albedo, metallic);
@@ -383,6 +391,7 @@ void main() {
 
 		fragColor = mix(finalColor, wireframeColor, mixVal);
 	}
-	else
+	else {
 		fragColor = finalColor;
+	}
 }

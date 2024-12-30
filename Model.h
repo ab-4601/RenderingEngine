@@ -13,9 +13,13 @@ protected:
 	std::vector<Texture*> metalnessTextures;
 	std::vector<Texture*> emissiveTextures;
 
+	GLuint RSBO{ 0 };
+
 	void _loadNode(aiNode* node, const aiScene* const scene);
 	void _loadMesh(aiMesh* mesh, const aiScene* const scene);
-	void _updateRenderData(const aiScene* node);
+	void _updateMeshData(const aiScene* node);
+	void _updateRenderData();
+	void _updateIndirectBuffer();
 	void _loadMaterialMap(const aiScene* const scene, std::vector<Texture*>& maps, aiTextureType textureType) const;
 
 public:
@@ -31,7 +35,6 @@ public:
 		aiTextureType normalMap, aiTextureType metallicMap, aiTextureType emissiveMap);
 
 	void drawModel(GLenum renderMode = GL_TRIANGLES);
-	void drawDepth(Shader& shader, GLenum renderModel = GL_TRIANGLES);
 	void renderModel(Shader& shader, GLenum renderMode = GL_TRIANGLES);
 
 	void clearModel();

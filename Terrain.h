@@ -14,9 +14,7 @@ private:
 	int frequencyDivisor, persistenceDivisor;
 	int maxRandomSeed, maxOctaves;
 
-	std::vector<glm::vec3> vertexCoords;
 	std::vector<std::vector<float>> heightMaps;
-	std::vector<float> texCoords;
 
 	void generateIndices();
 	void generateTexCoords();

@@ -2,8 +2,8 @@
 
 #define PI 3.1415926535897932384626433832795
 
-const int MAX_POINT_LIGHTS = 3;
-const int MAX_SPOT_LIGHTS = 3;
+const int MAX_POINT_LIGHTS = 50;
+const int MAX_SPOT_LIGHTS = 50;
 const int MAX_CASCADES = 16;
 const float gamma = 2.2f;
 

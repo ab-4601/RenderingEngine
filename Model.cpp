@@ -19,20 +19,56 @@ Model::Model(std::string fileName, std::string texFolderPath, aiTextureType diff
 	Mesh::meshList.pop_back();
 }
 
-void Model::_updateRenderData(const aiScene* scene) {
-	renderData.resize(scene->mNumMeshes);
+void Model::_updateMeshData(const aiScene* scene) {
+	meshData.resize(scene->mNumMeshes);
 
-	for (size_t i = 0; i < renderData.size(); i++) {
-		renderData[i].materialIndex = scene->mMeshes[i]->mMaterialIndex;
-		renderData[i].numIndices = scene->mMeshes[i]->mNumFaces * 3;
-		renderData[i].baseVertex = vertexOffset;
-		renderData[i].baseIndex = indexOffset;
+	for (size_t i = 0; i < meshData.size(); i++) {
+		meshData[i].materialIndex = scene->mMeshes[i]->mMaterialIndex;
+		meshData[i].numIndices = scene->mMeshes[i]->mNumFaces * 3;
+		meshData[i].baseVertex = vertexOffset;
+		meshData[i].baseIndex = indexOffset;
 
 		vertexOffset += scene->mMeshes[i]->mNumVertices;
-		indexOffset += renderData[i].numIndices;
+		indexOffset += meshData[i].numIndices;
+	}
+}
+
+void Model::_updateIndirectBuffer() {
+	drawCommands.resize(meshData.size());
+
+	for (size_t i = 0; i < meshData.size(); i++) {
+		drawCommands[i].instancedCount = 1;
+		drawCommands[i].baseInstance = i;
+		drawCommands[i].indexCount = meshData[i].numIndices;
+		drawCommands[i].baseIndex = meshData[i].baseIndex;
+		drawCommands[i].baseVertex = meshData[i].baseVertex;
 	}
 
-	vertexOffset = 0;
+	glGenBuffers(1, &IBO);
+	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, IBO);
+	glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(DrawCommand) * drawCommands.size(), &drawCommands[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+}
+
+void Model::_updateRenderData() {
+	RenderData3D data{};
+	int index = 0;
+
+	for (const MeshMetaData& mesh : meshData) {
+		data.meshIndex = index++;
+		data.diffuseMap = diffuseTextures[mesh.materialIndex]->getTextureHandle();
+		data.normalMap = normalTextures[mesh.materialIndex]->getTextureHandle();
+		data.metallicMap = metalnessTextures[mesh.materialIndex]->getTextureHandle();
+		data.emissiveMap = (useEmissiveMap) ? emissiveTextures[mesh.materialIndex]->getTextureHandle() : 0;
+
+		renderData.push_back(data);
+	}
+
+	glGenBuffers(1, &RSBO);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, RSBO);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, RSBO);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(RenderData3D) * renderData.size(), &renderData[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 void Model::_loadNode(aiNode* node, const aiScene* const scene) {
@@ -58,9 +94,8 @@ void Model::_loadMesh(aiMesh* mesh, const aiScene* const scene) {
 
 	for (size_t i = 0; i < mesh->mNumFaces; i++) {
 		aiFace face = mesh->mFaces[i];
-		for (size_t j = 0; j < face.mNumIndices; j++) {
+		for (size_t j = 0; j < face.mNumIndices; j++)
 			indices.push_back(face.mIndices[j]);
-		}
 	}
 }
 
@@ -136,7 +171,8 @@ void Model::loadModel(std::string fileName, aiTextureType diffuseMap,
 		return;
 	}
 
-	_updateRenderData(scene);
+	_updateMeshData(scene);
+	_updateIndirectBuffer();
 	_loadNode(scene->mRootNode, scene);
 	_loadMaterialMap(scene, diffuseTextures, diffuseMap);
 	_loadMaterialMap(scene, normalTextures, normalMap);
@@ -145,35 +181,20 @@ void Model::loadModel(std::string fileName, aiTextureType diffuseMap,
 
 	if(useEmissiveMap)
 		_loadMaterialMap(scene, emissiveTextures, emissiveMap);
+
+	_updateRenderData();
 }
 
 void Model::drawModel(GLenum renderMode) {
 	glBindVertexArray(VAO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, IBO);
 
-	for (const auto& mesh : renderData) {
-		glDrawElementsBaseVertex(
-			renderMode, mesh.numIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * mesh.baseIndex), mesh.baseVertex
-		);
-	}
+	glMultiDrawElementsIndirect(
+		renderMode, GL_UNSIGNED_INT, (GLvoid*)0, (GLsizei)drawCommands.size(), 0
+	);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-}
-
-void Model::drawDepth(Shader& shader, GLenum renderMode) {
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-
-	for (const auto& mesh : renderData) {
-		if (mesh.materialIndex < diffuseTextures.size() && diffuseTextures[mesh.materialIndex])
-			shader.setTexture("diffuseMap", diffuseTextures[mesh.materialIndex]->getTextureHandle());
-
-		glDrawElementsBaseVertex(
-			renderMode, mesh.numIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * mesh.baseIndex), mesh.baseVertex
-		);
-	}
-
+	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
@@ -187,32 +208,7 @@ void Model::renderModel(Shader& shader, GLenum renderMode) {
 	shader.setUint("useMaterialMap", useMaterialMap);
 	shader.setUint("useEmissiveMap", useEmissiveMap);
 
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-
-	for (const auto& mesh: renderData) {
-		if (mesh.materialIndex < diffuseTextures.size() && diffuseTextures[mesh.materialIndex])
-			shader.setTexture("diffuseMap", diffuseTextures[mesh.materialIndex]->getTextureHandle());
-
-		if (mesh.materialIndex < normalTextures.size() && normalTextures[mesh.materialIndex])
-			shader.setTexture("normalMap", normalTextures[mesh.materialIndex]->getTextureHandle());
-
-		if (mesh.materialIndex < heightTextures.size() && heightTextures[mesh.materialIndex])
-			shader.setTexture("depthMap", heightTextures[mesh.materialIndex]->getTextureHandle());
-
-		if (mesh.materialIndex < metalnessTextures.size() && metalnessTextures[mesh.materialIndex])
-			shader.setTexture("metallicMap", metalnessTextures[mesh.materialIndex]->getTextureHandle());
-
-		if (mesh.materialIndex < emissiveTextures.size() && emissiveTextures[mesh.materialIndex])
-			shader.setTexture("emissiveMap", emissiveTextures[mesh.materialIndex]->getTextureHandle());
-
-		glDrawElementsBaseVertex(
-			renderMode, mesh.numIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * mesh.baseIndex), mesh.baseVertex
-		);
-	}
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	drawModel();
 }
 
 void Model::clearModel() {

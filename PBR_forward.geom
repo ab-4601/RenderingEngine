@@ -7,8 +7,9 @@ in VERT_DATA {
 	vec4 color;
     vec2 texel;
     vec3 normal;
-	vec3 tangent;
+    vec3 tangent;
     vec4 fragPos;
+    flat uint drawID;
 } data_in[];
 
 out GEOM_DATA {
@@ -17,6 +18,7 @@ out GEOM_DATA {
     vec3 normal;
 	vec3 tangent;
     vec4 fragPos;
+	flat uint drawID;
 	noperspective vec3 edgeDistance;
 } data_out;
 
@@ -60,6 +62,7 @@ void main() {
 		data_out.normal = data_in[i].normal;
 		data_out.tangent = data_in[i].tangent;
 		data_out.fragPos = data_in[i].fragPos;
+		data_out.drawID = data_in[i].drawID;
 		data_out.edgeDistance = edgeDistances[i];
 		gl_Position = gl_in[i].gl_Position;
 		EmitVertex();

@@ -1,7 +1,7 @@
 #ifndef _CORE_H_
 #define _CORE_H_
 
-enum CONTEXT_VERSION { MAJOR = 4, MINOR = 5 };
+enum CONTEXT_VERSION { MAJOR = 4, MINOR = 6 };
 
 typedef unsigned int uint;
 

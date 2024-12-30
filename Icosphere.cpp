@@ -44,9 +44,7 @@ void Icosphere::_generateTexCoords() {
     }
 }
 
-void Icosphere::_subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, unsigned int index1, unsigned int index2,
-    unsigned int index3) 
-{
+void Icosphere::_subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, uint32_t index1, uint32_t index2, uint32_t index3) {
     glm::vec3 mid1 = (a + b) / 2.f;
     mid1 = glm::normalize(mid1);
 
@@ -58,15 +56,15 @@ void Icosphere::_subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, unsigned int i
 
     glm::vec3 position{ mid1.x, mid1.y, mid1.z };
     addVertex(position, glm::vec2(0.f), position);
-    unsigned int newIndex1 = (unsigned int)(vertices.size() - 1);
+    uint32_t newIndex1 = (uint32_t)(vertices.size() - 1);
 
     position = glm::vec3(mid2.x, mid2.y, mid2.z);
     addVertex(position, glm::vec2(0.f), position);
-    unsigned int newIndex2 = (unsigned int)(vertices.size() - 1);
+    uint32_t newIndex2 = (uint32_t)(vertices.size() - 1);
 
     position = glm::vec3(mid3.x, mid3.y, mid3.z);
     addVertex(position, glm::vec2(0.f), position);
-    unsigned int newIndex3 = (unsigned int)(vertices.size() - 1);
+    uint32_t newIndex3 = (uint32_t)(vertices.size() - 1);
 
     addTempIndices(newIndex1, newIndex2, newIndex3);
     addTempIndices(index1, newIndex1, newIndex3);
@@ -75,9 +73,9 @@ void Icosphere::_subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, unsigned int i
 }
 
 void Icosphere::smoothSphere(int subdivisions) {
-    unsigned int index1{ 0 }, index2{ 0 }, index3{ 0 };
+    uint32_t index1{ 0 }, index2{ 0 }, index3{ 0 };
 
-    std::vector<unsigned int> tmpIndices{};
+    std::vector<uint32_t> tmpIndices{};
     std::vector<Vertex> tmpVertices{};
 
     while (subdivisions != 0) {
