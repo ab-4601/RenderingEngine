@@ -4,13 +4,15 @@
 
 class CascadedShadows {
 private:
-	static const int mapResolution = 2048;
+	static const int mapResolution = 1024;
 	static const uint numCascades = 4;
 
 	GLuint FBO{ 0 }, SSBO{ 0 };
 	GLuint shadowMaps{ 0 }, randomOffset{ 0 };
 
 	float cascadeSplits[::MAX_CASCADES];
+	glm::mat4 lightSpaceMatrices[::MAX_CASCADES];
+	glm::vec4 frustumCorners[8];
 	glm::vec3 noiseTextureSize{ 0.f };
 
 	float aspect{ 0.f };
@@ -27,6 +29,13 @@ private:
 
 	bool checkFramebufferStatus();
 	void calcSplitDepths(float lambda);
+	void calcFrustumCorners(const glm::mat4& projection, const glm::mat4& view);
+	
+	glm::mat4 calcLightSpaceMatrix(const glm::mat4& view, const glm::vec3& lightDir, int windowWidth, int windowHeight,
+		const float& nearPlane, const float& farPlane);
+
+	void calcLightSpaceMatrices(const glm::mat4& view, const glm::vec3& lightDir, int windowWidth, int windowHeight);
+
 	void genRandomOffsetData(int size, int samplesU, int samplesV);
 	void setComputeUniforms();
 
@@ -43,7 +52,7 @@ public:
 	glm::vec3 getNoiseTextureSize() const { return this->noiseTextureSize; }
 
 	void calculateShadows(int windowWidth, int windowHeight, const std::vector<Mesh*>& meshes,
-		const std::vector<Model*>& models, glm::vec3 lightPosition, GLuint currFramebuffer = 0);
+		const std::vector<Model*>& models, const glm::vec3& lightPosition, GLuint currFramebuffer = 0);
 
 	~CascadedShadows();
 };

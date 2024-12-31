@@ -21,6 +21,6 @@ layout (std430, binding = 2) readonly buffer renderItems {
 uniform bool useDiffuseMap;
 
 void main() {
-    if(useDiffuseMap && texture2D(sampler2D(renderData[data_in.drawID].diffuseMap), data_in.texel).a < 0.1f)
-        discard;
+    //if(useDiffuseMap && texture2D(sampler2D(renderData[data_in.drawID].diffuseMap), data_in.texel).a < 0.1f)
+        //discard;
 }

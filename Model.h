@@ -36,6 +36,7 @@ public:
 
 	void drawModel(GLenum renderMode = GL_TRIANGLES);
 	void renderModel(Shader& shader, GLenum renderMode = GL_TRIANGLES);
+	void renderModelWithOutline(Shader& shader, Shader& outlineShader, GLenum renderMode = GL_TRIANGLES);
 
 	void clearModel();
 

@@ -7,7 +7,6 @@
 #include "Application.h"
 
 uint Mesh::meshCount = 0;
-std::vector<Mesh*> Mesh::meshList = {};
 
 int main() {
     srand((uint)time(0));

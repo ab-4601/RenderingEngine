@@ -7,8 +7,8 @@ in vec2 texel;
 layout (binding = 0) uniform sampler2D hdrBuffer;
 layout (binding = 1) uniform sampler2D bloomBuffer;
 layout (binding = 2) uniform sampler2D blendWeightTexture;
-uniform ivec2 screenResolution;
 
+uniform ivec2 screenResolution;
 uniform float exposure;
 uniform bool enableBloom;
 

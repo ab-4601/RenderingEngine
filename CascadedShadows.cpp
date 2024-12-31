@@ -12,6 +12,21 @@ CascadedShadows::CascadedShadows(int windowWidth, int windowHeight, float lambda
 	_init();
 }
 
+void CascadedShadows::calcSplitDepths(float lambda) {
+	float range = ::far_plane - ::near_plane;
+	float logFactor = std::log(::far_plane / ::near_plane);
+
+	for (int i = 0; i < numCascades; i++) {
+		float p = (float)(i + 1) / numCascades;
+
+		float linearSplit = ::near_plane + range * p;
+
+		float logSplit = ::near_plane * std::pow(logFactor, p);
+
+		cascadeSplits[i] = (lambda * linearSplit + (1 - lambda) * logSplit);
+	}
+}
+
 bool CascadedShadows::checkFramebufferStatus() {
 	uint status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
@@ -110,21 +125,6 @@ void CascadedShadows::_init() {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
-void CascadedShadows::calcSplitDepths(float lambda) {
-	float range = ::far_plane - ::near_plane;
-	float logFactor = std::log(::far_plane / ::near_plane);
-
-	for (int i = 0; i < numCascades; i++) {
-		float p = (float)(i + 1) / numCascades;
-
-		float linearSplit = ::near_plane + range * p;
-
-		float logSplit = ::near_plane * std::pow(logFactor, p);
-
-		cascadeSplits[i] = (lambda * linearSplit + (1 - lambda) * logSplit);
-	}
-}
-
 void CascadedShadows::setComputeUniforms() {
 	computeShader.useShader();
 
@@ -132,7 +132,7 @@ void CascadedShadows::setComputeUniforms() {
 
 	for (int i = 0; i < ::MAX_CASCADES; i++) {
 		snprintf(buffer, sizeof(buffer), "cascadeSplits[%i]", i);
-		this->computeShader.setFloat(buffer, cascadeSplits[i]);
+		computeShader.setFloat(buffer, cascadeSplits[i]);
 	}
 
 	computeShader.setFloat("nearPlane", ::near_plane);
@@ -143,8 +143,101 @@ void CascadedShadows::setComputeUniforms() {
 	computeShader.endShader();
 }
 
-void CascadedShadows::calculateShadows(int windowWidth, int windowHeight, const std::vector<Mesh*>& meshes,
-	const std::vector<Model*>& models, glm::vec3 lightPosition, GLuint currFramebuffer)
+void CascadedShadows::calcFrustumCorners(const glm::mat4& projection, const glm::mat4& view) {
+	glm::mat4 inverse = glm::inverse(projection * view);
+
+	int index = 0;
+
+	for (int x = 0; x < 2; x++) {
+		for (int y = 0; y < 2; y++) {
+			for (int z = 0; z < 2; z++) {
+				glm::vec4 point{ 2.f * x - 1.f, 2.f * y - 1.f, 2.f * z - 1.f, 1.f };
+
+				point = inverse * point;
+				point /= point.w;
+
+				frustumCorners[index++] = point;
+			}
+		}
+	}
+}
+
+glm::mat4 CascadedShadows::calcLightSpaceMatrix(const glm::mat4& view, const glm::vec3& lightDir,
+	int windowWidth, int windowHeight, const float& nearPlane, const float& farPlane)
+{
+	float aspect = (float)windowWidth / windowHeight;
+	glm::mat4 projection = glm::perspective(glm::radians(45.f), aspect, nearPlane, farPlane);
+
+	glm::vec3 center = glm::vec3(0.f, 0.f, 0.f);
+
+	calcFrustumCorners(projection, view);
+
+	for (const auto& corner : frustumCorners)
+		center += glm::vec3(corner);
+
+	center /= 8;
+
+	glm::mat4 lightView = glm::lookAt(
+		center + lightDir,
+		center,
+		glm::vec3(0.f, 1.f, 0.f)
+	);
+
+	glm::vec3 zMin{ std::numeric_limits<float>::max() };
+	glm::vec3 zMax{ std::numeric_limits<float>::lowest() };
+
+	for (const glm::vec4& corner : frustumCorners) {
+		glm::vec3 trf = glm::vec3(lightView * corner);
+		zMin = glm::min(zMin, trf);
+		zMax = glm::max(zMax, trf);
+	}
+
+	float zMult = 10.f;
+
+	zMin.z = (zMin.z < 0.f) ? zMin.z * zMult : zMin.z / zMult;
+	zMax.z = (zMax.z < 0.f) ? zMax.z / zMult : zMax.z * zMult;
+
+	glm::mat4 lightProjection = glm::ortho(zMin.x, zMax.x, zMin.y, zMax.y, -zMax.z, -zMin.z);
+
+	return lightProjection * lightView;
+}
+
+void CascadedShadows::calcLightSpaceMatrices(const glm::mat4& view, const glm::vec3& lightDir,
+	int windowWidth, int windowHeight)
+{
+	for (int i = 0; i < numCascades + 1; i++) {
+		if (i == 0) {
+			lightSpaceMatrices[i] = calcLightSpaceMatrix(
+				view, lightDir, windowWidth, windowHeight, ::near_plane, cascadeSplits[i]
+			);
+		}
+		else if (i < numCascades) {
+			lightSpaceMatrices[i] = calcLightSpaceMatrix(
+				view, lightDir, windowWidth, windowHeight, cascadeSplits[i - 1], cascadeSplits[i]
+			);
+		}
+		else {
+			lightSpaceMatrices[i] = calcLightSpaceMatrix(
+				view, lightDir, windowWidth, windowHeight, cascadeSplits[i - 1], ::far_plane
+			);
+		}
+	}
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
+
+	for (int i = 0; i < numCascades + 1; i++) {
+		glBufferSubData(
+			GL_SHADER_STORAGE_BUFFER, i * sizeof(glm::mat4x4), sizeof(glm::mat4x4), &lightSpaceMatrices[i]
+		);
+	}
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+
+void CascadedShadows::calculateShadows(int windowWidth, int windowHeight,
+	const std::vector<Mesh*>& meshes, const std::vector<Model*>& models, const glm::vec3& lightPosition,
+	GLuint currFramebuffer)
 {
 	computeShader.useShader();
 	computeShader.setVec3("lightDirection", lightPosition);
@@ -168,13 +261,13 @@ void CascadedShadows::calculateShadows(int windowWidth, int windowHeight, const 
 
 	for (size_t i = 0; i < meshes.size(); i++) {
 		shader.setMat4("model", meshes[i]->getModelMatrix());
-		shader.setUint("useDiffuseMap", meshes[i]->getDiffuseMapBool());
+		//shader.setUint("useDiffuseMap", meshes[i]->getDiffuseMapBool());
 		meshes[i]->drawMesh(GL_TRIANGLES);
 	}
 
 	for (size_t i = 0; i < models.size(); i++) {
 		shader.setMat4("model", models[i]->getModelMatrix());
-		shader.setUint("useDiffuseMap", models[i]->getDiffuseMapBool());
+		//shader.setUint("useDiffuseMap", models[i]->getDiffuseMapBool());
 		models[i]->drawModel(GL_TRIANGLES);
 	}
 

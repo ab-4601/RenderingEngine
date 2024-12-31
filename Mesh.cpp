@@ -1,7 +1,6 @@
 #include "Mesh.h"
 
 Mesh::Mesh() {
-	meshList.push_back(this);
 	objectID = meshCount++;
 
 	vertices.clear();

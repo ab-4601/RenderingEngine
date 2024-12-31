@@ -53,11 +53,11 @@ void rotate(out mat4 matrix, float angle, vec3 axis) {
     matrix[2][2] = cosTheta + axis.z * axis.z * oneMinusCos;
 }
 
-layout (std140, binding = 2) buffer particleMatrices {
+layout (std430, binding = 2) buffer particleMatrices {
 	mat4 modelViewMatrices[];
 };
 
-layout (std140, binding = 3) buffer blendValues {
+layout (std430, binding = 3) buffer blendValues {
 	float blendFactors[];
 };
 

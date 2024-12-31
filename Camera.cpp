@@ -2,21 +2,23 @@
 
 Camera::Camera(glm::vec3 position, int windowWidth, int windowHeight, glm::vec3 worldUpDir,
 	GLfloat pitch, GLfloat yaw, GLfloat moveSpeed, GLfloat turnSpeed) :
-	position{ position }, worldUpDir{ worldUpDir }, pitch{ pitch }, yaw{ yaw },
+	worldUpDir{ worldUpDir }, pitch{ pitch }, yaw{ yaw },
 	movementSpeed{ moveSpeed }, turnSpeed{ turnSpeed }, movementSpeedMultiplier{ 1.f } 
 {
+	cameraData.position = position;
 
 	glm::vec3 origin(0.f, 0.f, 0.f);
-	front = glm::normalize(this->position - origin);
+	front = glm::normalize(cameraData.position - origin);
 
 	float aspect = (float)windowWidth / windowHeight;
-	projection = glm::perspective(glm::radians(45.f), aspect, ::near_plane, ::far_plane);
+	cameraData.projection = glm::perspective(glm::radians(45.f), aspect, ::near_plane, ::far_plane);
+	cameraData.view = generateViewMatrix();
 
 	glGenBuffers(1, &cameraBuffer);
-	glBindBuffer(GL_UNIFORM_BUFFER, cameraBuffer);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4x4) * 2 + sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraBuffer);
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, cameraBuffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(CameraData), NULL, GL_DYNAMIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, cameraBuffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 	update();
 }
@@ -25,22 +27,22 @@ void Camera::keyFunctionality(const Window* currWindow, GLfloat deltaTime) {
 	GLfloat velocity = movementSpeed * deltaTime * movementSpeedMultiplier;
 
 	if (currWindow->getKeyPress(GLFW_KEY_W) || currWindow->getKeyPress(GLFW_KEY_UP))
-		position += front * velocity;
+		cameraData.position += front * velocity;
 
 	if (currWindow->getKeyPress(GLFW_KEY_S) || currWindow->getKeyPress(GLFW_KEY_DOWN))
-		position -= front * velocity;
+		cameraData.position -= front * velocity;
 
 	if (currWindow->getKeyPress(GLFW_KEY_D) || currWindow->getKeyPress(GLFW_KEY_RIGHT))
-		position += right * velocity;
+		cameraData.position += right * velocity;
 
 	if (currWindow->getKeyPress(GLFW_KEY_A) || currWindow->getKeyPress(GLFW_KEY_LEFT))
-		position -= right * velocity;
+		cameraData.position -= right * velocity;
 
 	if (currWindow->getKeyPress(GLFW_KEY_SPACE))
-		position += up * velocity;
+		cameraData.position += up * velocity;
 
 	if (currWindow->getKeyPress(GLFW_KEY_LEFT_CONTROL))
-		position -= up * velocity;
+		cameraData.position -= up * velocity;
 
 	if (currWindow->getKeyPress(GLFW_KEY_LEFT_SHIFT))
 		movementSpeedMultiplier = 3.f;
@@ -65,7 +67,6 @@ void Camera::mouseFunctionality(GLfloat xChange, GLfloat yChange, GLfloat scroll
 		pitch = 89.f;
 	}
 
-
 	if (pitch < -89.f) {
 		pitch = -89.f;
 	}
@@ -83,14 +84,11 @@ void Camera::update() {
 	right = glm::normalize(glm::cross(front, worldUpDir));
 	up = glm::normalize(glm::cross(right, front));
 
-	glm::mat4x4 cameraSpaceMatrices[2] = { projection, generateViewMatrix() };
+	cameraData.view = generateViewMatrix();
 
-	glBindBuffer(GL_UNIFORM_BUFFER, cameraBuffer);
-	for (int i = 0; i < 3; i++) {
-		if (i != 2)
-			glBufferSubData(GL_UNIFORM_BUFFER, i * sizeof(glm::mat4x4), sizeof(glm::mat4x4), &cameraSpaceMatrices[i]);
-		else
-			glBufferSubData(GL_UNIFORM_BUFFER, i * sizeof(glm::mat4x4), sizeof(glm::vec3), &position);
-	}
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	GLint bufferSize{ 0 };
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, cameraBuffer);
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(CameraData), &cameraData);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }

@@ -91,7 +91,6 @@ protected:
 	bool enableSSAO{ false };
 
 public:
-	static std::vector<Mesh*> meshList;
 	Mesh();
 
 	virtual void setVertices(const std::vector<Vertex>& vertices) { this->vertices = vertices; }

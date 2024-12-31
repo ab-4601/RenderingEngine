@@ -121,27 +121,31 @@ void Application::start() {
 
     glm::mat4 model{ 1.f };
 
-    Icosphere sphere;
-    sphere.smoothSphere(5);
-    sphere.setColor({ 0.07f, 1.f, 1.f });
-    sphere.setMeshMaterial(0.f, 0.f, 1.f);
-    sphere.loadMesh();
+    Icosphere* sphere = new Icosphere();
+    sphere->smoothSphere(5);
+    sphere->setColor({ 0.07f, 1.f, 1.f });
+    sphere->setMeshMaterial(0.f, 0.f, 1.f);
+    sphere->loadMesh();
 
     model = glm::mat4(1.f);
     model = glm::translate(model, glm::vec3(400.f, 100.f, 0.f));
-    model = glm::scale(model, glm::vec3(100.f, 100.f, 100.f));
+    model = glm::scale(model, glm::vec3(100.f));
 
-    sphere.setModelMatrix(model);
+    sphere->setModelMatrix(model);
+
+    meshes.push_back(sphere);
 
     model = glm::mat4(1.f);
     model = glm::translate(model, glm::vec3(0.f, 100.f, 0.f));
-    model = glm::scale(model, glm::vec3(100.f, 100.f, 100.f));
+    model = glm::scale(model, glm::vec3(100.f));
 
-    Cube cube;
-    cube.setColor({ 1.f, 0.07f, 0.07f });
-    cube.setModelMatrix(model);
-    cube.setMeshMaterial(0.f, 0.f, 1.f);;
-    cube.loadMesh(false, false);
+    Cube* cube = new Cube();
+    cube->setColor({ 1.f, 0.07f, 0.07f });
+    cube->setModelMatrix(model);
+    cube->setMeshMaterial(0.f, 0.f, 1.f);;
+    cube->loadMesh(false, false);
+
+    meshes.push_back(cube);
 
     model = glm::mat4(1.f);
     model = glm::scale(model, glm::vec3(5.f, 5.f, 5.f));
@@ -154,9 +158,7 @@ void Application::start() {
     terrain.setModelMatrix(model);
     terrain.setColor(glm::vec3(0.2f, 0.2f, 0.2f));*/
 
-    meshes = Mesh::meshList;
-
-    /*Model suntemple(
+    /*Model* suntemple = new Model(
         "Models/SunTemple/SunTemple.fbx",
         "Models/SunTemple/Textures/",
         aiTextureType_DIFFUSE,
@@ -166,13 +168,29 @@ void Application::start() {
         true, true
     );*/
 
-    Model sponza(
+    model = glm::mat4(1.f);
+    model = glm::scale(model, glm::vec3(100.f));
+
+    /*Model* isometricRoom = new Model(
+        "Models/IsometricRoom/Isometric Room v5058 p4866.fbx",
+        "Models/IsometricRoom/",
+        aiTextureType_DIFFUSE,
+        aiTextureType_NORMALS,
+        aiTextureType_METALNESS,
+        aiTextureType_EMISSIVE,
+        false, true
+    );*/
+
+    //isometricRoom->setModelMatrix(model);
+
+    Model* sponza = new Model(
         "Models/Sponza/Sponza.gltf",
         "Models/Sponza/"
     );
 
-    models.push_back(&sponza);
-    //models.push_back(&suntemple);
+    //models.push_back(isometricRoom);
+    models.push_back(sponza);
+    //models.push_back(suntemple);
 
     coordSystem.createCoordinateSystem();
 
@@ -187,7 +205,7 @@ void Application::start() {
     hdrBuffer._initMSAA();
 
     setGlobalPBRUniforms(forwardShader);
-    //this->setGlobalPBRUniforms(this->deferredShading);
+    //setGlobalPBRUniforms(deferredShader);
 
     while (!glfwWindowShouldClose(window.getGlfwWindow())) {
         mainLoopForward(pSystem, model, particlePosition, lightDirection);
@@ -438,19 +456,19 @@ void Application::mainLoopDeferred(ParticleSystem& pSystem, glm::mat4& model, gl
         deferredShader.setUint("enableSSAO", enableSSAO);
         deferredShader.setFloat("radius", shadowRadius);
 
-        glActiveTexture(GL_TEXTURE8);
+        glActiveTexture(GL_TEXTURE7);
         glBindTexture(GL_TEXTURE_2D, gbuffer.positionBuffer());
 
-        glActiveTexture(GL_TEXTURE9);
+        glActiveTexture(GL_TEXTURE8);
         glBindTexture(GL_TEXTURE_2D, gbuffer.albedoBuffer());
 
-        glActiveTexture(GL_TEXTURE10);
+        glActiveTexture(GL_TEXTURE9);
         glBindTexture(GL_TEXTURE_2D, gbuffer.normalBuffer());
 
-        glActiveTexture(GL_TEXTURE11);
+        glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_2D, gbuffer.metallicBuffer());
 
-        glActiveTexture(GL_TEXTURE12);
+        glActiveTexture(GL_TEXTURE11);
         glBindTexture(GL_TEXTURE_2D, ssao.occlusionBuffer());
 
         if (index < (int)meshes.size() && index != -1) {

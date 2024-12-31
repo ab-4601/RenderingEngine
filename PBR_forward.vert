@@ -16,7 +16,7 @@ out VERT_DATA {
     flat uint drawID;
 } data_out;
 
-layout (std140, binding = 0) uniform cameraSpaceVariables {
+layout (std430, binding = 0) readonly buffer cameraSpaceVariables {
 	mat4 projection;
 	mat4 view;
 	vec3 cameraPosition;

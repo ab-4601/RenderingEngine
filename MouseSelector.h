@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Window.h"
-#include "Mesh.h"
+#include "Model.h"
 #include "SelectionTexture.h"
 
 class MouseSelector {

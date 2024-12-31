@@ -4,7 +4,7 @@ MouseSelector::MouseSelector(unsigned int windowWidth, unsigned int windowHeight
 	this->pixelInfo.init(windowWidth, windowHeight);
 }
 
-void MouseSelector::pickingPhase(std::vector<Mesh*>& meshes, GLuint framebuffer) 
+void MouseSelector::pickingPhase(std::vector<Mesh*>& meshes, GLuint framebuffer)
 {
 	pixelInfo.enableWriting();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

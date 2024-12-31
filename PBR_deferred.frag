@@ -2,8 +2,8 @@
 
 #define PI 3.1415926535897932384626433832795
 
-const int MAX_POINT_LIGHTS = 50;
-const int MAX_SPOT_LIGHTS = 50;
+const int MAX_POINT_LIGHTS = 3;
+const int MAX_SPOT_LIGHTS = 3;
 const int MAX_CASCADES = 16;
 const float gamma = 2.2f;
 
@@ -58,11 +58,11 @@ layout (binding = 4) uniform samplerCube pointShadowMap;
 layout (binding = 5) uniform sampler2DArray cascadedShadowMap;
 layout (binding = 6) uniform sampler3D randomOffsets;
 
-layout (binding = 8) uniform sampler2D gPosition;
-layout (binding = 9) uniform sampler2D gAlbedo;
-layout (binding = 10) uniform sampler2D gNormal;
-layout (binding = 11) uniform sampler2D gMetallic;
-layout (binding = 12) uniform sampler2D occlusionSampler;
+layout (binding = 7) uniform sampler2D gPosition;
+layout (binding = 8) uniform sampler2D gAlbedo;
+layout (binding = 9) uniform sampler2D gNormal;
+layout (binding = 10) uniform sampler2D gMetallic;
+layout (binding = 11) uniform sampler2D occlusionSampler;
 
 uniform float nearPlane;
 uniform float farPlane;
@@ -73,13 +73,13 @@ uniform vec3 offsetTexSize;
 uniform bool enableSSAO;
 uniform bool calcShadows;
 
-layout (std140, binding = 0) uniform cameraSpaceVariables {
+layout (std430, binding = 0) readonly buffer cameraSpaceVariables {
 	mat4 projection;
 	mat4 view;
 	vec3 cameraPosition;
 };
 
-layout (std140, binding = 1) buffer LightSpaceMatrices {
+layout (std430, binding = 1) buffer LightSpaceMatrices {
 	mat4 lightSpaceMatrices[16];
 };
 

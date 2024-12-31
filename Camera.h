@@ -3,17 +3,23 @@
 #include "Window.h"
 #include "Texture.h"
 
+struct CameraData {
+	glm::mat4 projection{ 1.f };
+	glm::mat4 view{ 1.f };
+	glm::vec3 position{ 0.f };
+};
+
 class Camera {
 private:
-	glm::vec3 position, front, up, right;
+	glm::vec3 front, up, right;
 	glm::vec3 worldUpDir;
 
 	GLuint cameraBuffer = 0;
 
 	GLfloat pitch, yaw, roll;
-	glm::mat4 projection;
 
 	GLfloat movementSpeed, turnSpeed, movementSpeedMultiplier;
+	CameraData cameraData;
 
 	void update();
 
@@ -25,11 +31,11 @@ public:
 	void keyFunctionality(const Window* currWindow, GLfloat deltaTime);
 	void mouseFunctionality(GLfloat xChange, GLfloat yChange, GLfloat scrollChange);
 
-	glm::mat4 getProjectionMatrix() const { return projection; };
+	glm::mat4 getProjectionMatrix() const { return cameraData.projection; };
 	glm::vec3 getCameraLookDirection() const { return front; }
-	glm::vec3 getCameraPosition() const { return position; }
+	glm::vec3 getCameraPosition() const { return cameraData.position; }
 
-	glm::mat4 generateViewMatrix() const { return glm::lookAt(position, position + front, up); }
+	glm::mat4 generateViewMatrix() const { return glm::lookAt(cameraData.position, cameraData.position + front, up); }
 
 	~Camera() = default;
 };

@@ -15,8 +15,6 @@ Model::Model(std::string fileName, std::string texFolderPath, aiTextureType diff
 
 	loadModel(fileName, diffuseMap, normalMap, metallicMap, emissiveMap);
 	loadMesh(true, true, true, true, hasEmissiveMaterial, isStrippedNormal);
-
-	Mesh::meshList.pop_back();
 }
 
 void Model::_updateMeshData(const aiScene* scene) {
@@ -38,7 +36,7 @@ void Model::_updateIndirectBuffer() {
 
 	for (size_t i = 0; i < meshData.size(); i++) {
 		drawCommands[i].instancedCount = 1;
-		drawCommands[i].baseInstance = i;
+		drawCommands[i].baseInstance = (uint32_t)i;
 		drawCommands[i].indexCount = meshData[i].numIndices;
 		drawCommands[i].baseIndex = meshData[i].baseIndex;
 		drawCommands[i].baseVertex = meshData[i].baseVertex;
@@ -209,6 +207,36 @@ void Model::renderModel(Shader& shader, GLenum renderMode) {
 	shader.setUint("useEmissiveMap", useEmissiveMap);
 
 	drawModel();
+}
+
+void Model::renderModelWithOutline(Shader& shader, Shader& outlineShader, GLenum renderMode) {
+	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+	glStencilFunc(GL_ALWAYS, 1, 0xFF);
+	glStencilMask(0xFF);
+
+	renderModel(shader, renderMode);
+
+	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+	glStencilMask(0x00);
+	//glDisable(GL_DEPTH_TEST);
+
+	outlineShader.useShader();
+
+	outlineModel = glm::scale(model, glm::vec3(1.05f, 1.05f, 1.05f));
+	outlineShader.setMat4("model", outlineModel);
+
+	drawModel(GL_TRIANGLES);
+
+	glStencilMask(0xFF);
+	glStencilFunc(GL_ALWAYS, 1, 0xFF);
+	glDisable(GL_STENCIL_TEST);
+	//glEnable(GL_DEPTH_TEST);
+
+	outlineShader.endShader();
+
+	shader.useShader();
 }
 
 void Model::clearModel() {

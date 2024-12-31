@@ -64,7 +64,7 @@ private:
     Skybox skybox{ window.getBufferWidth(), window.getBufferHeight() };
     DirectionalLight skylight{ 0.1f, 0.5f, { 4000.f, 4000.f, 0.f }, { 1.f, 1.f, 1.f } };
     LightSources lightSources{};
-    CascadedShadows csm{ window.getBufferWidth(), window.getBufferHeight(), 0.4f };
+    CascadedShadows csm{ window.getBufferWidth(), window.getBufferHeight(), 0.5f };
     GBuffer gbuffer{ window.getBufferWidth(), window.getBufferHeight() };
     SSAO ssao{ window.getBufferWidth(), window.getBufferHeight() };
 
@@ -98,6 +98,12 @@ public:
 
 	void start();
 
-    ~Application() = default;
+    ~Application() {
+        for (size_t i = 0; i < models.size(); i++)
+            delete models[i];
+
+        for (size_t i = 0; i < meshes.size(); i++)
+            delete meshes[i];
+    }
 };
 
